@@ -71,7 +71,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
           <SidebarBody>
              <SidebarNav>
                 {navItems.map(item => (
-                   <SidebarNavItem key={item.href} href={item.href} label={item.label} icon={<item.icon />} active={pathname === item.href}/>
+                   <SidebarNavItem key={item.href} href={item.href} label={item.label} icon={item.icon} active={pathname === item.href}/>
                 ))}
               </SidebarNav>
           </SidebarBody>

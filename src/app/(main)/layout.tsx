@@ -79,7 +79,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
         <div className="flex flex-col">
           <header className="flex h-14 items-center gap-4 border-b border-primary/20 bg-primary text-primary-foreground px-4 lg:h-[60px] lg:px-6">
             <SidebarTrigger />
-            <div className="w-full flex-1 justify-center">
+            <div className="w-full flex-1 flex justify-center">
               <form>
                 <div className="relative">
                   <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />

@@ -4,7 +4,18 @@ import type { Employee, Supervisor } from '@/lib/data';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Mail, Phone, Briefcase } from 'lucide-react';
+import { Mail, Phone, Briefcase, Trash2 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 import {
   Dialog,
   DialogContent,
@@ -24,7 +35,7 @@ import {
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 
-export function EmployeeCard({ employee, supervisors }: { employee: Employee; supervisors: Supervisor[] }) {
+export function EmployeeCard({ employee, supervisors, onRemove }: { employee: Employee; supervisors: Supervisor[]; onRemove: (id: string) => void; }) {
   const { toast } = useToast();
 
   const handleReassign = () => {
@@ -62,22 +73,22 @@ export function EmployeeCard({ employee, supervisors }: { employee: Employee; su
           <span>{employee.contract}</span>
         </div>
       </CardContent>
-      <CardFooter>
+      <CardFooter className="grid grid-cols-2 gap-2">
         <Dialog>
           <DialogTrigger asChild>
-            <Button variant="outline" className="w-full">Reassign</Button>
+            <Button variant="outline" className="w-full">Reatribuir</Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Reassign Employee</DialogTitle>
+              <DialogTitle>Reatribuir Funcionário</DialogTitle>
               <DialogDescription>
-                Select a new supervisor for {employee.name}.
+                Selecione um novo supervisor para {employee.name}.
               </DialogDescription>
             </DialogHeader>
             <div className="py-4">
               <Select>
                 <SelectTrigger>
-                  <SelectValue placeholder="Select a supervisor" />
+                  <SelectValue placeholder="Selecione um supervisor" />
                 </SelectTrigger>
                 <SelectContent>
                   {supervisors
@@ -92,14 +103,36 @@ export function EmployeeCard({ employee, supervisors }: { employee: Employee; su
             </div>
             <DialogFooter>
               <DialogClose asChild>
-                <Button type="button" variant="secondary">Cancel</Button>
+                <Button type="button" variant="secondary">Cancelar</Button>
               </DialogClose>
               <DialogClose asChild>
-                 <Button type="submit" onClick={handleReassign}>Confirm Reassignment</Button>
+                 <Button type="submit" onClick={handleReassign}>Confirmar Reatribuição</Button>
               </DialogClose>
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="destructive" className="w-full">
+              <Trash2 className="mr-2 h-4 w-4" /> Remover
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Esta ação não pode ser desfeita. Isso removerá permanentemente o
+                funcionário de seus registros.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction onClick={() => onRemove(employee.id)}>
+                Continuar
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </CardFooter>
     </Card>
   );

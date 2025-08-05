@@ -19,9 +19,7 @@ import {
   SidebarBody,
   SidebarNav,
   SidebarNavItem,
-  SidebarFooter,
   SidebarTrigger,
-  SidebarInset,
 } from '@/components/ui/sidebar';
 
 import { Button } from '@/components/ui/button';
@@ -34,7 +32,6 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
-import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Logo } from '@/components/icons/logo';
 
@@ -47,43 +44,31 @@ export default function MainLayout({ children }: { children: React.ReactNode }) 
     { href: '/directory', icon: Users, label: 'Directory' },
   ];
 
-  const NavLink = ({ href, icon: Icon, label, isCollapsed }: { href: string, icon: React.ElementType, label: string, isCollapsed: boolean }) => (
-    <Link
-      href={href}
-      className={`flex items-center gap-3 rounded-lg px-3 py-2 transition-all hover:text-primary ${
-        pathname === href ? 'bg-muted text-primary' : 'text-muted-foreground'
-      }`}
-    >
-      <Icon className="h-4 w-4" />
-      {!isCollapsed && label}
-    </Link>
-  );
-
   return (
     <SidebarProvider>
-    <div className="grid min-h-screen w-full">
+    <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
       <Sidebar>
-        <SidebarHeader className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
-           <Link href="/" className="flex items-center gap-2 font-semibold font-headline">
-              <Logo className="h-6 w-6 text-primary" />
-              <span className="group-[[data-state=collapsed]]:hidden">Arpolar Connect</span>
+        <SidebarHeader>
+           <Link href="/" className="flex items-center gap-2 font-semibold font-headline text-primary-foreground">
+              <Logo className="h-6 w-6" />
+              <span>Arpolar Connect</span>
             </Link>
-            <Button variant="outline" size="icon" className="ml-auto h-8 w-8 group-[[data-state=collapsed]]:hidden">
+            <Button variant="ghost" size="icon" className="ml-auto h-8 w-8 text-primary-foreground hover:bg-primary/80 hover:text-primary-foreground">
               <Bell className="h-4 w-4" />
               <span className="sr-only">Toggle notifications</span>
             </Button>
         </SidebarHeader>
         <SidebarBody>
-           <nav className="grid items-start px-2 text-sm font-medium lg:px-4">
+           <SidebarNav>
               {navItems.map(item => (
                  <SidebarNavItem key={item.href} href={item.href} label={item.label} icon={<item.icon />} active={pathname === item.href}/>
               ))}
-            </nav>
+            </SidebarNav>
         </SidebarBody>
       </Sidebar>
       <div className="flex flex-col">
         <header className="flex h-14 items-center gap-4 border-b bg-muted/40 px-4 lg:h-[60px] lg:px-6">
-          <SidebarTrigger className="md:hidden"/>
+          <SidebarTrigger />
           <div className="w-full flex-1">
             <form>
               <div className="relative">

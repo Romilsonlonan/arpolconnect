@@ -5,7 +5,7 @@
 import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { VariantProps, cva } from "class-variance-authority"
-import { Menu } from "lucide-react"
+import { Menu, ChevronsLeft, ChevronsRight } from "lucide-react"
 
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
@@ -108,7 +108,7 @@ const Sidebar = React.forwardRef<
   HTMLDivElement,
   React.ComponentProps<"div">
 >(({ className, children, ...props }, ref) => {
-    const { open } = useSidebar()
+    const { open, toggleSidebar } = useSidebar()
     const isMobile = useIsMobile();
 
     if (isMobile) {
@@ -126,13 +126,21 @@ const Sidebar = React.forwardRef<
             ref={ref}
             data-state={open ? 'open' : 'closed'}
             className={cn(
-            "hidden md:flex flex-col h-full bg-primary text-primary-foreground",
-            !open && "hidden",
+            "hidden md:flex flex-col h-full bg-primary text-primary-foreground relative",
+            !open && "w-16 items-center",
             className,
             )}
             {...props}
         >
             {children}
+            <Button
+                variant="ghost"
+                size="icon"
+                className="absolute top-1/2 -right-4 translate-y-[-50%] rounded-full h-8 w-8 bg-primary hover:bg-primary/80 text-primary-foreground hover:text-primary-foreground"
+                onClick={toggleSidebar}
+            >
+                {open ? <ChevronsLeft /> : <ChevronsRight />}
+            </Button>
         </div>
     )
   }
@@ -144,6 +152,9 @@ const SidebarTrigger = React.forwardRef<
   React.ComponentProps<typeof Button>
 >(({ className, onClick, ...props }, ref) => {
   const { toggleSidebar } = useSidebar()
+  const isMobile = useIsMobile();
+  
+  if(!isMobile) return null;
 
   return (
     <Button
@@ -212,10 +223,15 @@ const SidebarNav = React.forwardRef<
   HTMLElement,
   React.ComponentProps<"nav">
 >(({ className, ...props }, ref) => {
+  const { open } = useSidebar();
   return (
     <nav
       ref={ref}
-      className={cn("grid items-start px-2 text-sm font-medium lg:px-4", className)}
+      className={cn(
+        "grid items-start text-sm font-medium", 
+        open ? "px-2 lg:px-4" : "px-2",
+        className
+      )}
       {...props}
     />
   )
@@ -230,6 +246,29 @@ type SidebarNavItemProps = {
 }
 
 const SidebarNavItem = ({href, label, icon, active}: SidebarNavItemProps) => {
+    const { open } = useSidebar();
+    
+    if (!open) {
+      return (
+         <Tooltip>
+            <TooltipTrigger asChild>
+                <a
+                    href={href}
+                    className={cn(
+                        "flex items-center justify-center gap-3 rounded-lg px-3 py-2 text-primary-foreground/80 transition-all hover:text-primary-foreground",
+                        active && "bg-primary/20 text-primary-foreground",
+                    )}
+                    >
+                    {icon}
+                </a>
+            </TooltipTrigger>
+            <TooltipContent side="right">
+                <p>{label}</p>
+            </TooltipContent>
+        </Tooltip>
+      )
+    }
+
     return (
         <a
             href={href}

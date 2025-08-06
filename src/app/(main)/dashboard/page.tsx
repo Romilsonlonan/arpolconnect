@@ -17,11 +17,20 @@ export default function DashboardPage() {
   }, []);
   
   const handleDragSort = () => {
-    if (dragItem.current === null || dragOverItem.current === null) return;
+    if (dragItem.current === null || dragOverItem.current === null || dragItem.current === dragOverItem.current) {
+        dragItem.current = null;
+        dragOverItem.current = null;
+        return;
+    }
     
     const items = Array.from(messages);
-    const [reorderedItem] = items.splice(dragItem.current, 1);
-    items.splice(dragOverItem.current, 0, reorderedItem);
+    const dragItemIndex = dragItem.current;
+    const dragOverItemIndex = dragOverItem.current;
+
+    // Troca os itens no array
+    const temp = items[dragItemIndex];
+    items[dragItemIndex] = items[dragOverItemIndex];
+    items[dragOverItemIndex] = temp;
 
     dragItem.current = null;
     dragOverItem.current = null;

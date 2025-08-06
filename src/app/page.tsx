@@ -1,7 +1,6 @@
 'use client';
 
 import Link from 'next/link';
-import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -13,12 +12,12 @@ export default function LoginPage() {
       <Card className="mx-auto max-w-sm w-full">
         <CardHeader className="space-y-4">
           <div className="flex justify-center">
-            <Image 
+            <img 
               src="https://i.ibb.co/xK3VPgL/logo-arpolar.png" 
               alt="Arpolar Connect Logo" 
-              width={96} 
-              height={96} 
-              className="object-contain"
+              width="96"
+              height="96" 
+              style={{ objectFit: 'contain' }}
             />
           </div>
           <div className="text-center">

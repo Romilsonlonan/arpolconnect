@@ -12,7 +12,7 @@ export function TreeNode({ node }: { node: OrgNode }) {
   return (
     <div className="flex flex-col items-center relative">
       {/* The node itself */}
-      <Card className="min-w-52 text-center shadow-md hover:shadow-lg transition-shadow relative z-10 bg-card">
+      <Card className="min-w-52 text-center shadow-md hover:shadow-lg hover:scale-105 transition-all relative z-10 bg-card">
         <CardContent className="p-4 flex flex-col items-center gap-2">
           <Avatar className="w-16 h-16 border-2 border-primary">
             <AvatarImage src={node.avatar} data-ai-hint="person portrait" />

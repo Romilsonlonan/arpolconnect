@@ -60,7 +60,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
                 "flex items-center gap-2 font-semibold font-headline text-primary-foreground",
                 !open && "justify-center"
              )}>
-                <Logo className="h-6 w-6" />
+                <Logo className="h-5 w-5" />
                 {open && <span>Arpolar Connect</span>}
               </Link>
               {open && <Button variant="ghost" size="icon" className="ml-auto h-8 w-8 text-primary-foreground hover:bg-primary/80 hover:text-primary-foreground">
@@ -77,7 +77,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
           </SidebarBody>
         </Sidebar>
         <div className="flex flex-col">
-          <header className="flex h-14 items-center gap-4 border-b border-primary/20 bg-primary text-primary-foreground px-4 lg:h-[60px] lg:px-6">
+          <header className="flex h-14 items-center gap-4 border-b border-primary/20 bg-primary px-4 lg:h-[60px] lg:px-6">
             <SidebarTrigger />
             <div className="w-full flex-1 flex justify-center">
               <form className="w-full max-w-md">
@@ -86,7 +86,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
                   <Input
                     type="search"
                     placeholder="Search..."
-                    className="w-full appearance-none bg-background/70 text-foreground pl-8 shadow-none"
+                    className="w-full appearance-none bg-background/70 text-foreground pl-8 shadow-none text-sm"
                   />
                 </div>
               </form>

@@ -1,73 +1,67 @@
 'use client';
 
 import type { Metadata } from 'next';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { messages as initialMessages, Message } from '@/lib/data';
 import { MessageCard } from '@/components/dashboard/message-card';
-import { DragDropContext, Droppable, Draggable, DropResult } from 'react-beautiful-dnd';
 
 export default function DashboardPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [isBrowser, setIsBrowser] = useState(false);
+  const dragItem = useRef<number | null>(null);
+  const dragOverItem = useRef<number | null>(null);
 
   useEffect(() => {
     setMessages(initialMessages);
     setIsBrowser(true);
   }, []);
   
-  const onDragEnd = (result: DropResult) => {
-    if (!result.destination) {
-      return;
-    }
-
+  const handleDragSort = () => {
+    if (dragItem.current === null || dragOverItem.current === null) return;
+    
     const items = Array.from(messages);
-    const [reorderedItem] = items.splice(result.source.index, 1);
-    items.splice(result.destination.index, 0, reorderedItem);
+    const [reorderedItem] = items.splice(dragItem.current, 1);
+    items.splice(dragOverItem.current, 0, reorderedItem);
 
+    dragItem.current = null;
+    dragOverItem.current = null;
     setMessages(items);
   };
+
+  if (!isBrowser) {
+    return (
+       <div
+          className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+        >
+          {initialMessages.map((message) => (
+            <MessageCard key={message.id} message={message} />
+          ))}
+        </div>
+    );
+  }
 
   return (
     <>
       <div className="flex items-center">
         <h1 className="text-lg font-semibold md:text-2xl font-headline">Message Dashboard</h1>
       </div>
-      {isBrowser ? (
-        <DragDropContext onDragEnd={onDragEnd}>
-          <Droppable droppableId="messages">
-            {(provided) => (
-              <div
-                {...provided.droppableProps}
-                ref={provided.innerRef}
-                className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-              >
-                {messages.map((message, index) => (
-                  <Draggable key={message.id} draggableId={message.id} index={index}>
-                    {(provided) => (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.draggableProps}
-                        {...provided.dragHandleProps}
-                      >
-                        <MessageCard message={message} />
-                      </div>
-                    )}
-                  </Draggable>
-                ))}
-                {provided.placeholder}
-              </div>
-            )}
-          </Droppable>
-        </DragDropContext>
-      ) : (
-         <div
-            className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+      <div
+        className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+      >
+        {messages.map((message, index) => (
+          <div
+            key={message.id}
+            draggable
+            onDragStart={() => dragItem.current = index}
+            onDragEnter={() => dragOverItem.current = index}
+            onDragEnd={handleDragSort}
+            onDragOver={(e) => e.preventDefault()}
+            className="cursor-move"
           >
-            {initialMessages.map((message) => (
-              <MessageCard key={message.id} message={message} />
-            ))}
+            <MessageCard message={message} />
           </div>
-      )}
+        ))}
+      </div>
     </>
   );
 }

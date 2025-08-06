@@ -12,7 +12,7 @@ export default function LoginPage() {
     <div className="flex items-center justify-center min-h-screen bg-background">
       <Card className="mx-auto max-w-sm w-full">
         <CardHeader className="space-y-4">
-          <div className="w-16 h-16 mx-auto text-primary">
+          <div className="w-12 h-12 mx-auto text-primary">
             <Logo />
           </div>
           <div className="text-center">

@@ -10,7 +10,7 @@ export function TreeNode({ node }: { node: OrgNode }) {
   }
   
   return (
-    <div className="flex flex-col items-center relative pt-8">
+    <div className="flex flex-col items-center relative">
       {/* The node itself */}
       <Card className="min-w-52 text-center shadow-md hover:shadow-lg transition-shadow relative z-10 bg-card">
         <CardContent className="p-4 flex flex-col items-center gap-2">
@@ -22,26 +22,40 @@ export function TreeNode({ node }: { node: OrgNode }) {
             <p className="font-bold text-lg font-headline">{node.name}</p>
             <p className="text-sm text-muted-foreground">{node.role}</p>
           </div>
-          <Button variant="outline" size="sm" className="mt-2 w-full">
-            <MessageCircle className="w-4 h-4 mr-2" /> Message
-          </Button>
+          {node.role !== 'Company' && (
+            <Button variant="outline" size="sm" className="mt-2 w-full">
+              <MessageCircle className="w-4 h-4 mr-2" /> Message
+            </Button>
+          )}
         </CardContent>
       </Card>
 
       {/* Children container */}
       {node.children && node.children.length > 0 && (
-        <div className="flex justify-center gap-8 pt-16 relative">
-          {/* Vertical line from parent */}
-           <div className="absolute top-0 h-8 w-px bg-border -translate-y-1/2" style={{left: '50%'}}></div>
-          
-          {node.children.map((child, index) => (
-            <div key={child.id} className="relative flex flex-col items-center">
-               {/* Horizontal line */}
-              <div className="absolute top-0 h-px bg-border" style={{ left: index === 0 ? '50%' : '-50%', right: index === node.children!.length - 1 ? '50%' : '-50%'}}></div>
-              <TreeNode node={child} />
-            </div>
-          ))}
-        </div>
+        <>
+          {/* Vertical line from parent to the horizontal line */}
+          <div className="absolute top-full h-8 w-px bg-border" style={{left: '50%'}}></div>
+
+          <div className="flex justify-center gap-8 pt-16 relative">
+             {/* Horizontal line connecting all children */}
+            <div className="absolute top-0 h-px bg-border" style={{ left: '50%', right: '50%', transform: `translateX(${node.children.length > 1 ? '-50%' : '0%'}) scaleX(${node.children.length > 1 ? 1 : 0})` }}></div>
+            
+            {node.children.map((child, index) => (
+              <div key={child.id} className="relative flex flex-col items-center">
+                 {/* Top vertical line for each child connecting to the horizontal line */}
+                 <div className="absolute bottom-full h-8 w-px bg-border" style={{left: '50%'}}></div>
+                {/* Horizontal line segment for each child */}
+                {node.children.length > 1 && (
+                    <div className="absolute top-0 h-px bg-border" style={{
+                        left: index === 0 ? '50%' : '-50%',
+                        right: index === node.children.length - 1 ? '50%' : '-50%'
+                    }}></div>
+                )}
+                <TreeNode node={child} />
+              </div>
+            ))}
+          </div>
+        </>
       )}
     </div>
   );

@@ -13,7 +13,7 @@ export default function LoginPage() {
       <Card className="mx-auto max-w-sm w-full">
         <CardHeader className="space-y-4">
           <div className="w-24 h-24 mx-auto relative">
-            <Image src="https://i.ibb.co/7bNK6j7/logo-arpolar.png" alt="Arpolar Connect Logo" layout="fill" objectFit="contain" />
+            <Image src="https://i.ibb.co/xK3VPgL/logo-arpolar.png" alt="Arpolar Connect Logo" layout="fill" objectFit="contain" />
           </div>
           <div className="text-center">
             <CardTitle className="text-2xl font-headline">Arpolar Connect</CardTitle>

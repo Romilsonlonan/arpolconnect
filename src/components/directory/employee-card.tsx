@@ -62,7 +62,7 @@ export function EmployeeCard({ employee, supervisors, onRemove }: { employee: Em
       <CardContent className="space-y-2 text-sm flex-grow">
         <div className="flex items-center gap-2">
           <Mail className="w-4 h-4 text-muted-foreground" />
-          <a href={`mailto:${employee.email}`} className="hover:underline">{employee.email}</a>
+          <a href={`mailto:${employee.email}`} className="hover:underline break-all">{employee.email}</a>
         </div>
         <div className="flex items-center gap-2">
           <Phone className="w-4 h-4 text-muted-foreground" />

@@ -27,6 +27,7 @@ import {
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { PlusCircle } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
 
 function SupervisorSection({ supervisor, employees, allSupervisors, onRemoveEmployee }: { supervisor: Supervisor; employees: Employee[], allSupervisors: Supervisor[], onRemoveEmployee: (id: string) => void }) {
   return (
@@ -41,7 +42,7 @@ function SupervisorSection({ supervisor, employees, allSupervisors, onRemoveEmpl
           <p className="text-sm text-muted-foreground">{supervisor.email}</p>
         </div>
       </div>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {employees.map(employee => (
           <EmployeeCard key={employee.id} employee={employee} supervisors={allSupervisors} onRemove={onRemoveEmployee} />
         ))}
@@ -110,54 +111,56 @@ function AddEmployeeDialog({ supervisors, onAddEmployee }: { supervisors: Superv
                         Preencha os detalhes abaixo para adicionar um novo funcionário.
                     </DialogDescription>
                 </DialogHeader>
-                <div className="grid gap-4 py-4">
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="name" className="text-right">Nome</Label>
-                        <Input id="name" value={name} onChange={(e) => setName(e.target.value)} className="col-span-3" />
+                 <ScrollArea className="max-h-[70vh]">
+                    <div className="grid gap-4 py-4 px-2">
+                        <div className="grid gap-2">
+                            <Label htmlFor="name">Nome</Label>
+                            <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="role">Função</Label>
+                            <Select onValueChange={(value: Employee['role']) => setRole(value)} value={role}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Selecione a função" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="Mechanic">Mechanic</SelectItem>
+                                    <SelectItem value="Electrician">Electrician</SelectItem>
+                                    <SelectItem value="Assistant">Assistant</SelectItem>
+                                    <SelectItem value="Artificer">Artificer</SelectItem>
+                                    <SelectItem value="Half-Official">Half-Official</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                         <div className="grid gap-2">
+                            <Label htmlFor="email">Email</Label>
+                            <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+                        </div>
+                         <div className="grid gap-2">
+                            <Label htmlFor="phone">Telefone</Label>
+                            <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="contract">Contrato</Label>
+                            <Input id="contract" value={contract} onChange={(e) => setContract(e.target.value)} />
+                        </div>
+                        <div className="grid gap-2">
+                            <Label htmlFor="supervisor">Supervisor</Label>
+                            <Select onValueChange={setSupervisorId} value={supervisorId}>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Selecione um supervisor" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {supervisors.map(supervisor => (
+                                        <SelectItem key={supervisor.id} value={supervisor.id}>
+                                            {supervisor.name}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="role" className="text-right">Função</Label>
-                        <Select onValueChange={(value: Employee['role']) => setRole(value)} value={role}>
-                            <SelectTrigger className="col-span-3">
-                                <SelectValue placeholder="Selecione a função" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="Mechanic">Mechanic</SelectItem>
-                                <SelectItem value="Electrician">Electrician</SelectItem>
-                                <SelectItem value="Assistant">Assistant</SelectItem>
-                                <SelectItem value="Artificer">Artificer</SelectItem>
-                                <SelectItem value="Half-Official">Half-Official</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-                     <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="email" className="text-right">Email</Label>
-                        <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} className="col-span-3" />
-                    </div>
-                     <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="phone" className="text-right">Telefone</Label>
-                        <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} className="col-span-3" />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="contract" className="text-right">Contrato</Label>
-                        <Input id="contract" value={contract} onChange={(e) => setContract(e.target.value)} className="col-span-3" />
-                    </div>
-                    <div className="grid grid-cols-4 items-center gap-4">
-                        <Label htmlFor="supervisor" className="text-right">Supervisor</Label>
-                        <Select onValueChange={setSupervisorId} value={supervisorId}>
-                            <SelectTrigger className="col-span-3">
-                                <SelectValue placeholder="Selecione um supervisor" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {supervisors.map(supervisor => (
-                                    <SelectItem key={supervisor.id} value={supervisor.id}>
-                                        {supervisor.name}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                </div>
+                </ScrollArea>
                 <DialogFooter>
                     <DialogClose asChild>
                         <Button type="button" variant="secondary">Cancelar</Button>
@@ -192,9 +195,9 @@ export default function DirectoryPage() {
 
   return (
     <>
-      <div className="flex items-center mb-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center mb-6 gap-4">
         <h1 className="text-lg font-semibold md:text-2xl font-headline">Diretório de Funcionários</h1>
-        <div className="ml-auto">
+        <div className="ml-0 sm:ml-auto">
             <AddEmployeeDialog supervisors={supervisors} onAddEmployee={handleAddEmployee} />
         </div>
       </div>

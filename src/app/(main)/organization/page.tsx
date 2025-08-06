@@ -12,10 +12,10 @@ export default function OrganizationPage() {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center pb-4 border-b">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center pb-4 border-b gap-4">
         <h1 className="text-lg font-semibold md:text-2xl font-headline">Organizational Chart</h1>
-        <div className="ml-auto flex items-center gap-4">
-          <div className="flex items-center gap-2 w-48">
+        <div className="ml-0 sm:ml-auto flex items-center gap-2 sm:gap-4">
+          <div className="flex items-center gap-2 w-36 sm:w-48">
              <Button variant="outline" size="icon" onClick={() => setZoom(z => Math.max(0.2, z - 0.1))}><ZoomOut className="h-4 w-4" /></Button>
              <Slider
                 value={[zoom]}

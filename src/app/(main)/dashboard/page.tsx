@@ -1,6 +1,5 @@
 'use client';
 
-import type { Metadata } from 'next';
 import { useState, useEffect, useRef } from 'react';
 import { messages as initialMessages, Message } from '@/lib/data';
 import { MessageCard } from '@/components/dashboard/message-card';
@@ -18,16 +17,13 @@ export default function DashboardPage() {
   
   const handleDragSort = () => {
     if (dragItem.current === null || dragOverItem.current === null || dragItem.current === dragOverItem.current) {
-        dragItem.current = null;
-        dragOverItem.current = null;
         return;
     }
     
     setMessages(prevMessages => {
         const newMessages = [...prevMessages];
-        const dragItemContent = newMessages[dragItem.current!];
-        newMessages.splice(dragItem.current!, 1);
-        newMessages.splice(dragOverItem.current!, 0, dragItemContent);
+        const [draggedItem] = newMessages.splice(dragItem.current!, 1);
+        newMessages.splice(dragOverItem.current!, 0, draggedItem);
         
         dragItem.current = null;
         dragOverItem.current = null;

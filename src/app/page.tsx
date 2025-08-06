@@ -5,20 +5,15 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Logo } from '@/components/icons/logo';
 
 export default function LoginPage() {
   return (
     <div className="flex items-center justify-center min-h-screen bg-background">
       <Card className="mx-auto max-w-sm w-full">
         <CardHeader className="space-y-4">
-          <div className="flex justify-center">
-            <img 
-              src="https://i.ibb.co/xK3VPgL/logo-arpolar.png"
-              alt="Arpolar Connect Logo"
-              width="96"
-              height="96"
-              style={{ objectFit: 'contain' }}
-            />
+          <div className="flex justify-center text-primary">
+            <Logo className="w-24 h-24" />
           </div>
           <div className="text-center">
             <CardTitle className="text-2xl font-headline">Arpolar Connect</CardTitle>

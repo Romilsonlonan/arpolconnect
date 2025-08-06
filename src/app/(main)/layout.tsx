@@ -60,7 +60,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
                 "flex items-center gap-2 font-semibold font-headline text-primary-foreground",
                 !open && "justify-center"
              )}>
-                <Logo className="h-5 w-5" />
+                <Logo className="h-6 w-6" />
                 {open && <span>Arpolar Connect</span>}
               </Link>
               {open && <Button variant="ghost" size="icon" className="ml-auto h-8 w-8 text-primary-foreground hover:bg-primary/80 hover:text-primary-foreground">

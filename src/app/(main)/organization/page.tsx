@@ -29,7 +29,10 @@ export default function OrganizationPage() {
            <Button variant="outline" size="icon" onClick={() => setZoom(1)}><RotateCcw className="h-4 w-4" /></Button>
         </div>
       </div>
-      <div className="flex-grow overflow-auto p-4 bg-slate-50 dark:bg-slate-900/50 rounded-lg mt-4">
+      <div 
+        className="flex-grow overflow-auto p-4 rounded-lg mt-4 bg-cover bg-center"
+        style={{ backgroundImage: "url('https://images.unsplash.com/photo-1557683311-eac922347aa1?q=80&w=2070&auto=format&fit=crop')" }}
+      >
         <div
           className="transition-transform duration-300"
           style={{ transform: `scale(${zoom})`, transformOrigin: 'top left' }}

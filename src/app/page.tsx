@@ -13,10 +13,10 @@ export default function LoginPage() {
         <CardHeader className="space-y-4">
           <div className="flex justify-center">
             <img 
-              src="https://i.ibb.co/xK3VPgL/logo-arpolar.png" 
-              alt="Arpolar Connect Logo" 
+              src="https://i.ibb.co/xK3VPgL/logo-arpolar.png"
+              alt="Arpolar Connect Logo"
               width="96"
-              height="96" 
+              height="96"
               style={{ objectFit: 'contain' }}
             />
           </div>

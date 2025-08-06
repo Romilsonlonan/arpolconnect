@@ -63,10 +63,6 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
                 <Logo className="h-6 w-6" />
                 {open && <span>Arpolar Connect</span>}
               </Link>
-              {open && <Button variant="ghost" size="icon" className="ml-auto h-8 w-8 text-primary-foreground hover:bg-primary/80 hover:text-primary-foreground">
-                <Bell className="h-4 w-4" />
-                <span className="sr-only">Toggle notifications</span>
-              </Button>}
           </SidebarHeader>
           <SidebarBody>
             <div className={cn("px-4 py-2 text-sm font-semibold text-primary-foreground/70", !open && "hidden")}>Menu</div>

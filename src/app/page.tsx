@@ -17,26 +17,26 @@ export default function LoginPage() {
           <div className="flex justify-center text-primary">
             <img 
               src="https://i.ibb.co/xK3VPgL/logo-arpolar.png" 
-              alt="Arpolar Connect Logo" 
+              alt="Logo Arpolar Connect" 
               className="w-48 h-auto"
             />
           </div>
           <div className="text-center">
             <CardTitle className="text-2xl font-headline text-slate-800">Arpolar Connect</CardTitle>
-            <CardDescription className="text-slate-700">Enter your credentials to access your account</CardDescription>
+            <CardDescription className="text-slate-700">Insira suas credenciais para acessar sua conta</CardDescription>
           </div>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4">
             <div className="grid gap-2">
               <Label htmlFor="email" className="text-slate-800">Email</Label>
-              <Input id="email" type="email" placeholder="m@example.com" required className="bg-white/50 border-white/60 placeholder:text-slate-600" />
+              <Input id="email" type="email" placeholder="m@exemplo.com" required className="bg-white/50 border-white/60 placeholder:text-slate-600" />
             </div>
             <div className="grid gap-2">
               <div className="flex items-center">
-                <Label htmlFor="password" className="text-slate-800">Password</Label>
+                <Label htmlFor="password" className="text-slate-800">Senha</Label>
                 <Link href="#" className="ml-auto inline-block text-sm underline text-slate-700 hover:text-slate-900">
-                  Forgot your password?
+                  Esqueceu sua senha?
                 </Link>
               </div>
               <Input id="password" type="password" required className="bg-white/50 border-white/60" />

@@ -12,8 +12,8 @@ export default function LoginPage() {
     <div className="flex items-center justify-center min-h-screen bg-background">
       <Card className="mx-auto max-w-sm w-full">
         <CardHeader className="space-y-4">
-          <div className="w-24 h-24 mx-auto relative">
-            <Image src="https://i.ibb.co/xK3VPgL/logo-arpolar.png" alt="Arpolar Connect Logo" layout="fill" objectFit="contain" />
+          <div className="w-24 h-24 mx-auto">
+            <Image src="https://i.ibb.co/xK3VPgL/logo-arpolar.png" alt="Arpolar Connect Logo" width={96} height={96} style={{ objectFit: 'contain' }} />
           </div>
           <div className="text-center">
             <CardTitle className="text-2xl font-headline">Arpolar Connect</CardTitle>

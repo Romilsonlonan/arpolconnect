@@ -23,18 +23,17 @@ export default function DashboardPage() {
         return;
     }
     
-    const items = Array.from(messages);
-    const dragItemIndex = dragItem.current;
-    const dragOverItemIndex = dragOverItem.current;
-
-    // Troca os itens no array
-    const temp = items[dragItemIndex];
-    items[dragItemIndex] = items[dragOverItemIndex];
-    items[dragOverItemIndex] = temp;
-
-    dragItem.current = null;
-    dragOverItem.current = null;
-    setMessages(items);
+    setMessages(prevMessages => {
+        const newMessages = [...prevMessages];
+        const dragItemContent = newMessages[dragItem.current!];
+        newMessages.splice(dragItem.current!, 1);
+        newMessages.splice(dragOverItem.current!, 0, dragItemContent);
+        
+        dragItem.current = null;
+        dragOverItem.current = null;
+        
+        return newMessages;
+    });
   };
 
   if (!isBrowser) {

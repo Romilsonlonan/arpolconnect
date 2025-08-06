@@ -52,7 +52,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
     return (
         <div className={cn(
             "grid min-h-screen w-full transition-[grid-template-columns]",
-            open ? "md:grid-cols-[180px_1fr]" : "md:grid-cols-[64px_1fr]"
+            open ? "md:grid-cols-[160px_1fr]" : "md:grid-cols-[64px_1fr]"
         )}>
         <Sidebar>
           <SidebarHeader>

@@ -123,43 +123,57 @@ export const organizationTree: OrgNode = {
   avatar: 'https://i.ibb.co/xK3VPgL/logo-arpolar.png',
   children: [
     {
-      id: 'dirA',
-      name: 'Diretor Chefe A',
-      role: 'Director',
+      id: 'directors',
+      name: 'Diretoria',
+      role: 'Management',
       avatar: 'https://placehold.co/100x100',
-    },
-    {
-      id: 'dirB',
-      name: 'Diretor Chefe B',
-      role: 'Director',
-      avatar: 'https://placehold.co/100x100',
-    },
-    {
-      id: 'coordA',
-      name: 'Coordenador A',
-      role: 'Geral - Preventiva',
-      avatar: 'https://placehold.co/100x100',
-    },
-    {
-      id: 'coordB',
-      name: 'Coordenador B',
-      role: 'Contratos',
-      avatar: 'https://placehold.co/100x100',
-    },
-    {
-      id: 'coordC',
-      name: 'Coordenador C',
-      role: 'Corretiva',
-      avatar: 'https://placehold.co/100x100',
-    },
-    {
-      id: 'regionRoot',
-      name: 'Regiões',
-      role: 'Regions',
-      avatar: 'https://placehold.co/100x100',
-      children: regions,
+      children: [
+        {
+          id: 'dirA',
+          name: 'Diretor Chefe A',
+          role: 'Director',
+          avatar: 'https://placehold.co/100x100',
+        },
+        {
+          id: 'dirB',
+          name: 'Diretor Chefe B',
+          role: 'Director',
+          avatar: 'https://placehold.co/100x100',
+        },
+        {
+          id: 'coordinators',
+          name: 'Coordenação',
+          role: 'Coordination',
+          avatar: 'https://placehold.co/100x100',
+          children: [
+            {
+              id: 'coordA',
+              name: 'Coordenador A',
+              role: 'Geral - Preventiva',
+              avatar: 'https://placehold.co/100x100',
+            },
+            {
+              id: 'coordB',
+              name: 'Coordenador B',
+              role: 'Contratos',
+              avatar: 'https://placehold.co/100x100',
+            },
+            {
+              id: 'coordC',
+              name: 'Coordenador C',
+              role: 'Corretiva',
+              avatar: 'https://placehold.co/100x100',
+            },
+            {
+              id: 'regionRoot',
+              name: 'Regiões',
+              role: 'Regions',
+              avatar: 'https://placehold.co/100x100',
+              children: regions,
+            }
+          ]
+        }
+      ]
     }
   ]
 };
-
-    

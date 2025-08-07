@@ -30,8 +30,8 @@ export default function OrganizationPage() {
         </div>
       </div>
       <div 
-        className="flex-grow overflow-auto p-4 rounded-lg mt-4 bg-cover bg-center"
-        style={{ backgroundImage: "url('https://images.unsplash.com/photo-1557683311-eac922347aa1?q=80&w=2070&auto=format&fit=crop')" }}
+        className="flex-grow overflow-auto p-4 rounded-lg mt-4 bg-cover bg-center bg-no-repeat"
+        style={{ backgroundImage: "url('https://files.fm/f/ypp4krtn5j')" }}
       >
         <div
           className="transition-transform duration-300"
@@ -43,3 +43,5 @@ export default function OrganizationPage() {
     </div>
   );
 }
+
+    

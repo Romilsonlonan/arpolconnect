@@ -15,7 +15,6 @@ export type Supervisor = {
   name:string;
   email: string;
   avatar: string;
-  coordinatorId: string;
   region?: string;
 };
 
@@ -37,17 +36,17 @@ export type OrgNode = {
 }
 
 export const supervisors: Supervisor[] = [
-  { id: 'sup1', name: 'Carlos Ferreira', email: 'carlos.f@arpolar.com', avatar: 'https://placehold.co/100x100', coordinatorId: 'coord1', region: 'Região A' },
-  { id: 'sup2', name: 'Beatriz Costa', email: 'beatriz.c@arpolar.com', avatar: 'https://placehold.co/100x100', coordinatorId: 'coord1', region: 'Região A' },
-  { id: 'sup3', name: 'Ricardo Almeida', email: 'ricardo.a@arpolar.com', avatar: 'https://placehold.co/100x100', coordinatorId: 'coord2', region: 'Região B' },
-  { id: 'sup4', name: 'Mariana Gonçalves', email: 'mariana.g@arpolar.com', avatar: 'https://placehold.co/100x100', coordinatorId: 'coord2', region: 'Região C' },
-  { id: 'sup5', name: 'Lucas Ribeiro', email: 'lucas.r@arpolar.com', avatar: 'https://placehold.co/100x100', coordinatorId: 'coord3', region: 'Região C' },
-  { id: 'sup6', name: 'Júlia Castro', email: 'julia.c@arpolar.com', avatar: 'https://placehold.co/100x100', coordinatorId: 'coord3', region: 'Região D' },
-  { id: 'sup7', name: 'Felipe Santos', email: 'felipe.s@arpolar.com', avatar: 'https://placehold.co/100x100', coordinatorId: 'coord1', region: 'Região D' },
-  { id: 'sup8', name: 'Letícia Martins', email: 'leticia.m@arpolar.com', avatar: 'https://placehold.co/100x100', coordinatorId: 'coord2', region: 'Região E' },
-  { id: 'sup9', name: 'Guilherme Nogueira', email: 'guilherme.n@arpolar.com', avatar: 'https://placehold.co/100x100', coordinatorId: 'coord3', region: 'Região E' },
-  { id: 'sup10', name: 'Isabela Fernandes', email: 'isabela.f@arpolar.com', avatar: 'https://placehold.co/100x100', coordinatorId: 'coord1', region: 'Região F' },
-  { id: 'sup11', name: 'Rafael Azevedo', email: 'rafael.a@arpolar.com', avatar: 'https://placehold.co/100x100', coordinatorId: 'coord2', region: 'Região F' },
+  { id: 'sup1', name: 'Carlos Ferreira', email: 'carlos.f@arpolar.com', avatar: 'https://placehold.co/100x100', region: 'Região A' },
+  { id: 'sup2', name: 'Beatriz Costa', email: 'beatriz.c@arpolar.com', avatar: 'https://placehold.co/100x100', region: 'Região A' },
+  { id: 'sup3', name: 'Ricardo Almeida', email: 'ricardo.a@arpolar.com', avatar: 'https://placehold.co/100x100', region: 'Região B' },
+  { id: 'sup4', name: 'Mariana Gonçalves', email: 'mariana.g@arpolar.com', avatar: 'https://placehold.co/100x100', region: 'Região C' },
+  { id: 'sup5', name: 'Lucas Ribeiro', email: 'lucas.r@arpolar.com', avatar: 'https://placehold.co/100x100', region: 'Região C' },
+  { id: 'sup6', name: 'Júlia Castro', email: 'julia.c@arpolar.com', avatar: 'https://placehold.co/100x100', region: 'Região D' },
+  { id: 'sup7', name: 'Felipe Santos', email: 'felipe.s@arpolar.com', avatar: 'https://placehold.co/100x100', region: 'Região D' },
+  { id: 'sup8', name: 'Letícia Martins', email: 'leticia.m@arpolar.com', avatar: 'https://placehold.co/100x100', region: 'Região E' },
+  { id: 'sup9', name: 'Guilherme Nogueira', email: 'guilherme.n@arpolar.com', avatar: 'https://placehold.co/100x100', region: 'Região E' },
+  { id: 'sup10', name: 'Isabela Fernandes', email: 'isabela.f@arpolar.com', avatar: 'https://placehold.co/100x100', region: 'Região F' },
+  { id: 'sup11', name: 'Rafael Azevedo', email: 'rafael.a@arpolar.com', avatar: 'https://placehold.co/100x100', region: 'Região F' },
 ];
 
 export const employees: Employee[] = [
@@ -57,7 +56,14 @@ export const employees: Employee[] = [
   { id: 'emp4', name: 'Ana Souza', role: 'Artificer', email: 'ana.s@contractor.com', phone: '(11) 98765-4324', supervisorId: 'sup3', contract: 'Contract C', avatar: 'https://placehold.co/100x100' },
   { id: 'emp5', name: 'Lucas Pereira', role: 'Mechanic', email: 'lucas.p@contractor.com', phone: '(11) 98765-4325', supervisorId: 'sup4', contract: 'Contract D', avatar: 'https://placehold.co/100x100' },
   { id: 'emp6', name: 'Juliana Lima', role: 'Half-Official', email: 'juliana.l@contractor.com', phone: '(11) 98765-4326', supervisorId: 'sup5', contract: 'Contract E', avatar: 'https://placehold.co/100x100' },
+  { id: 'emp7', name: 'Bruno Alves', role: 'Mechanic', email: 'bruno.a@contractor.com', phone: '(11) 98765-4327', supervisorId: 'sup6', contract: 'Contract F', avatar: 'https://placehold.co/100x100' },
+  { id: 'emp8', name: 'Carla Dias', role: 'Electrician', email: 'carla.d@contractor.com', phone: '(11) 98765-4328', supervisorId: 'sup7', contract: 'Contract G', avatar: 'https://placehold.co/100x100' },
+  { id: 'emp9', name: 'Diego Rocha', role: 'Assistant', email: 'diego.r@contractor.com', phone: '(11) 98765-4329', supervisorId: 'sup8', contract: 'Contract H', avatar: 'https://placehold.co/100x100' },
+  { id: 'emp10', name: 'Eduarda Cunha', role: 'Artificer', email: 'eduarda.c@contractor.com', phone: '(11) 98765-4330', supervisorId: 'sup9', contract: 'Contract I', avatar: 'https://placehold.co/100x100' },
+  { id: 'emp11', name: 'Fernanda Barbosa', role: 'Mechanic', email: 'fernanda.b@contractor.com', phone: '(11) 98765-4331', supervisorId: 'sup10', contract: 'Contract J', avatar: 'https://placehold.co/100x100' },
+  { id: 'emp12', name: 'Gustavo Gomes', role: 'Half-Official', email: 'gustavo.g@contractor.com', phone: '(11) 98765-4332', supervisorId: 'sup11', contract: 'Contract K', avatar: 'https://placehold.co/100x100' },
 ];
+
 
 const now = new Date();
 export const messages: Message[] = [
@@ -101,6 +107,15 @@ const getSupervisorsForRegion = (regionName: string): OrgNode[] => {
         }));
 };
 
+const regions: OrgNode[] = [
+    { id: 'regA', name: 'Região A', role: 'Region', avatar: 'https://placehold.co/100x100', children: getSupervisorsForRegion('Região A')},
+    { id: 'regB', name: 'Região B', role: 'Region', avatar: 'https://placehold.co/100x100', children: getSupervisorsForRegion('Região B')},
+    { id: 'regC', name: 'Região C', role: 'Region', avatar: 'https://placehold.co/100x100', children: getSupervisorsForRegion('Região C')},
+    { id: 'regD', name: 'Região D', role: 'Region', avatar: 'https://placehold.co/100x100', children: getSupervisorsForRegion('Região D')},
+    { id: 'regE', name: 'Região E', role: 'Region', avatar: 'https://placehold.co/100x100', children: getSupervisorsForRegion('Região E')},
+    { id: 'regF', name: 'Região F', role: 'Region', avatar: 'https://placehold.co/100x100', children: getSupervisorsForRegion('Região F')},
+];
+
 export const organizationTree: OrgNode = {
   id: 'arpolar',
   name: 'Arpolar',
@@ -142,14 +157,9 @@ export const organizationTree: OrgNode = {
       name: 'Regiões',
       role: 'Regions',
       avatar: 'https://placehold.co/100x100',
-      children: [
-        { id: 'regA', name: 'Região A', role: 'Region', avatar: 'https://placehold.co/100x100', children: getSupervisorsForRegion('Região A')},
-        { id: 'regB', name: 'Região B', role: 'Region', avatar: 'https://placehold.co/100x100', children: getSupervisorsForRegion('Região B')},
-        { id: 'regC', name: 'Região C', role: 'Region', avatar: 'https://placehold.co/100x100', children: getSupervisorsForRegion('Região C')},
-        { id: 'regD', name: 'Região D', role: 'Region', avatar: 'https://placehold.co/100x100', children: getSupervisorsForRegion('Região D')},
-        { id: 'regE', name: 'Região E', role: 'Region', avatar: 'https://placehold.co/100x100', children: getSupervisorsForRegion('Região E')},
-        { id: 'regF', name: 'Região F', role: 'Region', avatar: 'https://placehold.co/100x100', children: getSupervisorsForRegion('Região F')},
-      ]
+      children: regions,
     }
   ]
 };
+
+    

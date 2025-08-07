@@ -22,7 +22,7 @@ export function TreeNode({ node }: { node: OrgNode }) {
             <p className="font-bold text-lg font-headline">{node.name}</p>
             <p className="text-sm text-muted-foreground">{node.role}</p>
           </div>
-          {node.role !== 'Company' && (
+          {node.role !== 'Company' && node.role !== 'Contract' && (
             <Button variant="outline" size="sm" className="mt-2 w-full">
               <MessageCircle className="w-4 h-4 mr-2" /> Message
             </Button>

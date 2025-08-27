@@ -33,7 +33,26 @@ type EmployeeModalProps = {
   editingNode: OrgNode | null;
 };
 
-const defaultRoles = ['Diretor', 'Gerente', 'Coordenador', 'Supervisor'];
+const defaultRoles = [
+    'Diretor', 
+    'Gerente', 
+    'Coordenador', 
+    'Supervisor',
+    'Região',
+    'Contrato',
+    'Apoio',
+    'Mecânico',
+    '1/2 Oficial',
+    'Ajudante',
+    'Eletricista',
+    'Auxiliar de PMOC',
+    'PMOC',
+    'Técnico de Planejamento',
+    'Coordenador de Contratos',
+    'Gerente de Contratos',
+    'Auxiliar Administrativo',
+    'Supervisor de Qualidade'
+];
 
 export function EmployeeModal({ isOpen, onClose, onSave, editingNode }: EmployeeModalProps) {
   const [name, setName] = useState('');

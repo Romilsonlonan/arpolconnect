@@ -5,7 +5,7 @@ import { initialOrgTree, type OrgNode } from '@/lib/data';
 import { TreeNode } from '@/components/organization/tree-node';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
-import { ZoomIn, ZoomOut, RotateCcw, Settings } from 'lucide-react';
+import { ZoomIn, ZoomOut, RotateCcw, Settings, Building } from 'lucide-react';
 import { updateTree } from '@/lib/tree-utils';
 import { ContractSettingsModal } from '@/components/organization/contract-settings-modal';
 
@@ -32,6 +32,8 @@ export default function OrganogramaPage() {
     address: 'N/A',
     responsible: 'N/A',
   });
+  
+  const [nodeContractSettings, setNodeContractSettings] = useState(null);
 
   useEffect(() => {
     setIsClient(true);
@@ -123,6 +125,14 @@ export default function OrganogramaPage() {
     setIsSettingsModalOpen(false);
   };
 
+  const handleNodeContractSettingsChange = (newSettings: any) => {
+    if(nodeContractSettings) {
+        // @ts-ignore
+        handleUpdateNode(nodeContractSettings.id, { contractSettings: newSettings})
+    }
+    setNodeContractSettings(null);
+  }
+
   if (!isClient || !tree) {
     return null;
   }
@@ -164,6 +174,8 @@ export default function OrganogramaPage() {
             onUpdate={handleUpdateNode}
             onAddChild={handleAddChildNode}
             onRemove={handleRemoveNode}
+            onContractSettingsChange={handleSaveSettings}
+            contractSettings={contractSettings}
             isRoot={true}
           />
         </div>

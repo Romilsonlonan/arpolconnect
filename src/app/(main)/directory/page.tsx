@@ -1,217 +1,248 @@
 'use client';
 
-import { useState } from 'react';
-import type { Employee, Supervisor } from '@/lib/data';
-import { employees as allEmployees, supervisors as allSupervisors } from '@/lib/data';
-import { EmployeeCard } from '@/components/directory/employee-card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useState, useMemo } from 'react';
+import { refrigerationQuestions, type RefrigerationQuestion } from '@/lib/data';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  DialogTrigger,
-  DialogClose,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
+import { Progress } from '@/components/ui/progress';
+import Image from 'next/image';
+import { Award, RotateCcw, TrendingUp } from 'lucide-react';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { useToast } from '@/hooks/use-toast';
-import { PlusCircle } from 'lucide-react';
-import { ScrollArea } from '@/components/ui/scroll-area';
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  ChartLegend,
+  ChartLegendContent,
+} from "@/components/ui/chart"
+import { Pie, PieChart } from "recharts"
+import { cn } from '@/lib/utils';
+import Confetti from 'react-dom-confetti';
 
-function SupervisorSection({ supervisor, employees, allSupervisors, onRemoveEmployee }: { supervisor: Supervisor; employees: Employee[], allSupervisors: Supervisor[], onRemoveEmployee: (id: string) => void }) {
+const shuffleArray = (array: any[]) => {
+  return [...array].sort(() => Math.random() - 0.5);
+};
+
+// Componente para o Quiz
+function QuizView({ questions, onComplete }: { questions: RefrigerationQuestion[], onComplete: (answers: Record<string, string>) => void }) {
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+  const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
+
+  const handleSelectAnswer = (questionId: string, answer: string) => {
+    setSelectedAnswers(prev => ({ ...prev, [questionId]: answer }));
+  };
+
+  const handleNext = () => {
+    if (currentQuestionIndex < questions.length - 1) {
+      setCurrentQuestionIndex(prev => prev + 1);
+    } else {
+      onComplete(selectedAnswers);
+    }
+  };
+
+  const currentQuestion = questions[currentQuestionIndex];
+  const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
+
   return (
-    <div className="p-4 border rounded-lg bg-card">
-      <div className="flex items-center gap-4 mb-4">
-        <Avatar>
-          <AvatarImage src={supervisor.avatar} data-ai-hint="person portrait" />
-          <AvatarFallback>{supervisor.name.charAt(0)}</AvatarFallback>
-        </Avatar>
-        <div>
-          <h3 className="font-semibold text-lg">{supervisor.name}</h3>
-          <p className="text-sm text-muted-foreground">{supervisor.email}</p>
+    <Card className="w-full max-w-3xl mx-auto">
+      <CardHeader>
+        <div className='mb-4'>
+            <p className='text-sm text-muted-foreground'>Pergunta {currentQuestionIndex + 1} de {questions.length}</p>
+            <Progress value={progress} className="w-full h-2 mt-2" />
         </div>
-      </div>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {employees.map(employee => (
-          <EmployeeCard key={employee.id} employee={employee} supervisors={allSupervisors} onRemove={onRemoveEmployee} />
-        ))}
-      </div>
-    </div>
+        <Image 
+          src={currentQuestion.image} 
+          alt="Tema da Pergunta" 
+          width={800} 
+          height={400} 
+          className="rounded-lg object-cover aspect-[2/1] bg-muted"
+          data-ai-hint={currentQuestion.imageHint}
+        />
+        <CardTitle className="pt-4 text-xl">{currentQuestion.question}</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <RadioGroup
+          value={selectedAnswers[currentQuestion.id] || ''}
+          onValueChange={(value) => handleSelectAnswer(currentQuestion.id, value)}
+          className="grid gap-4"
+        >
+          {currentQuestion.options.map((option, index) => (
+            <Label
+              key={index}
+              className={cn(
+                  "flex items-center gap-4 border rounded-lg p-4 cursor-pointer hover:bg-accent/50 transition-colors",
+                  selectedAnswers[currentQuestion.id] === option && "bg-accent border-primary"
+              )}
+            >
+              <RadioGroupItem value={option} id={`q${currentQuestion.id}-o${index}`} />
+              <span>{option}</span>
+            </Label>
+          ))}
+        </RadioGroup>
+        <Button onClick={handleNext} className="w-full mt-6" disabled={!selectedAnswers[currentQuestion.id]}>
+          {currentQuestionIndex < questions.length - 1 ? 'Próxima Pergunta' : 'Finalizar Avaliação'}
+        </Button>
+      </CardContent>
+    </Card>
   );
 }
 
-function AddEmployeeDialog({ supervisors, onAddEmployee }: { supervisors: Supervisor[], onAddEmployee: (employee: Employee) => void }) {
-    const [name, setName] = useState('');
-    const [role, setRole] = useState<Employee['role']>('Mechanic');
-    const [email, setEmail] = useState('');
-    const [phone, setPhone] = useState('');
-    const [contract, setContract] = useState('');
-    const [supervisorId, setSupervisorId] = useState('');
-    const [avatar, setAvatar] = useState('https://placehold.co/100x100');
-    const { toast } = useToast();
+// Componente para o Certificado
+function CertificateView({ score, total, onRestart }: { score: number; total: number; onRestart: () => void }) {
+    const [isConfettiActive, setIsConfettiActive] = useState(false);
 
-    const handleAddEmployee = () => {
-        if (!name || !role || !email || !phone || !contract || !supervisorId) {
-            toast({
-                variant: 'destructive',
-                title: 'Erro',
-                description: 'Por favor, preencha todos os campos.',
-            });
-            return;
-        }
-
-        const newEmployee: Employee = {
-            id: `emp${Date.now()}`,
-            name,
-            role,
-            email,
-            phone,
-            contract,
-            supervisorId,
-            avatar,
-        };
-        onAddEmployee(newEmployee);
-        toast({
-            title: 'Funcionário Adicionado',
-            description: `${name} foi adicionado com sucesso.`,
-        });
-
-        // Reset form
-        setName('');
-        setRole('Mechanic');
-        setEmail('');
-        setPhone('');
-        setContract('');
-        setSupervisorId('');
-    };
-
+    useState(() => {
+        setTimeout(() => setIsConfettiActive(true), 300);
+    });
+    
     return (
-        <Dialog>
-            <DialogTrigger asChild>
-                <Button>
-                    <PlusCircle className="mr-2" />
-                    Adicionar Funcionário
-                </Button>
-            </DialogTrigger>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Adicionar Novo Funcionário</DialogTitle>
-                    <DialogDescription>
-                        Preencha os detalhes abaixo para adicionar um novo funcionário.
-                    </DialogDescription>
-                </DialogHeader>
-                 <ScrollArea className="max-h-[70vh]">
-                    <div className="grid gap-4 py-4 px-2">
-                        <div className="grid gap-2">
-                            <Label htmlFor="name">Nome</Label>
-                            <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
-                        </div>
-                        <div className="grid gap-2">
-                            <Label htmlFor="role">Função</Label>
-                            <Select onValueChange={(value: Employee['role']) => setRole(value)} value={role}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Selecione a função" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="Mechanic">Mechanic</SelectItem>
-                                    <SelectItem value="Electrician">Electrician</SelectItem>
-                                    <SelectItem value="Assistant">Assistant</SelectItem>
-                                    <SelectItem value="Artificer">Artificer</SelectItem>
-                                    <SelectItem value="Half-Official">Half-Official</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                         <div className="grid gap-2">
-                            <Label htmlFor="email">Email</Label>
-                            <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
-                        </div>
-                         <div className="grid gap-2">
-                            <Label htmlFor="phone">Telefone</Label>
-                            <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
-                        </div>
-                        <div className="grid gap-2">
-                            <Label htmlFor="contract">Contrato</Label>
-                            <Input id="contract" value={contract} onChange={(e) => setContract(e.target.value)} />
-                        </div>
-                        <div className="grid gap-2">
-                            <Label htmlFor="supervisor">Supervisor</Label>
-                            <Select onValueChange={setSupervisorId} value={supervisorId}>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Selecione um supervisor" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {supervisors.map(supervisor => (
-                                        <SelectItem key={supervisor.id} value={supervisor.id}>
-                                            {supervisor.name}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </div>
-                </ScrollArea>
-                <DialogFooter>
-                    <DialogClose asChild>
-                        <Button type="button" variant="secondary">Cancelar</Button>
-                    </DialogClose>
-                    <DialogClose asChild>
-                        <Button type="submit" onClick={handleAddEmployee}>Salvar</Button>
-                    </DialogClose>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
+        <div className="w-full max-w-3xl mx-auto text-center relative">
+            <div className='absolute top-1/2 left-1/2'>
+                <Confetti active={isConfettiActive} config={{
+                    angle: 90,
+                    spread: 360,
+                    startVelocity: 40,
+                    elementCount: 100,
+                    dragFriction: 0.12,
+                    duration: 3000,
+                    stagger: 3,
+                    width: "10px",
+                    height: "10px",
+                    perspective: "500px",
+                    colors: ["#a864fd", "#29cdff", "#78ff44", "#ff718d", "#fdff6a"]
+                }} />
+            </div>
+            <Card className="bg-card border-2 border-primary shadow-lg overflow-hidden">
+                <CardHeader className="bg-primary/10 p-8">
+                    <Award className="w-20 h-20 mx-auto text-primary" />
+                    <h1 className="text-4xl font-bold font-headline mt-4">Certificado de Conclusão</h1>
+                    <p className="text-muted-foreground text-lg mt-2">Avaliação de Qualificação em Refrigeração</p>
+                </CardHeader>
+                <CardContent className="p-8">
+                    <p className="text-xl">Este certificado é concedido a</p>
+                    <p className="text-3xl font-bold my-4">Funcionário da Arpolar</p>
+                    <p className="text-xl">por concluir com sucesso a avaliação, demonstrando proficiência e conhecimento em sistemas de refrigeração.</p>
+                    <p className="font-semibold text-2xl mt-6">Pontuação: {score} / {total}</p>
+                    <p className="text-muted-foreground mt-4">{new Date().toLocaleDateString('pt-BR', { dateStyle: 'long' })}</p>
+                </CardContent>
+            </Card>
+            <Button onClick={onRestart} className="mt-8">
+                <RotateCcw className="mr-2" />
+                Refazer Avaliação
+            </Button>
+        </div>
     );
 }
 
-
-export default function DirectoryPage() {
-  const [employees, setEmployees] = useState<Employee[]>(allEmployees);
-  const [supervisors] = useState<Supervisor[]>(allSupervisors);
-  const { toast } = useToast();
-
-  const handleAddEmployee = (employee: Employee) => {
-    setEmployees(prev => [...prev, employee]);
-  };
-
-  const handleRemoveEmployee = (id: string) => {
-    setEmployees(prev => prev.filter(e => e.id !== id));
-    toast({
-      title: "Funcionário Removido",
-      description: "O funcionário foi removido do diretório.",
-      variant: "destructive"
-    })
+// Componente para a Tela de Resultados (Reprovado)
+function ResultsView({ score, total, onRestart }: { score: number; total: number; onRestart: () => void }) {
+  const chartData = [
+    { name: 'Acertos', value: score, fill: 'hsl(var(--status-resolved))' },
+    { name: 'Erros', value: total - score, fill: 'hsl(var(--destructive))' },
+  ];
+  
+  const chartConfig = {
+      acertos: { label: "Acertos" },
+      erros: { label: "Erros" },
   }
 
   return (
-    <>
-      <div className="flex flex-col sm:flex-row items-start sm:items-center mb-6 gap-4">
-        <h1 className="text-lg font-semibold md:text-2xl font-headline">Diretório de Funcionários</h1>
-        <div className="ml-0 sm:ml-auto">
-            <AddEmployeeDialog supervisors={supervisors} onAddEmployee={handleAddEmployee} />
-        </div>
-      </div>
-      <div className="space-y-6">
-        {supervisors.map(supervisor => (
-          <SupervisorSection
-            key={supervisor.id}
-            supervisor={supervisor}
-            employees={employees.filter(e => e.supervisorId === supervisor.id)}
-            allSupervisors={supervisors}
-            onRemoveEmployee={handleRemoveEmployee}
-          />
-        ))}
-      </div>
-    </>
+    <Card className="w-full max-w-3xl mx-auto text-center">
+      <CardHeader>
+        <TrendingUp className="w-16 h-16 mx-auto text-destructive" />
+        <CardTitle className="text-3xl font-bold mt-4">Resultado da Avaliação</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="text-lg mb-4">Você não atingiu a pontuação mínima de 80% para aprovação.</p>
+        <p className="text-5xl font-bold mb-6">{score} <span className="text-3xl text-muted-foreground">/ {total}</span></p>
+
+         <ChartContainer config={chartConfig} className="mx-auto aspect-square h-[200px]">
+            <PieChart>
+                <ChartTooltip
+                    cursor={false}
+                    content={<ChartTooltipContent hideLabel />}
+                />
+                <Pie
+                    data={chartData}
+                    dataKey="value"
+                    nameKey="name"
+                    innerRadius={60}
+                    strokeWidth={5}
+                >
+                </Pie>
+                 <ChartLegend
+                    content={<ChartLegendContent nameKey="name" />}
+                    className="-mt-2"
+                />
+            </PieChart>
+        </ChartContainer>
+        
+        <p className="text-muted-foreground mt-6">Estude um pouco mais e tente novamente!</p>
+        <Button onClick={onRestart} className="mt-6">
+          <RotateCcw className="mr-2" />
+          Tentar Novamente
+        </Button>
+      </CardContent>
+    </Card>
   );
+}
+
+
+export default function EvaluationPage() {
+  const [quizState, setQuizState] = useState<'not_started' | 'in_progress' | 'completed'>('not_started');
+  const [userAnswers, setUserAnswers] = useState<Record<string, string>>({});
+  const [shuffledQuestions, setShuffledQuestions] = useState<RefrigerationQuestion[]>([]);
+
+  const startQuiz = () => {
+    setShuffledQuestions(shuffleArray(refrigerationQuestions).slice(0, 20));
+    setUserAnswers({});
+    setQuizState('in_progress');
+  };
+  
+  const handleQuizComplete = (answers: Record<string, string>) => {
+    setUserAnswers(answers);
+    setQuizState('completed');
+  };
+
+  const score = useMemo(() => {
+    return shuffledQuestions.reduce((correctCount, question) => {
+      if (userAnswers[question.id] === question.correctAnswer) {
+        return correctCount + 1;
+      }
+      return correctCount;
+    }, 0);
+  }, [userAnswers, shuffledQuestions]);
+
+  const passingScore = shuffledQuestions.length * 0.8;
+  const isApproved = score >= passingScore;
+
+  if (quizState === 'not_started') {
+    return (
+      <div className="text-center">
+        <h1 className="text-3xl font-bold font-headline mb-4">Avaliação de Qualificação em Refrigeração</h1>
+        <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">
+          Teste seus conhecimentos para garantir que você está afiado com as melhores práticas em refrigeração.
+          Responda 20 perguntas e receba seu certificado de qualificação.
+        </p>
+        <Button size="lg" onClick={startQuiz}>
+          Iniciar Avaliação
+        </Button>
+      </div>
+    );
+  }
+
+  if (quizState === 'in_progress') {
+    return <QuizView questions={shuffledQuestions} onComplete={handleQuizComplete} />;
+  }
+
+  if (quizState === 'completed') {
+    if (isApproved) {
+        return <CertificateView score={score} total={shuffledQuestions.length} onRestart={startQuiz} />;
+    } else {
+        return <ResultsView score={score} total={shuffledQuestions.length} onRestart={startQuiz} />;
+    }
+  }
+
+  return null;
 }

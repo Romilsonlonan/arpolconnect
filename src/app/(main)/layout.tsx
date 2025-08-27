@@ -1,5 +1,3 @@
-
-
 'use client';
 
 import Link from 'next/link';
@@ -11,6 +9,7 @@ import {
   Search,
   Users,
   GitMerge,
+  FileText,
 } from 'lucide-react';
 
 import {
@@ -46,7 +45,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
     const navItems = [
       { href: '/dashboard', icon: <Home />, label: 'Painel' },
       { href: '/organograma', icon: <GitMerge />, label: 'Organograma' },
-      { href: '/directory', icon: <Users />, label: 'Diretório' },
+      { href: '/directory', icon: <FileText />, label: 'Avaliação' },
     ];
 
     return (

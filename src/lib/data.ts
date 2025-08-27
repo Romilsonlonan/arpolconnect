@@ -1,4 +1,5 @@
 
+
 export type Employee = {
   id: string;
   name: string;
@@ -30,10 +31,20 @@ export type Message = {
 export type OrgNode = {
   id: string;
   name: string;
-  role: string;
+  role: 'Empresa' | 'Diretor' | 'Gerente' | 'Coordenador' | 'Supervisor' | string;
+  contact?: string;
+  contract?: string;
   avatar: string;
   children?: OrgNode[];
 }
+
+export const initialOrgTree: OrgNode = {
+  id: 'arpolar',
+  name: 'Arpolar',
+  role: 'Empresa',
+  avatar: 'https://i.ibb.co/xK3VPgL/logo-arpolar.png',
+  children: []
+};
 
 export const supervisors: Supervisor[] = [
   { id: 'sup1', name: 'Carlos Ferreira', email: 'carlos.f@arpolar.com', avatar: 'https://placehold.co/100x100', region: 'Região A' },
@@ -73,47 +84,13 @@ export const messages: Message[] = [
   { id: 'msg4', title: 'Resolved: Client Complaint', content: 'The issue with the thermostat at Contract B has been resolved and the client is satisfied.', author: 'Supervisor A', createdAt: new Date(now.getTime() - 100 * 60 * 60 * 1000).toISOString(), status: 'resolved' },
 ];
 
-const getEmployeesForContract = (supervisorId: string, contractName: string): OrgNode[] => {
-    return employees
-        .filter(e => e.supervisorId === supervisorId && e.contract === contractName)
-        .map(e => ({
-            id: e.id,
-            name: e.name,
-            role: e.role,
-            avatar: e.avatar,
-        }));
-};
-
-const getContractsForSupervisor = (supervisorId: string): OrgNode[] => {
-    const contracts = [...new Set(employees.filter(e => e.supervisorId === supervisorId).map(e => e.contract))];
-    return contracts.map(contractName => ({
-        id: `${supervisorId}-${contractName}`,
-        name: contractName,
-        role: 'Contract',
-        avatar: 'https://placehold.co/100x100', // Placeholder for contract icon/logo
-        children: getEmployeesForContract(supervisorId, contractName),
-    }));
-};
-
-const getSupervisorsForRegion = (regionName: string): OrgNode[] => {
-    return supervisors
-        .filter(s => s.region === regionName)
-        .map(s => ({
-            id: s.id,
-            name: s.name,
-            role: 'Supervisor',
-            avatar: s.avatar,
-            children: getContractsForSupervisor(s.id),
-        }));
-};
-
-const regions: OrgNode[] = [
-    { id: 'regA', name: 'Região A', role: 'Region', avatar: 'https://placehold.co/100x100', children: getSupervisorsForRegion('Região A')},
-    { id: 'regB', name: 'Região B', role: 'Region', avatar: 'https://placehold.co/100x100', children: getSupervisorsForRegion('Região B')},
-    { id: 'regC', name: 'Região C', role: 'Region', avatar: 'https://placehold.co/100x100', children: getSupervisorsForRegion('Região C')},
-    { id: 'regD', name: 'Região D', role: 'Region', avatar: 'https://placehold.co/100x100', children: getSupervisorsForRegion('Região D')},
-    { id: 'regE', name: 'Região E', role: 'Region', avatar: 'https://placehold.co/100x100', children: getSupervisorsForRegion('Região E')},
-    { id: 'regF', name: 'Região F', role: 'Region', avatar: 'https://placehold.co/100x100', children: getSupervisorsForRegion('Região F')},
+export const contractList = [
+    'Contrato A',
+    'Contrato B',
+    'Contrato C',
+    'Contrato D',
+    'Contrato E',
+    'Contrato F'
 ];
 
 export const organizationTree: OrgNode = {
@@ -164,13 +141,6 @@ export const organizationTree: OrgNode = {
               role: 'Corretiva',
               avatar: 'https://placehold.co/100x100',
             },
-            {
-              id: 'regionRoot',
-              name: 'Regiões',
-              role: 'Regions',
-              avatar: 'https://placehold.co/100x100',
-              children: regions,
-            }
           ]
         }
       ]

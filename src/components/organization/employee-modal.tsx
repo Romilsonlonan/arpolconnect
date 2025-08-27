@@ -22,6 +22,7 @@ import {
 } from '@/components/ui/select';
 import type { OrgNode } from '@/lib/data';
 import { contractList } from '@/lib/data';
+import { getAvatar } from '@/lib/avatar-storage';
 import { ScrollArea } from '../ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Upload } from 'lucide-react';
@@ -54,12 +55,14 @@ const defaultRoles = [
     'Supervisor de Qualidade'
 ];
 
+const PLACEHOLDER_AVATAR = 'https://placehold.co/100x100';
+
 export function EmployeeModal({ isOpen, onClose, onSave, editingNode }: EmployeeModalProps) {
   const [name, setName] = useState('');
   const [role, setRole] = useState('');
   const [contact, setContact] = useState('');
   const [contract, setContract] = useState('');
-  const [avatar, setAvatar] = useState('https://placehold.co/100x100');
+  const [avatar, setAvatar] = useState(PLACEHOLDER_AVATAR);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
 
@@ -69,14 +72,15 @@ export function EmployeeModal({ isOpen, onClose, onSave, editingNode }: Employee
       setRole(editingNode.role);
       setContact(editingNode.contact || '');
       setContract(editingNode.contract || '');
-      setAvatar(editingNode.avatar || 'https://placehold.co/100x100');
+      const storedAvatar = getAvatar(editingNode.id);
+      setAvatar(storedAvatar || editingNode.avatar || PLACEHOLDER_AVATAR);
     } else {
       // Reset form when adding a new node
       setName('');
       setRole('');
       setContact('');
       setContract('');
-      setAvatar('https://placehold.co/100x100');
+      setAvatar(PLACEHOLDER_AVATAR);
     }
   }, [editingNode, isOpen]);
 
@@ -86,6 +90,8 @@ export function EmployeeModal({ isOpen, onClose, onSave, editingNode }: Employee
       return;
     }
 
+    // The `avatar` state here is a data URL. 
+    // The parent component (`OrganogramaPage`) is responsible for saving it to storage.
     onSave({
       name,
       role,
@@ -99,6 +105,10 @@ export function EmployeeModal({ isOpen, onClose, onSave, editingNode }: Employee
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        alert("File is too large. Please select an image smaller than 5MB.");
+        return;
+      }
       const reader = new FileReader();
       reader.onloadend = () => {
         setAvatar(reader.result as string);

@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import type { OrgNode } from '@/lib/data';
+import { getAvatar } from '@/lib/avatar-storage';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -33,11 +34,26 @@ type TreeNodeProps = {
   isRoot?: boolean;
 };
 
-export function TreeNode({ node, onUpdate, onAddChild, onRemove, onContractSettingsChange, onOpenTicketModal, onToggleVisibility, contractSettings, isRoot = false }: TreeNodeProps) {
-  const getInitials = (name: string) => {
-    return name.split(' ').map(n => n[0]).join('').substring(0, 2);
-  }
+function NodeAvatar({ node }: { node: OrgNode }) {
+    const [avatarUrl, setAvatarUrl] = useState(node.avatar);
 
+    useEffect(() => {
+        // Fetch avatar from localStorage on the client
+        const url = getAvatar(node.id);
+        if (url) {
+            setAvatarUrl(url);
+        }
+    }, [node.id, node.avatar]);
+
+    return (
+        <Avatar className="w-16 h-16 border-2 border-primary">
+            <AvatarImage src={avatarUrl} data-ai-hint="person portrait" />
+            <AvatarFallback>{node.name.split(' ').map(n => n[0]).join('').substring(0, 2)}</AvatarFallback>
+        </Avatar>
+    );
+}
+
+export function TreeNode({ node, onUpdate, onAddChild, onRemove, onContractSettingsChange, onOpenTicketModal, onToggleVisibility, contractSettings, isRoot = false }: TreeNodeProps) {
   const [employeeModalOpen, setEmployeeModalOpen] = useState(false);
   const [contractModalOpen, setContractModalOpen] = useState(false);
   const [editingNode, setEditingNode] = useState<OrgNode | null>(null);
@@ -73,10 +89,7 @@ export function TreeNode({ node, onUpdate, onAddChild, onRemove, onContractSetti
         "bg-card"
         )}>
         <CardContent className="p-4 flex flex-col items-center gap-2">
-          <Avatar className="w-16 h-16 border-2 border-primary">
-            <AvatarImage src={node.avatar} data-ai-hint="person portrait" />
-            <AvatarFallback>{getInitials(node.name)}</AvatarFallback>
-          </Avatar>
+          <NodeAvatar node={node} />
           <div className="mt-2">
             <p className="font-bold text-lg font-headline">{node.name}</p>
             <p className="text-sm text-muted-foreground">{node.role}</p>

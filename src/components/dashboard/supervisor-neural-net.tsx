@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { initialOrgTree, type OrgNode } from '@/lib/data';
+import { getAvatar } from '@/lib/avatar-storage';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Logo } from '../icons/logo';
 import {
@@ -31,6 +32,25 @@ function getVisibleNodes(tree: OrgNode): OrgNode[] {
 
     findVisible(tree);
     return visibleNodes;
+}
+
+function NodeAvatar({ node }: { node: OrgNode }) {
+    const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+
+    useEffect(() => {
+        // Fetch avatar from localStorage on the client
+        const url = getAvatar(node.id);
+        setAvatarUrl(url);
+    }, [node.id]);
+
+    const finalAvatarUrl = avatarUrl || node.avatar;
+
+    return (
+        <Avatar className="w-16 h-16 border-4 border-background shadow-lg hover:scale-110 transition-transform cursor-pointer">
+            <AvatarImage src={finalAvatarUrl} alt={node.name} data-ai-hint="person portrait" />
+            <AvatarFallback>{node.name.substring(0, 2)}</AvatarFallback>
+        </Avatar>
+    );
 }
 
 
@@ -110,10 +130,7 @@ export function SupervisorNeuralNet() {
                                             transform: `translate(-50%, -50%) translate(${x}px, ${y}px)`
                                         }}
                                     >
-                                        <Avatar className="w-16 h-16 border-4 border-background shadow-lg hover:scale-110 transition-transform cursor-pointer">
-                                            <AvatarImage src={supervisor.avatar} alt={supervisor.name} data-ai-hint="person portrait" />
-                                            <AvatarFallback>{supervisor.name.substring(0, 2)}</AvatarFallback>
-                                        </Avatar>
+                                        <NodeAvatar node={supervisor} />
                                     </div>
                                 </TooltipTrigger>
                                 <TooltipContent>

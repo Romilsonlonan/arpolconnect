@@ -10,6 +10,7 @@ import { updateTree } from '@/lib/tree-utils';
 import { ContractSettingsModal } from '@/components/organization/contract-settings-modal';
 import { TicketModal } from '@/components/organization/ticket-modal';
 import type { Message } from '@/lib/data';
+import { saveAvatar } from '@/lib/avatar-storage';
 
 const ORG_CHART_STORAGE_KEY = 'orgChartTree';
 const CONTRACT_SETTINGS_STORAGE_KEY = 'contractSettings';
@@ -23,6 +24,21 @@ type ContractSettings = {
   address: string;
   responsible: string;
 };
+
+// Helper function to migrate old base64 avatars to the new storage
+function migrateAvatars(node: OrgNode, isRoot = true): OrgNode {
+  // Don't process the root node's avatar as it's a placeholder
+  if (!isRoot && node.avatar && node.avatar.startsWith('data:image')) {
+    saveAvatar(node.id, node.avatar);
+    // The avatar property now just needs to be a reference, but we can keep it as the ID.
+    // The display components will know how to fetch it.
+  }
+  if (node.children) {
+    node.children = node.children.map(child => migrateAvatars(child, false));
+  }
+  return node;
+}
+
 
 export default function OrganogramaPage() {
   const [zoom, setZoom] = useState(1);
@@ -48,11 +64,13 @@ export default function OrganogramaPage() {
       const savedTree = localStorage.getItem(ORG_CHART_STORAGE_KEY);
       const savedSettings = localStorage.getItem(CONTRACT_SETTINGS_STORAGE_KEY);
       
+      let treeToLoad = initialOrgTree;
       if (savedTree) {
-        setTree(JSON.parse(savedTree));
-      } else {
-        setTree(initialOrgTree);
+        let parsedTree = JSON.parse(savedTree);
+        // Run migration for old avatar data structure
+        treeToLoad = migrateAvatars(parsedTree);
       }
+      setTree(treeToLoad);
 
       if (savedSettings) {
         setContractSettings(JSON.parse(savedSettings));
@@ -68,7 +86,17 @@ export default function OrganogramaPage() {
     if (isClient) {
       if (tree) {
         try {
-          localStorage.setItem(ORG_CHART_STORAGE_KEY, JSON.stringify(tree));
+          // Create a version of the tree for storage that does NOT include base64 avatars
+          const treeForStorage = updateTree(tree, (node) => {
+            const newNode = { ...node };
+            if (newNode.avatar?.startsWith('data:image')) {
+              // This is a safety net. The main logic now relies on EmployeeModal saving correctly.
+              // We replace the avatar with the ID reference for storage.
+              saveAvatar(newNode.id, newNode.avatar);
+            }
+            return newNode;
+          });
+          localStorage.setItem(ORG_CHART_STORAGE_KEY, JSON.stringify(treeForStorage));
         } catch (error) {
           console.error("Failed to save org chart to localStorage", error);
         }
@@ -85,6 +113,10 @@ export default function OrganogramaPage() {
     if (!tree) return;
     const newTree = updateTree(tree, (node) => {
       if (node.id === nodeId) {
+        // If a new avatar data URL is passed, save it separately
+        if (values.avatar && values.avatar.startsWith('data:image')) {
+            saveAvatar(nodeId, values.avatar);
+        }
         return { ...node, ...values };
       }
       return node;
@@ -108,12 +140,17 @@ export default function OrganogramaPage() {
     if (!tree) return;
     const newTree = updateTree(tree, (node) => {
       if (node.id === parentId) {
+        const newNodeId = `node-${Date.now()}-${Math.random()}`;
         const newNode: OrgNode = {
           ...child,
-          id: `node-${Date.now()}-${Math.random()}`,
+          id: newNodeId,
           children: [],
           showInNeuralNet: true,
         };
+        // If a new avatar data URL is passed, save it separately
+        if (newNode.avatar && newNode.avatar.startsWith('data:image')) {
+            saveAvatar(newNodeId, newNode.avatar);
+        }
         return { ...node, children: [...(node.children || []), newNode] };
       }
       return node;

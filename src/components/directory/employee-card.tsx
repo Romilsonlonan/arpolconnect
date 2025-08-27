@@ -1,6 +1,8 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import type { Employee, Supervisor } from '@/lib/data';
+import { getAvatar } from '@/lib/avatar-storage';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -35,6 +37,25 @@ import {
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 
+function EmployeeAvatar({ employee }: { employee: Employee }) {
+    const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+
+    useEffect(() => {
+        // Fetch avatar from localStorage on the client
+        const url = getAvatar(employee.id);
+        setAvatarUrl(url);
+    }, [employee.id]);
+
+    const finalAvatarUrl = avatarUrl || employee.avatar;
+
+    return (
+        <Avatar className="w-16 h-16">
+            <AvatarImage src={finalAvatarUrl} data-ai-hint="person portrait" />
+            <AvatarFallback>{employee.name.charAt(0)}</AvatarFallback>
+        </Avatar>
+    );
+}
+
 export function EmployeeCard({ employee, supervisors, onRemove }: { employee: Employee; supervisors: Supervisor[]; onRemove: (id: string) => void; }) {
   const { toast } = useToast();
 
@@ -49,10 +70,7 @@ export function EmployeeCard({ employee, supervisors, onRemove }: { employee: Em
     <Card className="flex flex-col">
       <CardHeader>
         <div className="flex items-center gap-4">
-          <Avatar className="w-16 h-16">
-            <AvatarImage src={employee.avatar} data-ai-hint="person portrait" />
-            <AvatarFallback>{employee.name.charAt(0)}</AvatarFallback>
-          </Avatar>
+          <EmployeeAvatar employee={employee} />
           <div>
             <h4 className="font-semibold text-lg">{employee.name}</h4>
             <p className="text-sm text-muted-foreground">{employee.role}</p>

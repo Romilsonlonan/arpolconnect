@@ -25,9 +25,10 @@ type TreeNodeProps = {
   onUpdate: (nodeId: string, values: Partial<OrgNode>) => void;
   onAddChild: (parentId: string, child: Omit<OrgNode, 'children' | 'id'>) => void;
   onRemove: (nodeId: string) => void;
+  isRoot?: boolean;
 };
 
-export function TreeNode({ node, onUpdate, onAddChild, onRemove }: TreeNodeProps) {
+export function TreeNode({ node, onUpdate, onAddChild, onRemove, isRoot = false }: TreeNodeProps) {
   const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').substring(0, 2);
   }

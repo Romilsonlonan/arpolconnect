@@ -69,13 +69,16 @@ export default function OrganogramaPage() {
 
   const handleRemoveNode = (nodeId: string) => {
     if (!tree) return;
+    
+    // If we are removing the root node
     if (nodeId === tree.id) {
-       setTree(null);
+       setTree(null); // This will cause the component to unmount or show nothing
        localStorage.removeItem(ORG_CHART_STORAGE_KEY);
-       // Re-initialize with a default if the root is removed
+       // Option: re-initialize with a default if you always want a root
        setTimeout(() => setTree(initialOrgTree), 0);
        return;
     }
+
     const newTree = updateTree(tree, (node) => {
       if (node.children) {
         node.children = node.children.filter(child => child.id !== nodeId);
@@ -111,7 +114,7 @@ export default function OrganogramaPage() {
       </div>
       <div
         className="flex-grow overflow-auto p-4 rounded-lg mt-4 bg-cover bg-center"
-        style={{ backgroundImage: "url('https://i.ibb.co/Jqj3w8G')" }}
+        style={{ backgroundImage: "url('https://i.ibb.co/6yvsb3S/image.png')" }}
       >
         <div
           className="transition-transform duration-300"
@@ -122,6 +125,7 @@ export default function OrganogramaPage() {
             onUpdate={handleUpdateNode}
             onAddChild={handleAddChildNode}
             onRemove={handleRemoveNode}
+            isRoot={true}
           />
         </div>
       </div>

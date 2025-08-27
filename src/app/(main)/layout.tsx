@@ -44,7 +44,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
     const { open } = useSidebar();
 
     const navItems = [
-      { href: '/dashboard', icon: <Home />, label: 'Dashboard' },
+      { href: '/dashboard', icon: <Home />, label: 'Painel' },
       { href: '/organograma', icon: <GitMerge />, label: 'Organograma' },
       { href: '/directory', icon: <Users />, label: 'Diretório' },
     ];

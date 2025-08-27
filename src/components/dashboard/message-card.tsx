@@ -38,7 +38,7 @@ export function MessageCard({ message }: { message: Message }) {
       case 'Crítico':
         return { label: 'Crítico', colorClass: 'bg-status-critical text-white', pulse: true };
       case 'Atenção':
-        return { label: 'Atenção', colorClass: 'bg-status-warning', pulse: true };
+        return { label: 'Atenção', colorClass: 'bg-destructive', pulse: true };
       case 'Rotina':
       default:
         return { label: 'Rotina', colorClass: 'bg-status-new', pulse: false };

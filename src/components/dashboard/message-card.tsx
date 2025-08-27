@@ -55,7 +55,7 @@ export function MessageCard({ message }: { message: Message }) {
               <TooltipTrigger>
                 <div
                   className={cn(
-                    "flex items-center justify-center h-6 w-6 rounded-full",
+                    "flex items-center justify-center h-7 w-7 rounded-full",
                     statusInfo.colorClass,
                     statusInfo.pulse && 'animate-pulse'
                   )}

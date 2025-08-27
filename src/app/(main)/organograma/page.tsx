@@ -114,7 +114,7 @@ export default function OrganogramaPage() {
       </div>
       <div
         className="flex-grow overflow-auto p-4 rounded-lg mt-4 bg-cover bg-center"
-        style={{ backgroundImage: "url('https://i.ibb.co/6yvsb3S/image.png')" }}
+        style={{ backgroundImage: "url('https://i.ibb.co/zVzbGD/fundoaqc.jpg')" }}
       >
         <div
           className="transition-transform duration-300"

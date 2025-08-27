@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -23,6 +23,8 @@ import {
 import type { OrgNode } from '@/lib/data';
 import { contractList } from '@/lib/data';
 import { ScrollArea } from '../ui/scroll-area';
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+import { Upload } from 'lucide-react';
 
 type EmployeeModalProps = {
   isOpen: boolean;
@@ -38,6 +40,9 @@ export function EmployeeModal({ isOpen, onClose, onSave, editingNode }: Employee
   const [role, setRole] = useState('');
   const [contact, setContact] = useState('');
   const [contract, setContract] = useState('');
+  const [avatar, setAvatar] = useState('https://placehold.co/100x100');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
 
   useEffect(() => {
     if (editingNode) {
@@ -45,12 +50,14 @@ export function EmployeeModal({ isOpen, onClose, onSave, editingNode }: Employee
       setRole(editingNode.role);
       setContact(editingNode.contact || '');
       setContract(editingNode.contract || '');
+      setAvatar(editingNode.avatar || 'https://placehold.co/100x100');
     } else {
       // Reset form when adding a new node
       setName('');
       setRole('');
       setContact('');
       setContract('');
+      setAvatar('https://placehold.co/100x100');
     }
   }, [editingNode, isOpen]);
 
@@ -65,9 +72,20 @@ export function EmployeeModal({ isOpen, onClose, onSave, editingNode }: Employee
       role,
       contact,
       contract,
-      avatar: 'https://placehold.co/100x100', // Default or generate a placeholder
+      avatar,
     });
     onClose();
+  };
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAvatar(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
   };
 
   return (
@@ -81,6 +99,24 @@ export function EmployeeModal({ isOpen, onClose, onSave, editingNode }: Employee
         </DialogHeader>
         <ScrollArea className="max-h-[70vh] -mx-6">
             <div className="grid gap-4 py-4 px-6">
+            <div className="grid gap-2 items-center justify-center text-center">
+                <Avatar className="w-24 h-24 mx-auto border-2 border-primary">
+                    <AvatarImage src={avatar} data-ai-hint="person portrait" />
+                    <AvatarFallback>{name.charAt(0)}</AvatarFallback>
+                </Avatar>
+                <Input 
+                    id="avatar-upload"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    ref={fileInputRef}
+                    onChange={handleAvatarChange}
+                />
+                 <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
+                    <Upload className="mr-2" />
+                    Carregar Imagem
+                </Button>
+            </div>
             <div className="grid gap-2">
                 <Label htmlFor="name">Nome</Label>
                 <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />

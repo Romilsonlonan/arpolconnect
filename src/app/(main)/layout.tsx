@@ -46,7 +46,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
     const navItems = [
       { href: '/dashboard', icon: <Home />, label: 'Dashboard' },
       { href: '/organograma', icon: <GitMerge />, label: 'Organograma' },
-      { href: '/directory', icon: <Users />, label: 'Directory' },
+      { href: '/directory', icon: <Users />, label: 'Diretório' },
     ];
 
     return (

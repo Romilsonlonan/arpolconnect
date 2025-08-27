@@ -12,7 +12,7 @@ const ORG_CHART_STORAGE_KEY = 'orgChartTree';
 
 export default function OrganogramaPage() {
   const [zoom, setZoom] = useState(1);
-  const [tree, setTree] = useState<OrgNode>(initialOrgTree);
+  const [tree, setTree] = useState<OrgNode | null>(null);
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -21,14 +21,17 @@ export default function OrganogramaPage() {
       const savedTree = localStorage.getItem(ORG_CHART_STORAGE_KEY);
       if (savedTree) {
         setTree(JSON.parse(savedTree));
+      } else {
+        setTree(initialOrgTree);
       }
     } catch (error) {
       console.error("Failed to parse org chart from localStorage", error);
+      setTree(initialOrgTree);
     }
   }, []);
 
   useEffect(() => {
-    if (isClient) {
+    if (isClient && tree) {
       try {
         localStorage.setItem(ORG_CHART_STORAGE_KEY, JSON.stringify(tree));
       } catch (error) {
@@ -38,6 +41,7 @@ export default function OrganogramaPage() {
   }, [tree, isClient]);
 
   const handleUpdateNode = (nodeId: string, values: Partial<OrgNode>) => {
+    if (!tree) return;
     const newTree = updateTree(tree, (node) => {
       if (node.id === nodeId) {
         return { ...node, ...values };
@@ -48,6 +52,7 @@ export default function OrganogramaPage() {
   };
 
   const handleAddChildNode = (parentId: string, child: Omit<OrgNode, 'children' | 'id'>) => {
+    if (!tree) return;
     const newTree = updateTree(tree, (node) => {
       if (node.id === parentId) {
         const newNode: OrgNode = {
@@ -63,9 +68,13 @@ export default function OrganogramaPage() {
   };
 
   const handleRemoveNode = (nodeId: string) => {
+    if (!tree) return;
     if (nodeId === tree.id) {
-      alert("Não é possível remover o nó raiz.");
-      return;
+       setTree(null);
+       localStorage.removeItem(ORG_CHART_STORAGE_KEY);
+       // Re-initialize with a default if the root is removed
+       setTimeout(() => setTree(initialOrgTree), 0);
+       return;
     }
     const newTree = updateTree(tree, (node) => {
       if (node.children) {
@@ -76,8 +85,8 @@ export default function OrganogramaPage() {
     setTree(newTree);
   };
 
-  if (!isClient) {
-    // Render a placeholder or loading state on the server
+  if (!isClient || !tree) {
+    // Render a placeholder or loading state on the server/while loading
     return null;
   }
 
@@ -101,7 +110,7 @@ export default function OrganogramaPage() {
         </div>
       </div>
       <div
-        className="flex-grow overflow-auto p-4 rounded-lg mt-4 bg-cover bg-center bg-no-repeat"
+        className="flex-grow overflow-auto p-4 rounded-lg mt-4 bg-cover bg-center"
         style={{ backgroundImage: "url('https://files.fm/f/ypp4krtn5j')" }}
       >
         <div

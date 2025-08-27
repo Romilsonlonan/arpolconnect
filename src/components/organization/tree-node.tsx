@@ -89,34 +89,30 @@ export function TreeNode({ node, onUpdate, onAddChild, onRemove }: TreeNodeProps
              <Button variant="outline" size="icon" className="h-7 w-7 bg-white/80" onClick={handleAdd}>
                 <Plus className="h-4 w-4" />
              </Button>
-             {node.id !== 'arpolar' && (
-                <>
-                    <Button variant="outline" size="icon" className="h-7 w-7 bg-white/80" onClick={handleEdit}>
-                        <Pencil className="h-4 w-4" />
-                    </Button>
-                     <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                         <Button variant="destructive" size="icon" className="h-7 w-7">
-                            <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Esta ação não pode ser desfeita. Isso removerá permanentemente o funcionário e todos os seus subordinados.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => onRemove(node.id)}>
-                            Continuar
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
-                </>
-             )}
+            <Button variant="outline" size="icon" className="h-7 w-7 bg-white/80" onClick={handleEdit}>
+                <Pencil className="h-4 w-4" />
+            </Button>
+             <AlertDialog>
+              <AlertDialogTrigger asChild>
+                 <Button variant="destructive" size="icon" className="h-7 w-7">
+                    <Trash2 className="h-4 w-4" />
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Esta ação não pode ser desfeita. Isso removerá permanentemente o funcionário e todos os seus subordinados.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction onClick={() => onRemove(node.id)}>
+                    Continuar
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </CardContent>
       </Card>
@@ -131,15 +127,12 @@ export function TreeNode({ node, onUpdate, onAddChild, onRemove }: TreeNodeProps
 
       {node.children && node.children.length > 0 && (
         <>
-          <div className="absolute top-full h-8 w-0.5 bg-gray-600" />
+          <div className="absolute top-full h-8 w-px bg-slate-600 left-1/2 -translate-x-1/2"></div>
           
-          <div className="flex pt-16 relative">
-            <div className="absolute top-8 left-1/2 -translate-x-1/2 h-0.5 bg-gray-600" style={{width: `calc(100% - ${node.children.length > 1 ? '1rem' : '0rem'})`}} />
-            
+          <div className="flex pt-16 relative before:content-[''] before:absolute before:top-8 before:w-full before:h-px before:bg-slate-600">
             {node.children.map((child, index) => (
               <div key={child.id} className={cn(
-                "relative",
-                "before:content-[''] before:absolute before:bottom-full before:left-1/2 before:-translate-x-1/2 before:w-0.5 before:h-8 before:bg-gray-600",
+                "relative before:content-[''] before:absolute before:bottom-full before:left-1/2 before:-translate-x-1/2 before:w-px before:h-8 before:bg-slate-600",
                 index > 0 && "ml-4",
               )}>
                 <TreeNode node={child} onUpdate={onUpdate} onAddChild={onAddChild} onRemove={onRemove} />

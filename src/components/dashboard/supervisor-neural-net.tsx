@@ -13,13 +13,24 @@ import {
 
 const ORG_CHART_STORAGE_KEY = 'orgChartTree';
 
-function getVisibleSupervisors(tree: OrgNode): OrgNode[] {
-    if (!tree || !tree.children) {
-        return [];
+function getVisibleNodes(tree: OrgNode): OrgNode[] {
+    const visibleNodes: OrgNode[] = [];
+
+    function findVisible(node: OrgNode) {
+        // We don't want to add the root node itself, only its children
+        if (node.id !== 'arpolar' && node.showInNeuralNet !== false) {
+            visibleNodes.push(node);
+        }
+
+        if (node.children) {
+            for (const child of node.children) {
+                findVisible(child);
+            }
+        }
     }
-    // Assumes supervisors/directors are direct children of the root node.
-    // It will show any direct child that is marked as visible.
-    return tree.children.filter(node => node.showInNeuralNet !== false);
+
+    findVisible(tree);
+    return visibleNodes;
 }
 
 
@@ -31,12 +42,12 @@ export function SupervisorNeuralNet() {
       setIsClient(true);
       const savedTree = localStorage.getItem(ORG_CHART_STORAGE_KEY);
       const orgTree = savedTree ? JSON.parse(savedTree) : initialOrgTree;
-      setSupervisors(getVisibleSupervisors(orgTree));
+      setSupervisors(getVisibleNodes(orgTree));
 
       const handleStorageChange = () => {
          const updatedSavedTree = localStorage.getItem(ORG_CHART_STORAGE_KEY);
          const updatedOrgTree = updatedSavedTree ? JSON.parse(updatedSavedTree) : initialOrgTree;
-         setSupervisors(getVisibleSupervisors(updatedOrgTree));
+         setSupervisors(getVisibleNodes(updatedOrgTree));
       }
 
       window.addEventListener('storage', handleStorageChange);

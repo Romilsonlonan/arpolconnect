@@ -1,6 +1,7 @@
 'use client'
 
-import { supervisors } from '@/lib/data';
+import { useState, useEffect } from 'react';
+import { initialOrgTree, type OrgNode } from '@/lib/data';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Logo } from '../icons/logo';
 import {
@@ -9,12 +10,51 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
-import { cn } from '@/lib/utils';
+
+const ORG_CHART_STORAGE_KEY = 'orgChartTree';
+
+function getVisibleSupervisors(node: OrgNode): OrgNode[] {
+    let supervisors: OrgNode[] = [];
+    if (node.role === 'Supervisor' && node.showInNeuralNet !== false) {
+        supervisors.push(node);
+    }
+    if (node.children) {
+        for (const child of node.children) {
+            supervisors = supervisors.concat(getVisibleSupervisors(child));
+        }
+    }
+    return supervisors;
+}
 
 export function SupervisorNeuralNet() {
-    const radius = 120; // Raio do círculo
+    const [supervisors, setSupervisors] = useState<OrgNode[]>([]);
+    const [isClient, setIsClient] = useState(false);
+    
+    useEffect(() => {
+      setIsClient(true);
+      const savedTree = localStorage.getItem(ORG_CHART_STORAGE_KEY);
+      const orgTree = savedTree ? JSON.parse(savedTree) : initialOrgTree;
+      setSupervisors(getVisibleSupervisors(orgTree));
+
+      const handleStorageChange = () => {
+         const updatedSavedTree = localStorage.getItem(ORG_CHART_STORAGE_KEY);
+         const updatedOrgTree = updatedSavedTree ? JSON.parse(updatedSavedTree) : initialOrgTree;
+         setSupervisors(getVisibleSupervisors(updatedOrgTree));
+      }
+
+      window.addEventListener('storage', handleStorageChange);
+      return () => {
+          window.removeEventListener('storage', handleStorageChange);
+      }
+    }, []);
+
+    if (!isClient) {
+        return null; // Or a loading skeleton
+    }
+
+    const radius = 120; // Circle radius
     const supervisorCount = supervisors.length;
-    const angleStep = (2 * Math.PI) / supervisorCount;
+    const angleStep = supervisorCount > 0 ? (2 * Math.PI) / supervisorCount : 0;
 
     return (
         <TooltipProvider>
@@ -70,7 +110,7 @@ export function SupervisorNeuralNet() {
                                 </TooltipTrigger>
                                 <TooltipContent>
                                     <p className="font-semibold">{supervisor.name}</p>
-                                    <p className="text-muted-foreground">{supervisor.email}</p>
+                                    <p className="text-muted-foreground">{supervisor.contact}</p>
                                 </TooltipContent>
                             </Tooltip>
                         </div>

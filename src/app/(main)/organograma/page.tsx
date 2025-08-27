@@ -92,6 +92,18 @@ export default function OrganogramaPage() {
     setTree(newTree);
   };
 
+  const handleToggleVisibility = (nodeId: string) => {
+    if (!tree) return;
+    const newTree = updateTree(tree, (node) => {
+      if (node.id === nodeId) {
+        return { ...node, showInNeuralNet: node.showInNeuralNet === false };
+      }
+      return node;
+    });
+    setTree(newTree);
+  };
+
+
   const handleAddChildNode = (parentId: string, child: Omit<OrgNode, 'children' | 'id'>) => {
     if (!tree) return;
     const newTree = updateTree(tree, (node) => {
@@ -100,6 +112,7 @@ export default function OrganogramaPage() {
           ...child,
           id: `node-${Date.now()}-${Math.random()}`,
           children: [],
+          showInNeuralNet: true,
         };
         return { ...node, children: [...(node.children || []), newNode] };
       }
@@ -206,6 +219,7 @@ export default function OrganogramaPage() {
             onRemove={handleRemoveNode}
             onContractSettingsChange={handleSaveSettings}
             onOpenTicketModal={handleOpenTicketModal}
+            onToggleVisibility={handleToggleVisibility}
             contractSettings={contractSettings}
             isRoot={true}
           />

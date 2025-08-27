@@ -43,6 +43,7 @@ export type OrgNode = {
   contact?: string;
   contract?: string;
   avatar: string;
+  showInNeuralNet?: boolean;
   children?: OrgNode[];
 }
 
@@ -60,6 +61,7 @@ export const initialOrgTree: OrgNode = {
   name: 'Arpolar',
   role: 'Empresa',
   avatar: 'https://i.ibb.co/zVzbGGgD/fundoaqc.jpg',
+  showInNeuralNet: true,
   children: []
 };
 

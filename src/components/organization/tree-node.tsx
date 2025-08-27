@@ -5,7 +5,7 @@ import type { OrgNode } from '@/lib/data';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Pencil, Trash2, Phone, Briefcase, Building } from 'lucide-react';
+import { Plus, Pencil, Trash2, Phone, Briefcase, Building, MessageSquarePlus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { EmployeeModal } from './employee-modal';
 import { ContractSettingsModal } from './contract-settings-modal';
@@ -27,11 +27,12 @@ type TreeNodeProps = {
   onAddChild: (parentId: string, child: Omit<OrgNode, 'children' | 'id'>) => void;
   onRemove: (nodeId: string) => void;
   onContractSettingsChange: (settings: any) => void;
+  onOpenTicketModal: (node: OrgNode) => void;
   contractSettings: any;
   isRoot?: boolean;
 };
 
-export function TreeNode({ node, onUpdate, onAddChild, onRemove, onContractSettingsChange, contractSettings, isRoot = false }: TreeNodeProps) {
+export function TreeNode({ node, onUpdate, onAddChild, onRemove, onContractSettingsChange, onOpenTicketModal, contractSettings, isRoot = false }: TreeNodeProps) {
   const getInitials = (name: string) => {
     return name.split(' ').map(n => n[0]).join('').substring(0, 2);
   }
@@ -104,6 +105,9 @@ export function TreeNode({ node, onUpdate, onAddChild, onRemove, onContractSetti
             <Button variant="outline" size="icon" className="h-7 w-7 bg-white/80" onClick={handleOpenContractSettings}>
                 <Building className="h-4 w-4" />
             </Button>
+            <Button variant="outline" size="icon" className="h-7 w-7 bg-white/80" onClick={() => onOpenTicketModal(node)}>
+                <MessageSquarePlus className="h-4 w-4" />
+            </Button>
              <AlertDialog>
               <AlertDialogTrigger asChild>
                  <Button variant="destructive" size="icon" className="h-7 w-7">
@@ -161,6 +165,7 @@ export function TreeNode({ node, onUpdate, onAddChild, onRemove, onContractSetti
                   onAddChild={onAddChild} 
                   onRemove={onRemove}
                   onContractSettingsChange={onContractSettingsChange}
+                  onOpenTicketModal={onOpenTicketModal}
                   contractSettings={contractSettings}
                 />
               </div>

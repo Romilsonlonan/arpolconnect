@@ -19,12 +19,22 @@ export type Supervisor = {
 
 export type Message = {
   id: string;
-  title: string;
-  content: string;
+  contractName: string;
+  supervisor: string;
+  contact: string;
+  message: string;
+  urgency: 'Rotina' | 'Atenção' | 'Crítico';
+  status: 'Em andamento' | 'Finalizado';
   author: string;
   createdAt: string;
-  status: 'new' | 'in_progress' | 'resolved';
+
+  // Optional technical fields
+  equipmentName?: string;
+  equipmentBrand?: string;
+  equipmentModel?: string;
+  cause?: string;
 };
+
 
 export type OrgNode = {
   id: string;
@@ -85,10 +95,50 @@ export const employees: Employee[] = [
 
 const now = new Date();
 export const messages: Message[] = [
-  { id: 'msg1', title: 'Urgent: AC Unit Failure at Site A', content: 'The main AC unit at Site A has failed. Need immediate dispatch of a senior mechanic.', author: 'Director A', createdAt: new Date(now.getTime() - 12 * 60 * 60 * 1000).toISOString(), status: 'new' },
-  { id: 'msg2', title: 'Preventive Maintenance Schedule', content: 'Please review and approve the Q3 preventive maintenance schedule for all contracts.', author: 'Coordinator B', createdAt: new Date(now.getTime() - 50 * 60 * 60 * 1000).toISOString(), status: 'in_progress' },
-  { id: 'msg3', title: 'Electrical Wiring Issue - Site C', content: 'Reports of flickering lights at Site C. An electrician needs to investigate.', author: 'Supervisor C', createdAt: new Date(now.getTime() - 80 * 60 * 60 * 1000).toISOString(), status: 'in_progress' },
-  { id: 'msg4', title: 'Resolved: Client Complaint', content: 'The issue with the thermostat at Contract B has been resolved and the client is satisfied.', author: 'Supervisor A', createdAt: new Date(now.getTime() - 100 * 60 * 60 * 1000).toISOString(), status: 'resolved' },
+  { 
+    id: 'msg1', 
+    contractName: 'Contrato Alpha', 
+    supervisor: 'Carlos Ferreira', 
+    contact: '(11) 98888-1111',
+    message: 'A unidade de ar condicionado central do Site A parou de funcionar. Despacho de mecânico sênior é necessário imediatamente.', 
+    urgency: 'Atenção',
+    status: 'Em andamento',
+    author: 'Diretor A', 
+    createdAt: new Date(now.getTime() - 12 * 60 * 60 * 1000).toISOString() 
+  },
+  { 
+    id: 'msg2', 
+    contractName: 'Contrato Beta', 
+    supervisor: 'Beatriz Costa',
+    contact: '(21) 97777-2222',
+    message: 'Favor revisar e aprovar o cronograma de manutenção preventiva do Q3 para todos os contratos.', 
+    urgency: 'Rotina',
+    status: 'Em andamento',
+    author: 'Coordenador B', 
+    createdAt: new Date(now.getTime() - 50 * 60 * 60 * 1000).toISOString()
+  },
+  { 
+    id: 'msg3', 
+    contractName: 'Contrato Gamma', 
+    supervisor: 'Ricardo Almeida',
+    contact: '(31) 96666-3333',
+    message: 'Relatos de luzes piscando no Site C. Um eletricista precisa investigar a fiação.',
+    urgency: 'Crítico',
+    status: 'Em andamento',
+    author: 'Supervisor C', 
+    createdAt: new Date(now.getTime() - 80 * 60 * 60 * 1000).toISOString()
+  },
+  { 
+    id: 'msg4', 
+    contractName: 'Contrato Delta', 
+    supervisor: 'Carlos Ferreira',
+    contact: '(11) 95555-4444',
+    message: 'O problema com o termostato no Contrato B foi resolvido e o cliente está satisfeito.', 
+    urgency: 'Rotina',
+    status: 'Finalizado',
+    author: 'Supervisor A', 
+    createdAt: new Date(now.getTime() - 100 * 60 * 60 * 1000).toISOString()
+  },
 ];
 
 export const contractList = [

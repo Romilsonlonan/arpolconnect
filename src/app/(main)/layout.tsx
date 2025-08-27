@@ -10,6 +10,7 @@ import {
   Users,
   GitMerge,
   FileText,
+  MessageSquare,
 } from 'lucide-react';
 
 import {
@@ -43,7 +44,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
     const { open } = useSidebar();
 
     const navItems = [
-      { href: '/dashboard', icon: <Home />, label: 'Painel' },
+      { href: '/dashboard', icon: <MessageSquare />, label: 'Painel de Tickets' },
       { href: '/organograma', icon: <GitMerge />, label: 'Organograma' },
       { href: '/directory', icon: <FileText />, label: 'Avaliação' },
     ];
@@ -51,7 +52,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
     return (
         <div className={cn(
             "grid min-h-screen w-full transition-[grid-template-columns]",
-            open ? "md:grid-cols-[160px_1fr]" : "md:grid-cols-[64px_1fr]"
+            open ? "md:grid-cols-[220px_1fr]" : "md:grid-cols-[64px_1fr]"
         )}>
         <Sidebar>
           <SidebarHeader>

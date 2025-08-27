@@ -114,7 +114,7 @@ const Sidebar = React.forwardRef<
     if (isMobile) {
         return (
              <Sheet open={open} onOpenChange={useSidebar().setOpen}>
-                <SheetContent side="left" className="flex flex-col w-[160px] p-0 bg-primary">
+                <SheetContent side="left" className="flex flex-col w-[220px] p-0 bg-primary">
                      {children}
                 </SheetContent>
             </Sheet>

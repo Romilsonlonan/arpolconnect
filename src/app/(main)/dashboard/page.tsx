@@ -5,16 +5,27 @@ import { messages as initialMessages, Message } from '@/lib/data';
 import { MessageCard } from '@/components/dashboard/message-card';
 
 export default function DashboardPage() {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [isBrowser, setIsBrowser] = useState(false);
   const dragItem = useRef<number | null>(null);
   const dragOverItem = useRef<number | null>(null);
 
   useEffect(() => {
-    setMessages(initialMessages);
     setIsBrowser(true);
+    const storedMessages = localStorage.getItem('dashboardMessages');
+    if (storedMessages) {
+      setMessages(JSON.parse(storedMessages));
+    } else {
+      setMessages(initialMessages);
+    }
   }, []);
   
+  useEffect(() => {
+    if(isBrowser) {
+        localStorage.setItem('dashboardMessages', JSON.stringify(messages));
+    }
+  }, [messages, isBrowser]);
+
   const handleDragSort = () => {
     if (dragItem.current === null || dragOverItem.current === null || dragItem.current === dragOverItem.current) {
         return;
@@ -47,25 +58,32 @@ export default function DashboardPage() {
   return (
     <>
       <div className="flex items-center">
-        <h1 className="text-lg font-semibold md:text-2xl font-headline">Message Dashboard</h1>
+        <h1 className="text-lg font-semibold md:text-2xl font-headline">Painel de Tickets</h1>
       </div>
-      <div
-        className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
-      >
-        {messages.map((message, index) => (
-          <div
-            key={message.id}
-            draggable
-            onDragStart={() => dragItem.current = index}
-            onDragEnter={() => dragOverItem.current = index}
-            onDragEnd={handleDragSort}
-            onDragOver={(e) => e.preventDefault()}
-            className="cursor-move"
-          >
-            <MessageCard message={message} />
-          </div>
-        ))}
-      </div>
+      {messages.length === 0 ? (
+        <div className="flex flex-col items-center justify-center flex-1 py-12 text-center bg-gray-100/50 rounded-lg">
+            <p className="text-lg font-semibold text-muted-foreground">Nenhum ticket encontrado.</p>
+            <p className="mt-2 text-sm text-muted-foreground">Crie um novo ticket a partir do organograma.</p>
+        </div>
+        ) : (
+            <div
+            className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
+            >
+            {messages.map((message, index) => (
+                <div
+                key={message.id}
+                draggable
+                onDragStart={() => dragItem.current = index}
+                onDragEnter={() => dragOverItem.current = index}
+                onDragEnd={handleDragSort}
+                onDragOver={(e) => e.preventDefault()}
+                className="cursor-move"
+                >
+                <MessageCard message={message} />
+                </div>
+            ))}
+            </div>
+      )}
     </>
   );
 }

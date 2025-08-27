@@ -8,9 +8,13 @@ import { Slider } from '@/components/ui/slider';
 import { ZoomIn, ZoomOut, RotateCcw, Settings, Building } from 'lucide-react';
 import { updateTree } from '@/lib/tree-utils';
 import { ContractSettingsModal } from '@/components/organization/contract-settings-modal';
+import { TicketModal } from '@/components/organization/ticket-modal';
+import type { Message } from '@/lib/data';
 
 const ORG_CHART_STORAGE_KEY = 'orgChartTree';
 const CONTRACT_SETTINGS_STORAGE_KEY = 'contractSettings';
+const DASHBOARD_MESSAGES_KEY = 'dashboardMessages';
+
 
 type ContractSettings = {
   backgroundImage: string;
@@ -25,6 +29,9 @@ export default function OrganogramaPage() {
   const [tree, setTree] = useState<OrgNode | null>(null);
   const [isClient, setIsClient] = useState(false);
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
+  const [ticketNode, setTicketNode] = useState<OrgNode | null>(null);
+
   const [contractSettings, setContractSettings] = useState<ContractSettings>({
     backgroundImage: 'https://i.ibb.co/zVzbGGgD/fundoaqc.jpg',
     contractName: 'Contrato Principal',
@@ -133,6 +140,29 @@ export default function OrganogramaPage() {
     setNodeContractSettings(null);
   }
 
+  const handleOpenTicketModal = (node: OrgNode) => {
+    setTicketNode(node);
+    setIsTicketModalOpen(true);
+  };
+
+  const handleSaveTicket = (ticketData: Omit<Message, 'id' | 'createdAt' | 'author'>) => {
+    if (!ticketNode) return;
+
+    const newTicket: Message = {
+      ...ticketData,
+      id: `ticket-${Date.now()}`,
+      author: ticketNode.name, 
+      createdAt: new Date().toISOString(),
+    };
+
+    const existingMessages: Message[] = JSON.parse(localStorage.getItem(DASHBOARD_MESSAGES_KEY) || '[]');
+    localStorage.setItem(DASHBOARD_MESSAGES_KEY, JSON.stringify([newTicket, ...existingMessages]));
+    
+    setIsTicketModalOpen(false);
+    setTicketNode(null);
+  };
+
+
   if (!isClient || !tree) {
     return null;
   }
@@ -175,6 +205,7 @@ export default function OrganogramaPage() {
             onAddChild={handleAddChildNode}
             onRemove={handleRemoveNode}
             onContractSettingsChange={handleSaveSettings}
+            onOpenTicketModal={handleOpenTicketModal}
             contractSettings={contractSettings}
             isRoot={true}
           />
@@ -185,6 +216,12 @@ export default function OrganogramaPage() {
         onClose={() => setIsSettingsModalOpen(false)}
         onSave={handleSaveSettings}
         settings={contractSettings}
+      />
+      <TicketModal
+        isOpen={isTicketModalOpen}
+        onClose={() => setIsTicketModalOpen(false)}
+        onSave={handleSaveTicket}
+        node={ticketNode}
       />
     </div>
   );

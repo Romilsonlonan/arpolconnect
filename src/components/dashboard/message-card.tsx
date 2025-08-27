@@ -15,6 +15,13 @@ import {
   DialogDescription,
   DialogTrigger,
 } from '@/components/ui/dialog';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+
 
 type StatusInfo = {
   label: string;
@@ -43,15 +50,23 @@ export function MessageCard({ message }: { message: Message }) {
       <CardHeader>
         <div className="flex items-start justify-between gap-2">
           <CardTitle className="text-base font-bold font-headline pr-2">{message.contractName}</CardTitle>
-          <div
-            className={cn(
-              "flex items-center gap-2 text-xs font-semibold px-2 py-1 rounded-full whitespace-nowrap",
-              statusInfo.colorClass,
-              statusInfo.pulse && 'animate-pulse'
-            )}
-          >
-            {statusInfo.label}
-          </div>
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger>
+                <div
+                  className={cn(
+                    "flex items-center justify-center h-6 w-6 rounded-full",
+                    statusInfo.colorClass,
+                    statusInfo.pulse && 'animate-pulse'
+                  )}
+                >
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>{statusInfo.label}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </div>
         <CardDescription className="flex flex-col gap-1 text-xs pt-2">
           <div className="flex items-center gap-2">
@@ -92,7 +107,7 @@ export function MessageCard({ message }: { message: Message }) {
                 <h4 className="font-semibold">Informações Técnicas</h4>
                 <p><strong>Equipamento:</strong> {message.equipmentName || 'N/A'}</p>
                 <p><strong>Marca:</strong> {message.equipmentBrand || 'N/A'}</p>
-                <p><strong>Modelo:</strong> {message.equipmentModel || 'N/A'}</p>
+                <p><strong>Modelo:</strong> {message.equipmentModel || 'N-A'}</p>
                 <p><strong>Causa Provável:</strong> {message.cause || 'N/A'}</p>
             </div>
           </DialogContent>

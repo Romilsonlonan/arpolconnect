@@ -105,17 +105,47 @@ export function EmployeeModal({ isOpen, onClose, onSave, editingNode }: Employee
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 5 * 1024 * 1024) { // 5MB limit
-        alert("File is too large. Please select an image smaller than 5MB.");
+      if (file.size > 10 * 1024 * 1024) { // 10MB limit (before compression)
+        alert("File is too large. Please select an image smaller than 10MB.");
         return;
       }
+      
       const reader = new FileReader();
-      reader.onloadend = () => {
-        setAvatar(reader.result as string);
+      reader.onload = (event) => {
+        const img = document.createElement('img');
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const MAX_WIDTH = 256;
+          const MAX_HEIGHT = 256;
+          let width = img.width;
+          let height = img.height;
+
+          if (width > height) {
+            if (width > MAX_WIDTH) {
+              height *= MAX_WIDTH / width;
+              width = MAX_WIDTH;
+            }
+          } else {
+            if (height > MAX_HEIGHT) {
+              width *= MAX_HEIGHT / height;
+              height = MAX_HEIGHT;
+            }
+          }
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx?.drawImage(img, 0, 0, width, height);
+          
+          // Get the data URL with JPEG compression
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
+          setAvatar(dataUrl);
+        };
+        img.src = event.target?.result as string;
       };
       reader.readAsDataURL(file);
     }
   };
+
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

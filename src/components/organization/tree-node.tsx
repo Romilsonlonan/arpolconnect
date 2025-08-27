@@ -1,8 +1,11 @@
+'use client';
+
 import type { OrgNode } from '@/lib/data';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { MessageCircle } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 export function TreeNode({ node }: { node: OrgNode }) {
   const getInitials = (name: string) => {
@@ -10,7 +13,7 @@ export function TreeNode({ node }: { node: OrgNode }) {
   }
   
   return (
-    <div className="flex flex-col items-center relative">
+    <div className="inline-flex flex-col items-center text-center relative px-4">
       {/* The node itself */}
       <Card className="min-w-52 text-center shadow-md hover:shadow-lg hover:scale-105 transition-all relative z-10 bg-card">
         <CardContent className="p-4 flex flex-col items-center gap-2">
@@ -33,20 +36,19 @@ export function TreeNode({ node }: { node: OrgNode }) {
       {/* Children container */}
       {node.children && node.children.length > 0 && (
         <>
-          {/* Vertical line from parent to the horizontal line */}
-          <div className="absolute top-full h-8 w-0.5 bg-gray-400" style={{left: '50%'}}></div>
-
-          <div className="flex justify-center gap-8 pt-16 relative">
+          {/* Connector line down from parent */}
+          <div className="absolute top-full h-8 w-0.5 bg-gray-600" />
+          
+          <div className="flex pt-16 relative">
              {/* Horizontal line connecting all children */}
-            {node.children.length > 1 &&
-              <div className="absolute top-[32px] h-0.5 bg-gray-400" style={{ left: '25%', right: '25%' }}></div>
-            }
+            <div className="absolute top-8 left-0 right-0 h-0.5 bg-gray-600" />
             
             {node.children.map((child) => (
-              <div key={child.id} className="relative flex flex-col items-center">
-                 {/* Top vertical line for each child connecting to the horizontal line */}
-                 <div className="absolute bottom-full h-8 w-0.5 bg-gray-400" style={{left: '50%'}}></div>
-
+              <div key={child.id} className={cn(
+                "relative",
+                // Vertical line from child up to horizontal line
+                "before:content-[''] before:absolute before:bottom-full before:left-1/2 before:-translate-x-1/2 before:w-0.5 before:h-8 before:bg-gray-600"
+              )}>
                 <TreeNode node={child} />
               </div>
             ))}

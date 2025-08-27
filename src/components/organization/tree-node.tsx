@@ -114,6 +114,8 @@ export function TreeNode({ node, onUpdate, onAddChild, onRemove, onContractSetti
             <Button variant="outline" size="icon" className="h-7 w-7 bg-white/80" onClick={() => onOpenTicketModal(node)}>
                 <MessageSquarePlus className="h-4 w-4" />
             </Button>
+          </div>
+          <div className="absolute top-2 left-2 flex flex-col gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
              <AlertDialog>
               <AlertDialogTrigger asChild>
                  <Button variant="destructive" size="icon" className="h-7 w-7">

@@ -11,6 +11,7 @@ import {
   GitMerge,
   FileText,
   MessageSquare,
+  BookUser,
 } from 'lucide-react';
 
 import {
@@ -46,7 +47,8 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
     const navItems = [
       { href: '/dashboard', icon: <MessageSquare />, label: 'Painel de Tickets' },
       { href: '/organograma', icon: <GitMerge />, label: 'Organograma' },
-      { href: '/directory', icon: <FileText />, label: 'Avaliação' },
+      { href: '/directory', icon: <BookUser />, label: 'Diretório' },
+      { href: '/evaluation', icon: <FileText />, label: 'Avaliação' },
     ];
 
     return (

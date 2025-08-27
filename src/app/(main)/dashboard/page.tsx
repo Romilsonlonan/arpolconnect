@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { messages as initialMessages, Message } from '@/lib/data';
 import { MessageCard } from '@/components/dashboard/message-card';
+import { SupervisorNeuralNet } from '@/components/dashboard/supervisor-neural-net';
 
 export default function DashboardPage() {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
@@ -56,8 +57,15 @@ export default function DashboardPage() {
   }
 
   return (
-    <>
-      <div className="flex items-center">
+    <div className="flex flex-col gap-6">
+       <div>
+        <h1 className="text-lg font-semibold md:text-2xl font-headline mb-4">Rede de Supervisores</h1>
+        <div className="flex items-center justify-center p-4 bg-card rounded-lg shadow-sm min-h-[350px]">
+          <SupervisorNeuralNet />
+        </div>
+      </div>
+
+      <div>
         <h1 className="text-lg font-semibold md:text-2xl font-headline">Painel de Tickets</h1>
       </div>
       {messages.length === 0 ? (
@@ -84,6 +92,6 @@ export default function DashboardPage() {
             ))}
             </div>
       )}
-    </>
+    </div>
   );
 }

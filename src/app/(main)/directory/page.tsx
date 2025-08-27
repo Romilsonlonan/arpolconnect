@@ -1,248 +1,108 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { refrigerationQuestions, type RefrigerationQuestion } from '@/lib/data';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
-import { Progress } from '@/components/ui/progress';
-import Image from 'next/image';
-import { Award, RotateCcw, TrendingUp } from 'lucide-react';
+import { useState } from 'react';
+import { employees as allEmployees, supervisors, type Employee, type Supervisor } from '@/lib/data';
+import { EmployeeCard } from '@/components/directory/employee-card';
 import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  ChartLegend,
-  ChartLegendContent,
-} from "@/components/ui/chart"
-import { Pie, PieChart } from "recharts"
-import { cn } from '@/lib/utils';
-import Confetti from 'react-dom-confetti';
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
-const shuffleArray = (array: any[]) => {
-  return [...array].sort(() => Math.random() - 0.5);
+type GroupedEmployees = {
+  [key: string]: Employee[];
 };
 
-// Componente para o Quiz
-function QuizView({ questions, onComplete }: { questions: RefrigerationQuestion[], onComplete: (answers: Record<string, string>) => void }) {
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [selectedAnswers, setSelectedAnswers] = useState<Record<string, string>>({});
+export default function DirectoryPage() {
+  const [employees, setEmployees] = useState<Employee[]>(allEmployees);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedRegion, setSelectedRegion] = useState('all');
 
-  const handleSelectAnswer = (questionId: string, answer: string) => {
-    setSelectedAnswers(prev => ({ ...prev, [questionId]: answer }));
+  const handleRemoveEmployee = (id: string) => {
+    setEmployees(prev => prev.filter(emp => emp.id !== id));
   };
 
-  const handleNext = () => {
-    if (currentQuestionIndex < questions.length - 1) {
-      setCurrentQuestionIndex(prev => prev + 1);
-    } else {
-      onComplete(selectedAnswers);
+  const filteredEmployees = employees.filter(employee => {
+    const supervisor = supervisors.find(s => s.id === employee.supervisorId);
+    const regionMatch = selectedRegion === 'all' || supervisor?.region === selectedRegion;
+    const searchMatch = employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        employee.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                        employee.contract.toLowerCase().includes(searchTerm.toLowerCase());
+    return regionMatch && searchMatch;
+  });
+
+  const groupedBySupervisor = filteredEmployees.reduce((acc: GroupedEmployees, employee) => {
+    const supervisorName = supervisors.find(s => s.id === employee.supervisorId)?.name || 'Unassigned';
+    if (!acc[supervisorName]) {
+      acc[supervisorName] = [];
     }
-  };
+    acc[supervisorName].push(employee);
+    return acc;
+  }, {});
 
-  const currentQuestion = questions[currentQuestionIndex];
-  const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
+  const regions = [...new Set(supervisors.map(s => s.region).filter(Boolean))] as string[];
 
   return (
-    <Card className="w-full max-w-3xl mx-auto">
-      <CardHeader>
-        <div className='mb-4'>
-            <p className='text-sm text-muted-foreground'>Pergunta {currentQuestionIndex + 1} de {questions.length}</p>
-            <Progress value={progress} className="w-full h-2 mt-2" />
+    <div className="flex flex-col gap-6">
+       <div>
+        <h1 className="text-lg font-semibold md:text-2xl font-headline">Diretório de Funcionários</h1>
+        <p className="text-muted-foreground">Encontre e gerencie os funcionários da sua equipe.</p>
+       </div>
+      
+       <Card className="p-4">
+        <div className="flex flex-col sm:flex-row gap-4">
+            <Input
+            placeholder="Pesquisar por nome, cargo, contrato..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full sm:max-w-sm"
+            />
+            <Select value={selectedRegion} onValueChange={setSelectedRegion}>
+            <SelectTrigger className="w-full sm:w-[180px]">
+                <SelectValue placeholder="Filtrar por região" />
+            </SelectTrigger>
+            <SelectContent>
+                <SelectItem value="all">Todas as Regiões</SelectItem>
+                {regions.map(region => (
+                <SelectItem key={region} value={region}>{region}</SelectItem>
+                ))}
+            </SelectContent>
+            </Select>
         </div>
-        <Image 
-          src={currentQuestion.image} 
-          alt="Tema da Pergunta" 
-          width={800} 
-          height={400} 
-          className="rounded-lg object-cover aspect-[2/1] bg-muted"
-          data-ai-hint={currentQuestion.imageHint}
-        />
-        <CardTitle className="pt-4 text-xl">{currentQuestion.question}</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <RadioGroup
-          value={selectedAnswers[currentQuestion.id] || ''}
-          onValueChange={(value) => handleSelectAnswer(currentQuestion.id, value)}
-          className="grid gap-4"
-        >
-          {currentQuestion.options.map((option, index) => (
-            <Label
-              key={index}
-              className={cn(
-                  "flex items-center gap-4 border rounded-lg p-4 cursor-pointer hover:bg-accent/50 transition-colors",
-                  selectedAnswers[currentQuestion.id] === option && "bg-accent border-primary"
-              )}
-            >
-              <RadioGroupItem value={option} id={`q${currentQuestion.id}-o${index}`} />
-              <span>{option}</span>
-            </Label>
-          ))}
-        </RadioGroup>
-        <Button onClick={handleNext} className="w-full mt-6" disabled={!selectedAnswers[currentQuestion.id]}>
-          {currentQuestionIndex < questions.length - 1 ? 'Próxima Pergunta' : 'Finalizar Avaliação'}
-        </Button>
-      </CardContent>
-    </Card>
+       </Card>
+
+      {Object.entries(groupedBySupervisor).map(([supervisorName, employeeList]) => (
+        <div key={supervisorName}>
+          <h2 className="text-xl font-semibold mb-4">{supervisorName}</h2>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            {employeeList.map(employee => (
+              <EmployeeCard
+                key={employee.id}
+                employee={employee}
+                supervisors={supervisors}
+                onRemove={handleRemoveEmployee}
+              />
+            ))}
+          </div>
+        </div>
+      ))}
+
+      {filteredEmployees.length === 0 && (
+         <div className="flex flex-col items-center justify-center flex-1 py-12 text-center bg-gray-100/50 rounded-lg">
+            <p className="text-lg font-semibold text-muted-foreground">Nenhum funcionário encontrado.</p>
+            <p className="mt-2 text-sm text-muted-foreground">Ajuste os filtros ou adicione novos funcionários no organograma.</p>
+        </div>
+      )}
+
+    </div>
   );
 }
 
-// Componente para o Certificado
-function CertificateView({ score, total, onRestart }: { score: number; total: number; onRestart: () => void }) {
-    const [isConfettiActive, setIsConfettiActive] = useState(false);
-
-    useState(() => {
-        setTimeout(() => setIsConfettiActive(true), 300);
-    });
-    
-    return (
-        <div className="w-full max-w-3xl mx-auto text-center relative">
-            <div className='absolute top-1/2 left-1/2'>
-                <Confetti active={isConfettiActive} config={{
-                    angle: 90,
-                    spread: 360,
-                    startVelocity: 40,
-                    elementCount: 100,
-                    dragFriction: 0.12,
-                    duration: 3000,
-                    stagger: 3,
-                    width: "10px",
-                    height: "10px",
-                    perspective: "500px",
-                    colors: ["#a864fd", "#29cdff", "#78ff44", "#ff718d", "#fdff6a"]
-                }} />
-            </div>
-            <Card className="bg-card border-2 border-primary shadow-lg overflow-hidden">
-                <CardHeader className="bg-primary/10 p-8">
-                    <Award className="w-20 h-20 mx-auto text-primary" />
-                    <h1 className="text-4xl font-bold font-headline mt-4">Certificado de Conclusão</h1>
-                    <p className="text-muted-foreground text-lg mt-2">Avaliação de Qualificação em Refrigeração</p>
-                </CardHeader>
-                <CardContent className="p-8">
-                    <p className="text-xl">Este certificado é concedido a</p>
-                    <p className="text-3xl font-bold my-4">Funcionário da Arpolar</p>
-                    <p className="text-xl">por concluir com sucesso a avaliação, demonstrando proficiência e conhecimento em sistemas de refrigeração.</p>
-                    <p className="font-semibold text-2xl mt-6">Pontuação: {score} / {total}</p>
-                    <p className="text-muted-foreground mt-4">{new Date().toLocaleDateString('pt-BR', { dateStyle: 'long' })}</p>
-                </CardContent>
-            </Card>
-            <Button onClick={onRestart} className="mt-8">
-                <RotateCcw className="mr-2" />
-                Refazer Avaliação
-            </Button>
-        </div>
-    );
-}
-
-// Componente para a Tela de Resultados (Reprovado)
-function ResultsView({ score, total, onRestart }: { score: number; total: number; onRestart: () => void }) {
-  const chartData = [
-    { name: 'Acertos', value: score, fill: 'hsl(var(--status-resolved))' },
-    { name: 'Erros', value: total - score, fill: 'hsl(var(--destructive))' },
-  ];
-  
-  const chartConfig = {
-      acertos: { label: "Acertos" },
-      erros: { label: "Erros" },
-  }
-
-  return (
-    <Card className="w-full max-w-3xl mx-auto text-center">
-      <CardHeader>
-        <TrendingUp className="w-16 h-16 mx-auto text-destructive" />
-        <CardTitle className="text-3xl font-bold mt-4">Resultado da Avaliação</CardTitle>
-      </CardHeader>
-      <CardContent>
-        <p className="text-lg mb-4">Você não atingiu a pontuação mínima de 80% para aprovação.</p>
-        <p className="text-5xl font-bold mb-6">{score} <span className="text-3xl text-muted-foreground">/ {total}</span></p>
-
-         <ChartContainer config={chartConfig} className="mx-auto aspect-square h-[200px]">
-            <PieChart>
-                <ChartTooltip
-                    cursor={false}
-                    content={<ChartTooltipContent hideLabel />}
-                />
-                <Pie
-                    data={chartData}
-                    dataKey="value"
-                    nameKey="name"
-                    innerRadius={60}
-                    strokeWidth={5}
-                >
-                </Pie>
-                 <ChartLegend
-                    content={<ChartLegendContent nameKey="name" />}
-                    className="-mt-2"
-                />
-            </PieChart>
-        </ChartContainer>
-        
-        <p className="text-muted-foreground mt-6">Estude um pouco mais e tente novamente!</p>
-        <Button onClick={onRestart} className="mt-6">
-          <RotateCcw className="mr-2" />
-          Tentar Novamente
-        </Button>
-      </CardContent>
-    </Card>
-  );
-}
-
-
-export default function EvaluationPage() {
-  const [quizState, setQuizState] = useState<'not_started' | 'in_progress' | 'completed'>('not_started');
-  const [userAnswers, setUserAnswers] = useState<Record<string, string>>({});
-  const [shuffledQuestions, setShuffledQuestions] = useState<RefrigerationQuestion[]>([]);
-
-  const startQuiz = () => {
-    setShuffledQuestions(shuffleArray(refrigerationQuestions).slice(0, 20));
-    setUserAnswers({});
-    setQuizState('in_progress');
-  };
-  
-  const handleQuizComplete = (answers: Record<string, string>) => {
-    setUserAnswers(answers);
-    setQuizState('completed');
-  };
-
-  const score = useMemo(() => {
-    return shuffledQuestions.reduce((correctCount, question) => {
-      if (userAnswers[question.id] === question.correctAnswer) {
-        return correctCount + 1;
-      }
-      return correctCount;
-    }, 0);
-  }, [userAnswers, shuffledQuestions]);
-
-  const passingScore = shuffledQuestions.length * 0.8;
-  const isApproved = score >= passingScore;
-
-  if (quizState === 'not_started') {
-    return (
-      <div className="text-center">
-        <h1 className="text-3xl font-bold font-headline mb-4">Avaliação de Qualificação em Refrigeração</h1>
-        <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">
-          Teste seus conhecimentos para garantir que você está afiado com as melhores práticas em refrigeração.
-          Responda 20 perguntas e receba seu certificado de qualificação.
-        </p>
-        <Button size="lg" onClick={startQuiz}>
-          Iniciar Avaliação
-        </Button>
-      </div>
-    );
-  }
-
-  if (quizState === 'in_progress') {
-    return <QuizView questions={shuffledQuestions} onComplete={handleQuizComplete} />;
-  }
-
-  if (quizState === 'completed') {
-    if (isApproved) {
-        return <CertificateView score={score} total={shuffledQuestions.length} onRestart={startQuiz} />;
-    } else {
-        return <ResultsView score={score} total={shuffledQuestions.length} onRestart={startQuiz} />;
-    }
-  }
-
-  return null;
-}
+// Dummy Card component to avoid breaking the code.
+const Card = ({ children, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
+  <div {...props}>{children}</div>
+);

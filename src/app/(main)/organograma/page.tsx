@@ -5,40 +5,72 @@ import { initialOrgTree, type OrgNode } from '@/lib/data';
 import { TreeNode } from '@/components/organization/tree-node';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
-import { ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
+import { ZoomIn, ZoomOut, RotateCcw, Settings } from 'lucide-react';
 import { updateTree } from '@/lib/tree-utils';
+import { ContractSettingsModal } from '@/components/organization/contract-settings-modal';
 
 const ORG_CHART_STORAGE_KEY = 'orgChartTree';
+const CONTRACT_SETTINGS_STORAGE_KEY = 'contractSettings';
+
+type ContractSettings = {
+  backgroundImage: string;
+  contractName: string;
+  region: string;
+  address: string;
+  responsible: string;
+};
 
 export default function OrganogramaPage() {
   const [zoom, setZoom] = useState(1);
   const [tree, setTree] = useState<OrgNode | null>(null);
   const [isClient, setIsClient] = useState(false);
+  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
+  const [contractSettings, setContractSettings] = useState<ContractSettings>({
+    backgroundImage: 'https://i.ibb.co/zVzbGGgD/fundoaqc.jpg',
+    contractName: 'Contrato Principal',
+    region: 'N/A',
+    address: 'N/A',
+    responsible: 'N/A',
+  });
 
   useEffect(() => {
     setIsClient(true);
     try {
       const savedTree = localStorage.getItem(ORG_CHART_STORAGE_KEY);
+      const savedSettings = localStorage.getItem(CONTRACT_SETTINGS_STORAGE_KEY);
+      
       if (savedTree) {
         setTree(JSON.parse(savedTree));
       } else {
         setTree(initialOrgTree);
       }
+
+      if (savedSettings) {
+        setContractSettings(JSON.parse(savedSettings));
+      }
+
     } catch (error) {
-      console.error("Failed to parse org chart from localStorage", error);
+      console.error("Failed to parse data from localStorage", error);
       setTree(initialOrgTree);
     }
   }, []);
 
   useEffect(() => {
-    if (isClient && tree) {
+    if (isClient) {
+      if (tree) {
+        try {
+          localStorage.setItem(ORG_CHART_STORAGE_KEY, JSON.stringify(tree));
+        } catch (error) {
+          console.error("Failed to save org chart to localStorage", error);
+        }
+      }
       try {
-        localStorage.setItem(ORG_CHART_STORAGE_KEY, JSON.stringify(tree));
+        localStorage.setItem(CONTRACT_SETTINGS_STORAGE_KEY, JSON.stringify(contractSettings));
       } catch (error) {
-        console.error("Failed to save org chart to localStorage", error);
+        console.error("Failed to save contract settings to localStorage", error);
       }
     }
-  }, [tree, isClient]);
+  }, [tree, contractSettings, isClient]);
 
   const handleUpdateNode = (nodeId: string, values: Partial<OrgNode>) => {
     if (!tree) return;
@@ -70,11 +102,9 @@ export default function OrganogramaPage() {
   const handleRemoveNode = (nodeId: string) => {
     if (!tree) return;
     
-    // If we are removing the root node
     if (nodeId === tree.id) {
-       setTree(null); // This will cause the component to unmount or show nothing
+       setTree(null);
        localStorage.removeItem(ORG_CHART_STORAGE_KEY);
-       // Option: re-initialize with a default if you always want a root
        setTimeout(() => setTree(initialOrgTree), 0);
        return;
     }
@@ -87,16 +117,25 @@ export default function OrganogramaPage() {
     });
     setTree(newTree);
   };
+  
+  const handleSaveSettings = (newSettings: ContractSettings) => {
+    setContractSettings(newSettings);
+    setIsSettingsModalOpen(false);
+  };
 
   if (!isClient || !tree) {
-    // Render a placeholder or loading state on the server/while loading
     return null;
   }
 
   return (
     <div className="flex flex-col h-full">
       <div className="flex flex-col sm:flex-row items-start sm:items-center pb-4 border-b gap-4">
-        <h1 className="text-lg font-semibold md:text-2xl font-headline">Organograma</h1>
+        <div className="flex items-center gap-2">
+            <h1 className="text-lg font-semibold md:text-2xl font-headline">Organograma</h1>
+             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setIsSettingsModalOpen(true)}>
+                <Settings className="h-5 w-5" />
+            </Button>
+        </div>
         <div className="ml-0 sm:ml-auto flex items-center gap-2 sm:gap-4">
           <div className="flex items-center gap-2 w-36 sm:w-48">
             <Button variant="outline" size="icon" onClick={() => setZoom(z => Math.max(0.2, z - 0.1))}><ZoomOut className="h-4 w-4" /></Button>
@@ -114,7 +153,7 @@ export default function OrganogramaPage() {
       </div>
       <div
         className="flex-grow overflow-auto p-4 rounded-lg mt-4 bg-cover bg-center"
-        style={{ backgroundImage: "url('https://i.ibb.co/zVzbGGgD/fundoaqc.jpg')" }}
+        style={{ backgroundImage: `url('${contractSettings.backgroundImage}')` }}
       >
         <div
           className="transition-transform duration-300"
@@ -129,6 +168,12 @@ export default function OrganogramaPage() {
           />
         </div>
       </div>
+       <ContractSettingsModal
+        isOpen={isSettingsModalOpen}
+        onClose={() => setIsSettingsModalOpen(false)}
+        onSave={handleSaveSettings}
+        settings={contractSettings}
+      />
     </div>
   );
 }

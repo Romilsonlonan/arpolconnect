@@ -13,18 +13,15 @@ import {
 
 const ORG_CHART_STORAGE_KEY = 'orgChartTree';
 
-function getVisibleSupervisors(node: OrgNode): OrgNode[] {
-    let supervisors: OrgNode[] = [];
-    if (node.role === 'Supervisor' && node.showInNeuralNet !== false) {
-        supervisors.push(node);
+function getVisibleSupervisors(tree: OrgNode): OrgNode[] {
+    if (!tree || !tree.children) {
+        return [];
     }
-    if (node.children) {
-        for (const child of node.children) {
-            supervisors = supervisors.concat(getVisibleSupervisors(child));
-        }
-    }
-    return supervisors;
+    // Assumes supervisors/directors are direct children of the root node.
+    // It will show any direct child that is marked as visible.
+    return tree.children.filter(node => node.showInNeuralNet !== false);
 }
+
 
 export function SupervisorNeuralNet() {
     const [supervisors, setSupervisors] = useState<OrgNode[]>([]);

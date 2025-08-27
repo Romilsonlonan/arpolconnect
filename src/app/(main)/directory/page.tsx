@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
-import { employees as allEmployees, supervisors, type Employee, type Supervisor } from '@/lib/data';
+import { useState, useEffect } from 'react';
+import { supervisors, type Employee, type Supervisor, initialOrgTree, type OrgNode } from '@/lib/data';
+import { flattenTreeToEmployees } from '@/lib/tree-utils';
 import { EmployeeCard } from '@/components/directory/employee-card';
 import {
   Select,
@@ -11,18 +12,44 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Card } from '@/components/ui/card';
 
 type GroupedEmployees = {
   [key: string]: Employee[];
 };
 
+const ORG_CHART_STORAGE_KEY = 'orgChartTree';
+
 export default function DirectoryPage() {
-  const [employees, setEmployees] = useState<Employee[]>(allEmployees);
+  const [employees, setEmployees] = useState<Employee[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRegion, setSelectedRegion] = useState('all');
+  const [isClient, setIsClient] = useState(false);
 
+  useEffect(() => {
+    setIsClient(true);
+    
+    const savedTree = localStorage.getItem(ORG_CHART_STORAGE_KEY);
+    const orgTree = savedTree ? JSON.parse(savedTree) : initialOrgTree;
+    const allEmployees = flattenTreeToEmployees(orgTree);
+    
+    setEmployees(allEmployees);
+
+    const handleStorageChange = () => {
+        const updatedSavedTree = localStorage.getItem(ORG_CHART_STORAGE_KEY);
+        const updatedOrgTree = updatedSavedTree ? JSON.parse(updatedSavedTree) : initialOrgTree;
+        setEmployees(flattenTreeToEmployees(updatedOrgTree));
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+        window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+  
   const handleRemoveEmployee = (id: string) => {
+    // This function might need to be updated to modify the main org tree
+    // For now, it only affects the local state of this page.
     setEmployees(prev => prev.filter(emp => emp.id !== id));
   };
 
@@ -30,12 +57,13 @@ export default function DirectoryPage() {
     const supervisor = supervisors.find(s => s.id === employee.supervisorId);
     const regionMatch = selectedRegion === 'all' || supervisor?.region === selectedRegion;
     const searchMatch = employee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                        employee.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                        employee.contract.toLowerCase().includes(searchTerm.toLowerCase());
+                        (employee.role && employee.role.toLowerCase().includes(searchTerm.toLowerCase())) ||
+                        (employee.contract && employee.contract.toLowerCase().includes(searchTerm.toLowerCase()));
     return regionMatch && searchMatch;
   });
 
   const groupedBySupervisor = filteredEmployees.reduce((acc: GroupedEmployees, employee) => {
+    // This logic might need adjustment if supervisor data is also in the tree
     const supervisorName = supervisors.find(s => s.id === employee.supervisorId)?.name || 'Unassigned';
     if (!acc[supervisorName]) {
       acc[supervisorName] = [];
@@ -45,6 +73,10 @@ export default function DirectoryPage() {
   }, {});
 
   const regions = [...new Set(supervisors.map(s => s.region).filter(Boolean))] as string[];
+
+  if (!isClient) {
+      return null;
+  }
 
   return (
     <div className="flex flex-col gap-6">
@@ -97,12 +129,6 @@ export default function DirectoryPage() {
             <p className="mt-2 text-sm text-muted-foreground">Ajuste os filtros ou adicione novos funcionários no organograma.</p>
         </div>
       )}
-
     </div>
   );
 }
-
-// Dummy Card component to avoid breaking the code.
-const Card = ({ children, ...props }: React.HTMLAttributes<HTMLDivElement>) => (
-  <div {...props}>{children}</div>
-);

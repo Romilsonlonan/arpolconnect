@@ -1,9 +1,26 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { messages as initialMessages, Message } from '@/lib/data';
 import { MessageCard } from '@/components/dashboard/message-card';
 import { SupervisorNeuralNet } from '@/components/dashboard/supervisor-neural-net';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { AlarmClock, CheckCircle, ShieldAlert, Zap } from 'lucide-react';
+
+function InfoCard({ title, value, icon, colorClass }: { title: string, value: number, icon: React.ReactNode, colorClass?: string }) {
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium">{title}</CardTitle>
+        <div className={colorClass}>{icon}</div>
+      </CardHeader>
+      <CardContent>
+        <div className="text-2xl font-bold">{value}</div>
+      </CardContent>
+    </Card>
+  );
+}
+
 
 export default function DashboardPage() {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
@@ -13,16 +30,21 @@ export default function DashboardPage() {
 
   useEffect(() => {
     setIsBrowser(true);
-    try {
-      const storedMessages = localStorage.getItem('dashboardMessages');
-      if (storedMessages) {
-        setMessages(JSON.parse(storedMessages));
-      } else {
-        setMessages(initialMessages);
-      }
-    } catch (error) {
-      console.error("Failed to parse messages from localStorage", error);
-      setMessages(initialMessages);
+    const loadMessages = () => {
+        try {
+            const storedMessages = localStorage.getItem('dashboardMessages');
+            setMessages(storedMessages ? JSON.parse(storedMessages) : initialMessages);
+        } catch (error) {
+            console.error("Failed to parse messages from localStorage", error);
+            setMessages(initialMessages);
+        }
+    };
+    
+    loadMessages();
+    window.addEventListener('storage', loadMessages);
+
+    return () => {
+        window.removeEventListener('storage', loadMessages);
     }
   }, []);
   
@@ -35,6 +57,28 @@ export default function DashboardPage() {
         }
     }
   }, [messages, isBrowser]);
+
+  const ticketCounts = useMemo(() => {
+    return messages.reduce((acc, msg) => {
+      if (msg.status === 'Finalizado') {
+        acc.finalizado++;
+      } else {
+        switch (msg.urgency) {
+          case 'Crítico':
+            acc.critico++;
+            break;
+          case 'Atenção':
+            acc.alerta++;
+            break;
+          case 'Rotina':
+            acc.rotina++;
+            break;
+        }
+      }
+      return acc;
+    }, { rotina: 0, alerta: 0, critico: 0, finalizado: 0 });
+  }, [messages]);
+
 
   const handleDragSort = () => {
     if (dragItem.current === null || dragOverItem.current === null || dragItem.current === dragOverItem.current) {
@@ -67,6 +111,33 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-6">
+       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <InfoCard 
+            title="Rotina" 
+            value={ticketCounts.rotina} 
+            icon={<AlarmClock className="h-4 w-4 text-muted-foreground" />} 
+            colorClass="text-status-new"
+        />
+        <InfoCard 
+            title="Alerta" 
+            value={ticketCounts.alerta} 
+            icon={<ShieldAlert className="h-4 w-4 text-muted-foreground" />} 
+            colorClass="text-destructive"
+        />
+        <InfoCard 
+            title="Crítico" 
+            value={ticketCounts.critico} 
+            icon={<Zap className="h-4 w-4 text-muted-foreground" />}
+            colorClass="text-status-critical"
+        />
+        <InfoCard 
+            title="Finalizado" 
+            value={ticketCounts.finalizado} 
+            icon={<CheckCircle className="h-4 w-4 text-muted-foreground" />}
+            colorClass="text-status-resolved"
+        />
+       </div>
+       
        <div>
         <h1 className="text-lg font-semibold md:text-2xl font-headline mb-4">Rede de Supervisores</h1>
         <div className="flex items-center justify-center p-4 bg-card rounded-lg shadow-sm min-h-[350px]">

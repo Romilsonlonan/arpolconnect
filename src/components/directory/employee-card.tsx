@@ -56,18 +56,20 @@ function EmployeeAvatar({ employee }: { employee: Employee }) {
     );
 }
 
-export function EmployeeCard({ employee, supervisors, onRemove }: { employee: Employee; supervisors: Supervisor[]; onRemove: (id: string) => void; }) {
+// The onRemove prop is no longer needed here as re-assignment is handled by drag-and-drop
+// and removal should happen from the main organogram page.
+export function EmployeeCard({ employee, supervisors }: { employee: Employee; supervisors: Supervisor[]; }) {
   const { toast } = useToast();
 
   const handleReassign = () => {
     toast({
-      title: "Employee Reassigned",
-      description: `${employee.name} has been successfully reassigned.`,
+      title: "Função Desativada",
+      description: "Por favor, use o método de arrastar e soltar para reatribuir funcionários.",
     })
   }
   
   return (
-    <Card className="flex flex-col">
+    <Card className="flex flex-col bg-card">
       <CardHeader>
         <div className="flex items-center gap-4">
           <EmployeeAvatar employee={employee} />
@@ -91,66 +93,8 @@ export function EmployeeCard({ employee, supervisors, onRemove }: { employee: Em
           <span>{employee.contract}</span>
         </div>
       </CardContent>
-      <CardFooter className="grid grid-cols-2 gap-2">
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button variant="outline" className="w-full">Reatribuir</Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Reatribuir Funcionário</DialogTitle>
-              <DialogDescription>
-                Selecione um novo supervisor para {employee.name}.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="py-4">
-              <Select>
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione um supervisor" />
-                </SelectTrigger>
-                <SelectContent>
-                  {supervisors
-                    .filter(s => s.id !== employee.supervisorId)
-                    .map(supervisor => (
-                      <SelectItem key={supervisor.id} value={supervisor.id}>
-                        {supervisor.name}
-                      </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <DialogFooter>
-              <DialogClose asChild>
-                <Button type="button" variant="secondary">Cancelar</Button>
-              </DialogClose>
-              <DialogClose asChild>
-                 <Button type="submit" onClick={handleReassign}>Confirmar Reatribuição</Button>
-              </DialogClose>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <Button variant="destructive" className="w-full">
-              <Trash2 className="mr-2 h-4 w-4" /> Remover
-            </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Esta ação não pode ser desfeita. Isso removerá permanentemente o
-                funcionário de seus registros.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-              <AlertDialogAction onClick={() => onRemove(employee.id)}>
-                Continuar
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+      <CardFooter>
+         <p className="text-xs text-muted-foreground">Arraste para reatribuir a um novo supervisor.</p>
       </CardFooter>
     </Card>
   );

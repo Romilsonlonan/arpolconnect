@@ -25,29 +25,39 @@ export function updateTree(tree: OrgNode, updateFn: (node: OrgNode) => OrgNode):
   return updatedNode;
 }
 
+
 export function flattenTreeToEmployees(root: OrgNode): Employee[] {
     const employees: Employee[] = [];
 
+    // This function will find all nodes that are not the root and are not direct children of the root.
+    // In our structure, this means they are employees under a supervisor/director.
     function traverse(node: OrgNode, supervisorId?: string) {
-        // We don't want to add the root node as an employee
-        if (node.id !== 'arpolar') {
+        // Only add nodes that have a supervisorId, meaning they are not the top-level directors/supervisors
+        if (supervisorId && node.id !== 'arpolar') {
             employees.push({
                 id: node.id,
                 name: node.name,
+                // @ts-ignore
                 role: node.role,
-                email: node.contact || '', // Assuming contact is email for now
+                // @ts-ignore
+                email: node.contact || `${node.name.toLowerCase().split(' ').join('.')}@arpolar.com`,
                 phone: node.contact || '',
-                supervisorId: supervisorId || '',
+                supervisorId: supervisorId,
                 contract: node.contract || '',
-                avatar: node.avatar
+                avatar: node.avatar || ''
             });
         }
         
         if (node.children) {
+            // The new supervisorId for the next level is the current node's id
             node.children.forEach(child => traverse(child, node.id));
         }
     }
 
-    traverse(root);
+    // Start traversal from the children of the root, as they are the supervisors
+    if (root.children) {
+        root.children.forEach(supervisorNode => traverse(supervisorNode, root.id));
+    }
+    
     return employees;
 }

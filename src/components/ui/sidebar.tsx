@@ -108,12 +108,12 @@ const Sidebar = React.forwardRef<
   HTMLDivElement,
   React.ComponentProps<"div">
 >(({ className, children, ...props }, ref) => {
-    const { open, toggleSidebar } = useSidebar()
+    const { open, setOpen, toggleSidebar } = useSidebar()
     const isMobile = useIsMobile();
 
     if (isMobile) {
         return (
-             <Sheet open={open} onOpenChange={useSidebar().setOpen}>
+             <Sheet open={open} onOpenChange={setOpen}>
                 <SheetContent side="left" className="flex flex-col w-[220px] p-0 bg-primary">
                      {children}
                 </SheetContent>

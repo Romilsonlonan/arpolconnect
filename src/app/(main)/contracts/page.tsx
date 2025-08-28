@@ -28,7 +28,7 @@ const ORG_CHART_STORAGE_KEY = 'orgChartTree';
 
 function ContractCard({ contract }: { contract: Contract }) {
   return (
-    <Card className="group flex flex-col justify-between text-white overflow-hidden shadow-lg hover:scale-105 transition-transform duration-300 relative min-h-[250px]">
+    <Card className="group flex flex-col justify-between text-white overflow-hidden shadow-lg transition-transform duration-300 relative min-h-[250px]">
        <div 
         className="absolute inset-0 bg-cover bg-center -z-10"
         style={{ backgroundImage: `url('${contract.backgroundImage}')`}}

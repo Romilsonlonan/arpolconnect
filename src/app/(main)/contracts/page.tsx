@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { PlusCircle, User, MapPin } from 'lucide-react';
+import { PlusCircle, User, MapPin, Upload } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -19,6 +19,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { type OrgNode, type Contract, initialOrgTree } from '@/lib/data';
+import Image from 'next/image';
 
 const CONTRACTS_STORAGE_KEY = 'arpolarContracts';
 const ORG_CHART_STORAGE_KEY = 'orgChartTree';
@@ -57,13 +58,34 @@ function AddContractModal({ supervisors, onSave }: { supervisors: OrgNode[], onS
     const [address, setAddress] = useState('');
     const [region, setRegion] = useState('');
     const [backgroundImage, setBackgroundImage] = useState('');
+    const fileInputRef = useRef<HTMLInputElement>(null);
     const { toast } = useToast();
+
+    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+             if (file.size > 2 * 1024 * 1024) { // 2MB limit
+                toast({
+                    title: "Imagem Muito Grande",
+                    description: "Por favor, selecione uma imagem menor que 2MB.",
+                    variant: "destructive",
+                });
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                setBackgroundImage(event.target?.result as string);
+            };
+            reader.readAsDataURL(file);
+        }
+    };
+
 
     const handleSubmit = () => {
         if (!name || !supervisorId || !address || !region || !backgroundImage) {
             toast({
                 title: "Campos Obrigatórios",
-                description: "Por favor, preencha todos os campos.",
+                description: "Por favor, preencha todos os campos, incluindo a imagem.",
                 variant: "destructive",
             });
             return;
@@ -80,6 +102,12 @@ function AddContractModal({ supervisors, onSave }: { supervisors: OrgNode[], onS
             region,
             backgroundImage
         });
+        // Reset state after save
+        setName('');
+        setSupervisorId('');
+        setAddress('');
+        setRegion('');
+        setBackgroundImage('');
     }
 
     return (
@@ -118,8 +146,24 @@ function AddContractModal({ supervisors, onSave }: { supervisors: OrgNode[], onS
                         <Input id="region" value={region} onChange={e => setRegion(e.target.value)} />
                     </div>
                     <div className="grid gap-2">
-                        <Label htmlFor="backgroundImage">URL da Imagem de Fundo</Label>
-                        <Input id="backgroundImage" value={backgroundImage} onChange={e => setBackgroundImage(e.target.value)} placeholder="https://picsum.photos/600/400" />
+                        <Label>Imagem de Fundo</Label>
+                        {backgroundImage && (
+                            <div className="relative w-full h-32 rounded-md overflow-hidden border">
+                                <Image src={backgroundImage} alt="Pré-visualização da imagem" layout="fill" objectFit="cover" />
+                            </div>
+                        )}
+                        <Input 
+                            id="image-upload"
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            ref={fileInputRef}
+                            onChange={handleImageUpload}
+                        />
+                         <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
+                            <Upload className="mr-2" />
+                            Carregar Imagem
+                        </Button>
                     </div>
                 </div>
                 <DialogFooter>

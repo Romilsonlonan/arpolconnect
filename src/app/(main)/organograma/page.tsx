@@ -60,17 +60,16 @@ export default function OrganogramaPage() {
 
   useEffect(() => {
     setIsClient(true);
+    let treeToLoad = initialOrgTree;
     try {
       const savedTree = localStorage.getItem(ORG_CHART_STORAGE_KEY);
       const savedSettings = localStorage.getItem(CONTRACT_SETTINGS_STORAGE_KEY);
       
-      let treeToLoad = initialOrgTree;
       if (savedTree) {
         let parsedTree = JSON.parse(savedTree);
-        // Run migration for old avatar data structure
+        // Run migration for old avatar data structure, only on client
         treeToLoad = migrateAvatars(parsedTree);
       }
-      setTree(treeToLoad);
 
       if (savedSettings) {
         setContractSettings(JSON.parse(savedSettings));
@@ -78,8 +77,8 @@ export default function OrganogramaPage() {
 
     } catch (error) {
       console.error("Failed to parse data from localStorage", error);
-      setTree(initialOrgTree);
     }
+    setTree(treeToLoad);
   }, []);
 
   useEffect(() => {
@@ -180,6 +179,38 @@ export default function OrganogramaPage() {
     });
     setTree(newTree);
   };
+
+  const handleMoveNode = (draggedNodeId: string, targetNodeId: string) => {
+    if (!tree || draggedNodeId === targetNodeId) return;
+
+    let draggedNode: OrgNode | null = null;
+    let newTree = { ...tree };
+
+    // Find and remove the dragged node from its original parent
+    newTree = updateTree(newTree, (node) => {
+      if (node.children) {
+        const childIndex = node.children.findIndex(c => c.id === draggedNodeId);
+        if (childIndex > -1) {
+          draggedNode = node.children[childIndex];
+          node.children.splice(childIndex, 1);
+        }
+      }
+      return node;
+    });
+
+    if (!draggedNode) return;
+
+    // Add the dragged node to the target node's children
+    newTree = updateTree(newTree, (node) => {
+      if (node.id === targetNodeId) {
+        return { ...node, children: [...(node.children || []), draggedNode!] };
+      }
+      return node;
+    });
+    
+    setTree(newTree);
+  };
+
   
   const handleSaveSettings = (newSettings: ContractSettings) => {
     setContractSettings(newSettings);
@@ -258,6 +289,7 @@ export default function OrganogramaPage() {
             onUpdate={handleUpdateNode}
             onAddChild={handleAddChildNode}
             onRemove={handleRemoveNode}
+            onMoveNode={handleMoveNode}
             onContractSettingsChange={handleSaveSettings}
             onOpenTicketModal={handleOpenTicketModal}
             onToggleVisibility={handleToggleVisibility}

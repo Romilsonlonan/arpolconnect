@@ -27,6 +27,7 @@ type TreeNodeProps = {
   onUpdate: (nodeId: string, values: Partial<OrgNode>) => void;
   onAddChild: (parentId: string, child: Omit<OrgNode, 'children' | 'id'>) => void;
   onRemove: (nodeId: string) => void;
+  onMoveNode: (draggedNodeId: string, targetNodeId: string) => void;
   onContractSettingsChange: (settings: any) => void;
   onOpenTicketModal: (node: OrgNode) => void;
   onToggleVisibility: (nodeId: string) => void;
@@ -47,16 +48,17 @@ function NodeAvatar({ node }: { node: OrgNode }) {
 
     return (
         <Avatar className="w-16 h-16 border-2 border-primary">
-            <AvatarImage src={avatarUrl} data-ai-hint="person portrait" />
+            <AvatarImage src={avatarUrl} data-ai-hint="person portrait" draggable="false"/>
             <AvatarFallback>{node.name.split(' ').map(n => n[0]).join('').substring(0, 2)}</AvatarFallback>
         </Avatar>
     );
 }
 
-export function TreeNode({ node, onUpdate, onAddChild, onRemove, onContractSettingsChange, onOpenTicketModal, onToggleVisibility, contractSettings, isRoot = false }: TreeNodeProps) {
+export function TreeNode({ node, onUpdate, onAddChild, onRemove, onMoveNode, onContractSettingsChange, onOpenTicketModal, onToggleVisibility, contractSettings, isRoot = false }: TreeNodeProps) {
   const [employeeModalOpen, setEmployeeModalOpen] = useState(false);
   const [contractModalOpen, setContractModalOpen] = useState(false);
   const [editingNode, setEditingNode] = useState<OrgNode | null>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
 
   const handleAdd = () => {
     setEditingNode(null);
@@ -81,12 +83,49 @@ export function TreeNode({ node, onUpdate, onAddChild, onRemove, onContractSetti
   const handleOpenContractSettings = () => {
     setContractModalOpen(true);
   }
+
+  // --- Drag and Drop Handlers ---
+  const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
+    if (isRoot) return;
+    e.dataTransfer.setData('text/plain', node.id);
+    e.effectAllowed = 'move';
+  };
+  
+  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+  };
+  
+  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+    const draggedNodeId = e.dataTransfer.getData('text/plain');
+    if (draggedNodeId && draggedNodeId !== node.id) {
+      onMoveNode(draggedNodeId, node.id);
+    }
+  };
   
   return (
     <div className="flex flex-col items-center text-center relative px-4">
-      <Card className={cn(
-        "min-w-60 text-center shadow-md hover:shadow-lg transition-transform duration-300 hover:scale-105 relative group",
-        "bg-card"
+      <Card 
+        draggable={!isRoot}
+        onDragStart={handleDragStart}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        className={cn(
+        "min-w-60 text-center shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105 relative group",
+        "bg-card",
+        isDragOver && "ring-2 ring-primary ring-offset-2",
+        !isRoot && "cursor-move"
         )}>
         <CardContent className="p-4 flex flex-col items-center gap-2">
           <NodeAvatar node={node} />
@@ -185,6 +224,7 @@ export function TreeNode({ node, onUpdate, onAddChild, onRemove, onContractSetti
                   onUpdate={onUpdate} 
                   onAddChild={onAddChild} 
                   onRemove={onRemove}
+                  onMoveNode={onMoveNode}
                   onContractSettingsChange={onContractSettingsChange}
                   onOpenTicketModal={onOpenTicketModal}
                   onToggleVisibility={onToggleVisibility}

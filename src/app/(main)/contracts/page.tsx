@@ -21,18 +21,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useToast } from '@/hooks/use-toast';
 import { type OrgNode, type Contract, initialOrgTree } from '@/lib/data';
 import Image from 'next/image';
+import { cn } from '@/lib/utils';
 
 const CONTRACTS_STORAGE_KEY = 'arpolarContracts';
 const ORG_CHART_STORAGE_KEY = 'orgChartTree';
 
 function ContractCard({ contract }: { contract: Contract }) {
   return (
-    <Card className="flex flex-col justify-between text-white overflow-hidden shadow-lg hover:scale-105 transition-transform duration-300 relative min-h-[250px]">
-      <div 
-        className="absolute inset-0 bg-cover bg-center -z-10"
+    <Card className="group flex flex-col justify-between text-white overflow-hidden shadow-lg hover:scale-105 transition-transform duration-300 relative min-h-[250px]">
+       <div 
+        className="absolute inset-0 bg-cover bg-center -z-10 transition-all duration-300"
         style={{ backgroundImage: `url('${contract.backgroundImage}')`}}
       />
-      <div className="absolute inset-0 bg-black/50 -z-10"></div>
+      <div className="absolute inset-0 bg-black/80 group-hover:bg-black/40 transition-colors duration-300 -z-10"></div>
       <CardHeader>
         <CardTitle className="text-xl font-bold font-headline">{contract.name}</CardTitle>
         <CardDescription className="text-white/80">{contract.address}</CardDescription>

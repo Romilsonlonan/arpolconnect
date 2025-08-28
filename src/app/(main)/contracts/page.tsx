@@ -19,14 +19,13 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 import { type OrgNode, type Contract, initialOrgTree } from '@/lib/data';
-import { flattenTreeToEmployees } from '@/lib/tree-utils';
 
 const CONTRACTS_STORAGE_KEY = 'arpolarContracts';
 const ORG_CHART_STORAGE_KEY = 'orgChartTree';
 
 function ContractCard({ contract }: { contract: Contract }) {
   return (
-    <Card className="flex flex-col justify-between text-white overflow-hidden shadow-lg hover:scale-105 transition-transform duration-300">
+    <Card className="flex flex-col justify-between text-white overflow-hidden shadow-lg hover:scale-105 transition-transform duration-300 relative">
       <div 
         className="absolute inset-0 bg-cover bg-center -z-10"
         style={{ backgroundImage: `url('${contract.backgroundImage}')`}}
@@ -38,7 +37,7 @@ function ContractCard({ contract }: { contract: Contract }) {
         <CardDescription className="text-white/80">{contract.address}</CardDescription>
       </CardHeader>
       <CardContent className="flex-grow"></CardContent>
-      <CardFooter className="flex flex-col items-start gap-2 text-sm">
+      <CardFooter className="flex flex-col items-start gap-2 text-sm z-10">
          <div className="flex items-center gap-2">
             <User className="w-4 h-4"/>
             <span>{contract.supervisorName}</span>
@@ -103,7 +102,7 @@ function AddContractModal({ supervisors, onSave }: { supervisors: OrgNode[], onS
                     </div>
                     <div className="grid gap-2">
                         <Label htmlFor="supervisor">Supervisor Responsável</Label>
-                        <Select onValueChange={setSupervisorId}>
+                        <Select onValueChange={setSupervisorId} value={supervisorId}>
                             <SelectTrigger><SelectValue placeholder="Selecione um supervisor" /></SelectTrigger>
                             <SelectContent>
                                 {supervisors.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
@@ -132,6 +131,19 @@ function AddContractModal({ supervisors, onSave }: { supervisors: OrgNode[], onS
     )
 }
 
+function findSupervisorsInTree(node: OrgNode): OrgNode[] {
+    let supervisors: OrgNode[] = [];
+    if (node.role === 'Supervisor') {
+        supervisors.push(node);
+    }
+    if (node.children) {
+        for (const child of node.children) {
+            supervisors = supervisors.concat(findSupervisorsInTree(child));
+        }
+    }
+    return supervisors;
+}
+
 export default function ContractsPage() {
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [supervisors, setSupervisors] = useState<OrgNode[]>([]);
@@ -145,8 +157,8 @@ export default function ContractsPage() {
 
         const savedTree = localStorage.getItem(ORG_CHART_STORAGE_KEY);
         const orgTree = savedTree ? JSON.parse(savedTree) : initialOrgTree;
-        // Supervisors are direct children of the root node
-        const supervisorNodes = orgTree.children?.filter(node => node.role === 'Supervisor') || [];
+        
+        const supervisorNodes = findSupervisorsInTree(orgTree);
         setSupervisors(supervisorNodes);
 
       } catch (error) {

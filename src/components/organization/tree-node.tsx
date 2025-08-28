@@ -25,6 +25,7 @@ import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
+  TooltipProvider
 } from "@/components/ui/tooltip"
 
 type TreeNodeProps = {
@@ -41,19 +42,20 @@ type TreeNodeProps = {
 };
 
 function NodeAvatar({ node }: { node: OrgNode }) {
-    const [avatarUrl, setAvatarUrl] = useState(node.avatar);
+    const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
     useEffect(() => {
-        // Fetch avatar from localStorage on the client
-        const url = getAvatar(node.id);
-        if (url) {
+        if (node.avatar?.startsWith('avatar:')) {
+            const url = getAvatar(node.id);
             setAvatarUrl(url);
+        } else {
+            setAvatarUrl(node.avatar);
         }
     }, [node.id, node.avatar]);
 
     return (
         <Avatar className="w-16 h-16 border-2 border-primary">
-            <AvatarImage src={avatarUrl} data-ai-hint="person portrait" draggable="false"/>
+            <AvatarImage src={avatarUrl ?? undefined} data-ai-hint="person portrait" draggable="false"/>
             <AvatarFallback>{node.name.split(' ').map(n => n[0]).join('').substring(0, 2)}</AvatarFallback>
         </Avatar>
     );
@@ -119,6 +121,7 @@ export function TreeNode({ node, onUpdate, onAddChild, onRemove, onMoveNode, onC
   };
   
   return (
+    <TooltipProvider>
     <div className="flex flex-col items-center text-center relative px-4">
       <Card 
         draggable={!isRoot}
@@ -271,5 +274,8 @@ export function TreeNode({ node, onUpdate, onAddChild, onRemove, onMoveNode, onC
         </>
       )}
     </div>
+    </TooltipProvider>
   );
 }
+
+    

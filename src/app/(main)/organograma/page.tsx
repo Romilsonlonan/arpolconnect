@@ -10,7 +10,7 @@ import { updateTree } from '@/lib/tree-utils';
 import { ContractSettingsModal } from '@/components/organization/contract-settings-modal';
 import { TicketModal } from '@/components/organization/ticket-modal';
 import type { Message } from '@/lib/data';
-import { saveAvatar } from '@/lib/avatar-storage';
+import { saveAvatar, getAvatar } from '@/lib/avatar-storage';
 
 const ORG_CHART_STORAGE_KEY = 'orgChartTree';
 const CONTRACT_SETTINGS_STORAGE_KEY = 'contractSettings';
@@ -67,15 +67,15 @@ export default function OrganogramaPage() {
     setTree(treeToLoad);
   }, []);
 
-  useEffect(() => {
-    if (isClient && tree) {
-        try {
-          localStorage.setItem(ORG_CHART_STORAGE_KEY, JSON.stringify(tree));
-        } catch (error) {
-          console.error("Failed to save org chart to localStorage", error);
-        }
+  const saveTree = (updatedTree: OrgNode) => {
+    try {
+        localStorage.setItem(ORG_CHART_STORAGE_KEY, JSON.stringify(updatedTree));
+        setTree(updatedTree);
+    } catch (error) {
+        console.error("Failed to save org chart to localStorage", error);
     }
-  }, [tree, isClient]);
+  };
+
 
    useEffect(() => {
     if (isClient) {
@@ -131,13 +131,15 @@ export default function OrganogramaPage() {
         // If a new avatar data URL is passed, save it separately
         if (values.avatar && values.avatar.startsWith('data:image')) {
             saveAvatar(nodeId, values.avatar);
+            // Don't store the full data URL in the main tree
+            values.avatar = `avatar:${nodeId}`;
         }
         return { ...node, ...values };
       }
       return node;
     });
 
-    setTree(newTree);
+    saveTree(newTree);
 
     if (values.contract && parentNode) {
         syncContractList(values.contract, parentNode);
@@ -148,11 +150,11 @@ export default function OrganogramaPage() {
     if (!tree) return;
     const newTree = updateTree(tree, (node) => {
       if (node.id === nodeId) {
-        return { ...node, showInNeuralNet: node.showInNeuralNet === false };
+        return { ...node, showInNeuralNet: node.showInNeuralNet !== false };
       }
       return node;
     });
-    setTree(newTree);
+    saveTree(newTree);
   };
 
 
@@ -174,13 +176,15 @@ export default function OrganogramaPage() {
         // If a new avatar data URL is passed, save it separately
         if (newNode.avatar && newNode.avatar.startsWith('data:image')) {
             saveAvatar(newNodeId, newNode.avatar);
+            // Don't store the full data URL in the main tree
+            newNode.avatar = `avatar:${newNodeId}`;
         }
         return { ...node, children: [...(node.children || []), newNode] };
       }
       return node;
     });
 
-    setTree(newTree);
+    saveTree(newTree);
 
     if(child.contract && parentNode) {
         syncContractList(child.contract, parentNode);
@@ -193,7 +197,8 @@ export default function OrganogramaPage() {
     if (nodeId === tree.id) {
        setTree(null);
        localStorage.removeItem(ORG_CHART_STORAGE_KEY);
-       setTimeout(() => setTree(initialOrgTree), 0);
+       // This might be too aggressive, maybe just clear children
+       saveTree(initialOrgTree);
        return;
     }
 
@@ -203,7 +208,7 @@ export default function OrganogramaPage() {
       }
       return node;
     });
-    setTree(newTree);
+    saveTree(newTree);
   };
 
   const handleMoveNode = (draggedNodeId: string, targetNodeId: string) => {
@@ -234,7 +239,7 @@ export default function OrganogramaPage() {
       return node;
     });
     
-    setTree(newTree);
+    saveTree(newTree);
   };
 
   
@@ -339,3 +344,5 @@ export default function OrganogramaPage() {
     </div>
   );
 }
+
+    

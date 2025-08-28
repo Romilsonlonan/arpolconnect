@@ -27,6 +27,7 @@ type StatusInfo = {
   label: string;
   colorClass: string;
   pulse: boolean;
+  shadowClass?: string;
 };
 
 export function MessageCard({ message }: { message: Message }) {
@@ -36,9 +37,9 @@ export function MessageCard({ message }: { message: Message }) {
     }
     switch (message.urgency) {
       case 'Crítico':
-        return { label: 'Crítico', colorClass: 'bg-status-critical text-white', pulse: true };
+        return { label: 'Crítico', colorClass: 'bg-status-critical text-white', pulse: true, shadowClass: 'animate-shadow-pulse-critical' };
       case 'Atenção':
-        return { label: 'Atenção', colorClass: 'bg-destructive', pulse: true };
+        return { label: 'Atenção', colorClass: 'bg-destructive', pulse: true, shadowClass: 'animate-shadow-pulse-warning' };
       case 'Rotina':
       default:
         return { label: 'Rotina', colorClass: 'bg-status-new', pulse: false };
@@ -46,7 +47,10 @@ export function MessageCard({ message }: { message: Message }) {
   }, [message.status, message.urgency]);
 
   return (
-    <Card className="flex flex-col transition-transform duration-300 hover:scale-105">
+    <Card className={cn(
+        "flex flex-col transition-transform duration-300 hover:scale-105",
+        statusInfo.shadowClass
+    )}>
       <CardHeader>
         <div className="flex items-start justify-between gap-2">
           <CardTitle className="text-base font-bold font-headline pr-2">{message.contractName}</CardTitle>
@@ -91,7 +95,7 @@ export function MessageCard({ message }: { message: Message }) {
         </div>
         <Dialog>
           <DialogTrigger asChild>
-            <Button variant="outline" size="sm">Detalhes</Button>
+            <Button variant="outline" size="sm" draggable="false">Detalhes</Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>

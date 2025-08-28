@@ -84,10 +84,20 @@ export default {
             height: '0',
           },
         },
+        'shadow-pulse-warning': {
+          '0%, 100%': { boxShadow: '0 0 0 0 rgba(220, 38, 38, 0.7)' }, // Cor vermelha de 'destructive'
+          '50%': { boxShadow: '0 0 12px 3px rgba(220, 38, 38, 0.3)' },
+        },
+        'shadow-pulse-critical': {
+          '0%, 100%': { boxShadow: '0 0 0 0 rgba(13, 13, 13, 0.7)' }, // Cor preta de 'status-critical'
+          '50%': { boxShadow: '0 0 12px 3px rgba(13, 13, 13, 0.4)' },
+        }
       },
       animation: {
         'accordion-down': 'accordion-down 0.2s ease-out',
         'accordion-up': 'accordion-up 0.2s ease-out',
+        'shadow-pulse-warning': 'shadow-pulse-warning 2s infinite',
+        'shadow-pulse-critical': 'shadow-pulse-critical 2s infinite',
       },
     },
   },

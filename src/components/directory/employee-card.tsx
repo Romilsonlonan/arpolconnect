@@ -50,7 +50,7 @@ function EmployeeAvatar({ employee }: { employee: Employee }) {
 
     return (
         <Avatar className="w-16 h-16">
-            <AvatarImage src={finalAvatarUrl} data-ai-hint="person portrait" />
+            <AvatarImage src={finalAvatarUrl} data-ai-hint="person portrait" draggable="false" />
             <AvatarFallback>{employee.name.charAt(0)}</AvatarFallback>
         </Avatar>
     );

@@ -6,13 +6,14 @@ import { MessageCard } from '@/components/dashboard/message-card';
 import { SupervisorNeuralNet } from '@/components/dashboard/supervisor-neural-net';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AlarmClock, CheckCircle, ShieldAlert, Zap } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 function InfoCard({ title, value, icon, colorClass }: { title: string, value: number, icon: React.ReactNode, colorClass?: string }) {
   return (
-    <Card>
+    <Card className={cn("text-white", colorClass)}>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
         <CardTitle className="text-sm font-medium">{title}</CardTitle>
-        <div className={colorClass}>{icon}</div>
+        {icon}
       </CardHeader>
       <CardContent>
         <div className="text-2xl font-bold">{value}</div>
@@ -115,26 +116,26 @@ export default function DashboardPage() {
         <InfoCard 
             title="Rotina" 
             value={ticketCounts.rotina} 
-            icon={<AlarmClock className="h-4 w-4 text-muted-foreground" />} 
-            colorClass="text-status-new"
+            icon={<AlarmClock className="h-4 w-4" />} 
+            colorClass="bg-status-new"
         />
         <InfoCard 
             title="Alerta" 
             value={ticketCounts.alerta} 
-            icon={<ShieldAlert className="h-4 w-4 text-muted-foreground" />} 
-            colorClass="text-destructive"
+            icon={<ShieldAlert className="h-4 w-4" />} 
+            colorClass="bg-destructive"
         />
         <InfoCard 
             title="Crítico" 
             value={ticketCounts.critico} 
-            icon={<Zap className="h-4 w-4 text-muted-foreground" />}
-            colorClass="text-status-critical"
+            icon={<Zap className="h-4 w-4" />}
+            colorClass="bg-status-critical"
         />
         <InfoCard 
             title="Finalizado" 
             value={ticketCounts.finalizado} 
-            icon={<CheckCircle className="h-4 w-4 text-muted-foreground" />}
-            colorClass="text-status-resolved"
+            icon={<CheckCircle className="h-4 w-4" />}
+            colorClass="bg-status-resolved"
         />
        </div>
        

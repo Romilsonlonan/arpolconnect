@@ -19,7 +19,6 @@ const CONTRACTS_STORAGE_KEY = 'arpolarContracts';
 
 
 type ContractSettings = {
-  backgroundImage: string;
   contractName: string;
   region: string;
   address: string;
@@ -36,7 +35,6 @@ export default function OrganogramaPage() {
   const [ticketNode, setTicketNode] = useState<OrgNode | null>(null);
 
   const [contractSettings, setContractSettings] = useState<ContractSettings>({
-    backgroundImage: 'https://i.ibb.co/zVzbGGgD/fundoaqc.jpg',
     contractName: 'Contrato Principal',
     region: 'N/A',
     address: 'N/A',
@@ -59,9 +57,6 @@ export default function OrganogramaPage() {
 
       if (savedSettings) {
         setContractSettings(JSON.parse(savedSettings));
-      } else {
-        // Ensure the default background is set if no settings are saved
-        setContractSettings(prev => ({ ...prev, backgroundImage: 'https://i.ibb.co/zVzbGGgD/fundoaqc.jpg'}));
       }
 
     } catch (error) {
@@ -312,7 +307,7 @@ export default function OrganogramaPage() {
       </div>
       <div
         className="flex-grow overflow-auto p-4 rounded-lg mt-4 bg-cover bg-center"
-        style={{ backgroundImage: `url('${contractSettings.backgroundImage}')` }}
+        style={{ backgroundImage: `url('https://i.ibb.co/zVzbGGgD/fundoaqc.jpg')` }}
       >
         <div
           className="transition-transform duration-300"

@@ -16,7 +16,6 @@ import { Label } from '@/components/ui/label';
 import { ScrollArea } from '../ui/scroll-area';
 
 type ContractSettings = {
-  backgroundImage?: string;
   contractName: string;
   region: string;
   address: string;
@@ -32,7 +31,6 @@ type ContractSettingsModalProps = {
 };
 
 export function ContractSettingsModal({ isOpen, onClose, onSave, settings, hideBackgroundImage = false }: ContractSettingsModalProps) {
-  const [backgroundImage, setBackgroundImage] = useState('');
   const [contractName, setContractName] = useState('');
   const [region, setRegion] = useState('');
   const [address, setAddress] = useState('');
@@ -40,7 +38,6 @@ export function ContractSettingsModal({ isOpen, onClose, onSave, settings, hideB
 
   useEffect(() => {
     if (settings) {
-      setBackgroundImage(settings.backgroundImage || '');
       setContractName(settings.contractName);
       setRegion(settings.region);
       setAddress(settings.address);
@@ -55,9 +52,6 @@ export function ContractSettingsModal({ isOpen, onClose, onSave, settings, hideB
       address,
       responsible,
     };
-    if (!hideBackgroundImage) {
-        settingsToSave.backgroundImage = backgroundImage
-    }
     onSave(settingsToSave);
     onClose();
   };
@@ -68,17 +62,11 @@ export function ContractSettingsModal({ isOpen, onClose, onSave, settings, hideB
         <DialogHeader>
           <DialogTitle>Configurações do Contrato</DialogTitle>
           <DialogDescription>
-            Atualize as informações gerais do contrato e a imagem de fundo do organograma.
+            Atualize as informações gerais do contrato. A imagem de fundo é configurada separadamente.
           </DialogDescription>
         </DialogHeader>
         <ScrollArea className="max-h-[70vh] -mx-6">
           <div className="grid gap-4 py-4 px-6">
-            {!hideBackgroundImage && (
-                <div className="grid gap-2">
-                <Label htmlFor="backgroundImage">URL da Imagem de Fundo</Label>
-                <Input id="backgroundImage" value={backgroundImage} onChange={(e) => setBackgroundImage(e.target.value)} placeholder="https://exemplo.com/imagem.png" />
-                </div>
-            )}
             <div className="grid gap-2">
               <Label htmlFor="contractName">Nome do Contrato (Cliente)</Label>
               <Input id="contractName" value={contractName} onChange={(e) => setContractName(e.target.value)} />

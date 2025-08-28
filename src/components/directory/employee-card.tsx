@@ -69,7 +69,7 @@ export function EmployeeCard({ employee, supervisors }: { employee: Employee; su
   }
   
   return (
-    <Card className="flex flex-col bg-card">
+    <Card className="flex flex-col bg-card transition-transform duration-300 hover:scale-105">
       <CardHeader>
         <div className="flex items-center gap-4">
           <EmployeeAvatar employee={employee} />

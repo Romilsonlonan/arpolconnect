@@ -85,7 +85,7 @@ export function TreeNode({ node, onUpdate, onAddChild, onRemove, onContractSetti
   return (
     <div className="flex flex-col items-center text-center relative px-4">
       <Card className={cn(
-        "min-w-60 text-center shadow-md hover:shadow-lg transition-all duration-300 relative group",
+        "min-w-60 text-center shadow-md hover:shadow-lg transition-transform duration-300 hover:scale-105 relative group",
         "bg-card"
         )}>
         <CardContent className="p-4 flex flex-col items-center gap-2">

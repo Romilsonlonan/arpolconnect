@@ -46,7 +46,7 @@ export function MessageCard({ message }: { message: Message }) {
   }, [message.status, message.urgency]);
 
   return (
-    <Card className="flex flex-col">
+    <Card className="flex flex-col transition-transform duration-300 hover:scale-105">
       <CardHeader>
         <div className="flex items-start justify-between gap-2">
           <CardTitle className="text-base font-bold font-headline pr-2">{message.contractName}</CardTitle>

@@ -83,8 +83,7 @@ export default function OrganogramaPage() {
   }, []);
 
   useEffect(() => {
-    if (isClient) {
-      if (tree) {
+    if (isClient && tree) {
         try {
           // Create a version of the tree for storage that does NOT include base64 avatars
           const treeForStorage = updateTree(tree, (node) => {
@@ -100,14 +99,19 @@ export default function OrganogramaPage() {
         } catch (error) {
           console.error("Failed to save org chart to localStorage", error);
         }
-      }
+    }
+  }, [tree, isClient]);
+
+   useEffect(() => {
+    if (isClient) {
       try {
         localStorage.setItem(CONTRACT_SETTINGS_STORAGE_KEY, JSON.stringify(contractSettings));
       } catch (error) {
         console.error("Failed to save contract settings to localStorage", error);
       }
     }
-  }, [tree, contractSettings, isClient]);
+  }, [contractSettings, isClient]);
+
 
   const handleUpdateNode = (nodeId: string, values: Partial<OrgNode>) => {
     if (!tree) return;

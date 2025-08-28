@@ -59,6 +59,9 @@ export default function OrganogramaPage() {
 
       if (savedSettings) {
         setContractSettings(JSON.parse(savedSettings));
+      } else {
+        // Ensure the default background is set if no settings are saved
+        setContractSettings(prev => ({ ...prev, backgroundImage: 'https://i.ibb.co/zVzbGGgD/fundoaqc.jpg'}));
       }
 
     } catch (error) {
@@ -308,7 +311,7 @@ export default function OrganogramaPage() {
         </div>
       </div>
       <div
-        className="flex-grow overflow-auto p-4 rounded-lg mt-4"
+        className="flex-grow overflow-auto p-4 rounded-lg mt-4 bg-cover bg-center"
         style={{ backgroundImage: `url('${contractSettings.backgroundImage}')` }}
       >
         <div
@@ -344,5 +347,3 @@ export default function OrganogramaPage() {
     </div>
   );
 }
-
-    

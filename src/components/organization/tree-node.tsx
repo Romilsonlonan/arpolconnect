@@ -21,6 +21,11 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
 
 type TreeNodeProps = {
   node: OrgNode;
@@ -149,31 +154,61 @@ export function TreeNode({ node, onUpdate, onAddChild, onRemove, onMoveNode, onC
            )}
 
           <div className="absolute top-2 right-2 flex flex-col gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-             <Button variant="outline" size="icon" className="h-7 w-7 bg-white/80" onClick={handleAdd}>
-                <Plus className="h-4 w-4" />
-             </Button>
-            <Button variant="outline" size="icon" className="h-7 w-7 bg-white/80" onClick={handleEdit}>
-                <Pencil className="h-4 w-4" />
-            </Button>
+             <Tooltip>
+                <TooltipTrigger asChild>
+                    <Button variant="outline" size="icon" className="h-7 w-7 bg-white/80" onClick={handleAdd}>
+                        <Plus className="h-4 w-4" />
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent><p>Adicionar</p></TooltipContent>
+             </Tooltip>
+             <Tooltip>
+                <TooltipTrigger asChild>
+                    <Button variant="outline" size="icon" className="h-7 w-7 bg-white/80" onClick={handleEdit}>
+                        <Pencil className="h-4 w-4" />
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent><p>Editar</p></TooltipContent>
+            </Tooltip>
             {!isRoot && (
-              <Button variant="outline" size="icon" className="h-7 w-7 bg-white/80" onClick={() => onToggleVisibility(node.id)}>
-                {node.showInNeuralNet === false ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-              </Button>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button variant="outline" size="icon" className="h-7 w-7 bg-white/80" onClick={() => onToggleVisibility(node.id)}>
+                            {node.showInNeuralNet === false ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent><p>Visibilidade na Rede</p></TooltipContent>
+                </Tooltip>
             )}
-            <Button variant="outline" size="icon" className="h-7 w-7 bg-white/80" onClick={handleOpenContractSettings}>
-                <Building className="h-4 w-4" />
-            </Button>
-            <Button variant="outline" size="icon" className="h-7 w-7 bg-white/80" onClick={() => onOpenTicketModal(node)}>
-                <MessageSquarePlus className="h-4 w-4" />
-            </Button>
+             <Tooltip>
+                <TooltipTrigger asChild>
+                    <Button variant="outline" size="icon" className="h-7 w-7 bg-white/80" onClick={handleOpenContractSettings}>
+                        <Building className="h-4 w-4" />
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent><p>Configurar Contrato</p></TooltipContent>
+            </Tooltip>
+             <Tooltip>
+                <TooltipTrigger asChild>
+                    <Button variant="outline" size="icon" className="h-7 w-7 bg-white/80" onClick={() => onOpenTicketModal(node)}>
+                        <MessageSquarePlus className="h-4 w-4" />
+                    </Button>
+                </TooltipTrigger>
+                <TooltipContent><p>Criar Ticket</p></TooltipContent>
+            </Tooltip>
           </div>
           <div className="absolute top-2 left-2 flex flex-col gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
              <AlertDialog>
-              <AlertDialogTrigger asChild>
-                 <Button variant="destructive" size="icon" className="h-7 w-7">
-                    <Trash2 className="h-4 w-4" />
-                </Button>
-              </AlertDialogTrigger>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                    <AlertDialogTrigger asChild>
+                        <Button variant="destructive" size="icon" className="h-7 w-7">
+                            <Trash2 className="h-4 w-4" />
+                        </Button>
+                    </AlertDialogTrigger>
+                </TooltipTrigger>
+                <TooltipContent><p>Deletar</p></TooltipContent>
+              </Tooltip>
               <AlertDialogContent>
                 <AlertDialogHeader>
                   <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>

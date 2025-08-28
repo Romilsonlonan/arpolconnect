@@ -20,8 +20,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import type { OrgNode } from '@/lib/data';
-import { contractList } from '@/lib/data';
+import type { OrgNode, Contract } from '@/lib/data';
 import { getAvatar } from '@/lib/avatar-storage';
 import { ScrollArea } from '../ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
@@ -56,6 +55,7 @@ const defaultRoles = [
 ];
 
 const PLACEHOLDER_AVATAR = 'https://placehold.co/100x100';
+const CONTRACTS_STORAGE_KEY = 'arpolarContracts';
 
 export function EmployeeModal({ isOpen, onClose, onSave, editingNode }: EmployeeModalProps) {
   const [name, setName] = useState('');
@@ -64,23 +64,30 @@ export function EmployeeModal({ isOpen, onClose, onSave, editingNode }: Employee
   const [contract, setContract] = useState('');
   const [avatar, setAvatar] = useState(PLACEHOLDER_AVATAR);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [availableContracts, setAvailableContracts] = useState<Contract[]>([]);
 
 
   useEffect(() => {
-    if (editingNode) {
-      setName(editingNode.name);
-      setRole(editingNode.role);
-      setContact(editingNode.contact || '');
-      setContract(editingNode.contract || '');
-      const storedAvatar = getAvatar(editingNode.id);
-      setAvatar(storedAvatar || editingNode.avatar || PLACEHOLDER_AVATAR);
-    } else {
-      // Reset form when adding a new node
-      setName('');
-      setRole('');
-      setContact('');
-      setContract('');
-      setAvatar(PLACEHOLDER_AVATAR);
+    if (isOpen) {
+        // Load contracts from localStorage
+        const savedContracts = localStorage.getItem(CONTRACTS_STORAGE_KEY);
+        setAvailableContracts(savedContracts ? JSON.parse(savedContracts) : []);
+
+        if (editingNode) {
+          setName(editingNode.name);
+          setRole(editingNode.role);
+          setContact(editingNode.contact || '');
+          setContract(editingNode.contract || '');
+          const storedAvatar = getAvatar(editingNode.id);
+          setAvatar(storedAvatar || editingNode.avatar || PLACEHOLDER_AVATAR);
+        } else {
+          // Reset form when adding a new node
+          setName('');
+          setRole('');
+          setContact('');
+          setContract('');
+          setAvatar(PLACEHOLDER_AVATAR);
+        }
     }
   }, [editingNode, isOpen]);
 
@@ -105,42 +112,14 @@ export function EmployeeModal({ isOpen, onClose, onSave, editingNode }: Employee
   const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 10 * 1024 * 1024) { // 10MB limit (before compression)
-        alert("File is too large. Please select an image smaller than 10MB.");
+      if (file.size > 2 * 1024 * 1024) { // 2MB limit
+        alert("O arquivo é muito grande. Selecione uma imagem menor que 2MB.");
         return;
       }
       
       const reader = new FileReader();
       reader.onload = (event) => {
-        const img = document.createElement('img');
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          const MAX_WIDTH = 256;
-          const MAX_HEIGHT = 256;
-          let width = img.width;
-          let height = img.height;
-
-          if (width > height) {
-            if (width > MAX_WIDTH) {
-              height *= MAX_WIDTH / width;
-              width = MAX_WIDTH;
-            }
-          } else {
-            if (height > MAX_HEIGHT) {
-              width *= MAX_HEIGHT / height;
-              height = MAX_HEIGHT;
-            }
-          }
-          canvas.width = width;
-          canvas.height = height;
-          const ctx = canvas.getContext('2d');
-          ctx?.drawImage(img, 0, 0, width, height);
-          
-          // Get the data URL with JPEG compression
-          const dataUrl = canvas.toDataURL('image/jpeg', 0.9);
-          setAvatar(dataUrl);
-        };
-        img.src = event.target?.result as string;
+        setAvatar(event.target?.result as string);
       };
       reader.readAsDataURL(file);
     }
@@ -204,8 +183,8 @@ export function EmployeeModal({ isOpen, onClose, onSave, editingNode }: Employee
                     <SelectValue placeholder="Selecione um contrato" />
                 </SelectTrigger>
                 <SelectContent>
-                    {contractList.map((c) => (
-                        <SelectItem key={c} value={c}>{c}</SelectItem>
+                    {availableContracts.map((c) => (
+                        <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
                     ))}
                 </SelectContent>
                 </Select>

@@ -47,6 +47,16 @@ export type OrgNode = {
   children?: OrgNode[];
 }
 
+export type Contract = {
+    id: string;
+    name: string;
+    supervisorId: string;
+    supervisorName: string;
+    address: string;
+    region: string;
+    backgroundImage: string;
+}
+
 export type RefrigerationQuestion = {
   id: string;
   question: string;

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { initialOrgTree, type OrgNode } from '@/lib/data';
+import { initialOrgTree, type OrgNode, type Contract } from '@/lib/data';
 import { TreeNode } from '@/components/organization/tree-node';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
@@ -15,6 +15,7 @@ import { saveAvatar } from '@/lib/avatar-storage';
 const ORG_CHART_STORAGE_KEY = 'orgChartTree';
 const CONTRACT_SETTINGS_STORAGE_KEY = 'contractSettings';
 const DASHBOARD_MESSAGES_KEY = 'dashboardMessages';
+const CONTRACTS_STORAGE_KEY = 'arpolarContracts';
 
 
 type ContractSettings = {
@@ -24,20 +25,6 @@ type ContractSettings = {
   address: string;
   responsible: string;
 };
-
-// Helper function to migrate old base64 avatars to the new storage
-function migrateAvatars(node: OrgNode, isRoot = true): OrgNode {
-  // Don't process the root node's avatar as it's a placeholder
-  if (!isRoot && node.avatar && node.avatar.startsWith('data:image')) {
-    saveAvatar(node.id, node.avatar);
-    // The avatar property now just needs to be a reference, but we can keep it as the ID.
-    // The display components will know how to fetch it.
-  }
-  if (node.children) {
-    node.children = node.children.map(child => migrateAvatars(child, false));
-  }
-  return node;
-}
 
 
 export default function OrganogramaPage() {
@@ -67,8 +54,7 @@ export default function OrganogramaPage() {
       
       if (savedTree) {
         let parsedTree = JSON.parse(savedTree);
-        // Run migration for old avatar data structure, only on client
-        treeToLoad = migrateAvatars(parsedTree);
+        treeToLoad = parsedTree;
       }
 
       if (savedSettings) {
@@ -84,17 +70,7 @@ export default function OrganogramaPage() {
   useEffect(() => {
     if (isClient && tree) {
         try {
-          // Create a version of the tree for storage that does NOT include base64 avatars
-          const treeForStorage = updateTree(tree, (node) => {
-            const newNode = { ...node };
-            if (newNode.avatar?.startsWith('data:image')) {
-              // This is a safety net. The main logic now relies on EmployeeModal saving correctly.
-              // We replace the avatar with the ID reference for storage.
-              saveAvatar(newNode.id, newNode.avatar);
-            }
-            return newNode;
-          });
-          localStorage.setItem(ORG_CHART_STORAGE_KEY, JSON.stringify(treeForStorage));
+          localStorage.setItem(ORG_CHART_STORAGE_KEY, JSON.stringify(tree));
         } catch (error) {
           console.error("Failed to save org chart to localStorage", error);
         }
@@ -111,9 +87,45 @@ export default function OrganogramaPage() {
     }
   }, [contractSettings, isClient]);
 
+  const syncContractList = (newContractName: string, supervisorNode: OrgNode) => {
+    if (!newContractName || supervisorNode.role !== 'Supervisor') return;
+
+    try {
+        const savedContracts = localStorage.getItem(CONTRACTS_STORAGE_KEY);
+        const contracts: Contract[] = savedContracts ? JSON.parse(savedContracts) : [];
+
+        // Check if contract with the same name already exists
+        if (!contracts.some(c => c.name === newContractName)) {
+            const newContract: Contract = {
+                id: `contract-${Date.now()}`,
+                name: newContractName,
+                supervisorId: supervisorNode.id,
+                supervisorName: supervisorNode.name,
+                address: "Não definido",
+                region: "Não definida",
+                backgroundImage: `https://picsum.photos/600/400?random=${Math.random()}`
+            };
+            const updatedContracts = [...contracts, newContract];
+            localStorage.setItem(CONTRACTS_STORAGE_KEY, JSON.stringify(updatedContracts));
+        }
+    } catch (error) {
+        console.error("Failed to sync contract list", error);
+    }
+  };
+
 
   const handleUpdateNode = (nodeId: string, values: Partial<OrgNode>) => {
     if (!tree) return;
+    let parentNode: OrgNode | null = null;
+    
+    // Find parent to sync contract
+    updateTree(tree, (node) => {
+        if(node.children?.some(c => c.id === nodeId)) {
+            parentNode = node;
+        }
+        return node;
+    });
+
     const newTree = updateTree(tree, (node) => {
       if (node.id === nodeId) {
         // If a new avatar data URL is passed, save it separately
@@ -124,7 +136,12 @@ export default function OrganogramaPage() {
       }
       return node;
     });
+
     setTree(newTree);
+
+    if (values.contract && parentNode) {
+        syncContractList(values.contract, parentNode);
+    }
   };
 
   const handleToggleVisibility = (nodeId: string) => {
@@ -141,8 +158,12 @@ export default function OrganogramaPage() {
 
   const handleAddChildNode = (parentId: string, child: Omit<OrgNode, 'children' | 'id'>) => {
     if (!tree) return;
+
+    let parentNode: OrgNode | null = null;
+    
     const newTree = updateTree(tree, (node) => {
       if (node.id === parentId) {
+        parentNode = node;
         const newNodeId = `node-${Date.now()}-${Math.random()}`;
         const newNode: OrgNode = {
           ...child,
@@ -158,7 +179,12 @@ export default function OrganogramaPage() {
       }
       return node;
     });
+
     setTree(newTree);
+
+    if(child.contract && parentNode) {
+        syncContractList(child.contract, parentNode);
+    }
   };
 
   const handleRemoveNode = (nodeId: string) => {
@@ -277,7 +303,7 @@ export default function OrganogramaPage() {
         </div>
       </div>
       <div
-        className="flex-grow overflow-auto p-4 rounded-lg mt-4 bg-cover bg-center"
+        className="flex-grow overflow-auto p-4 rounded-lg mt-4"
         style={{ backgroundImage: `url('${contractSettings.backgroundImage}')` }}
       >
         <div

@@ -23,7 +23,7 @@ import {
 } from '@/components/ui/select';
 import { ScrollArea } from '../ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
-import type { OrgNode, Message } from '@/lib/data';
+import type { OrgNode, Message, Contract } from '@/lib/data';
 
 type TicketModalProps = {
   isOpen: boolean;
@@ -31,6 +31,8 @@ type TicketModalProps = {
   onSave: (values: Omit<Message, 'id' | 'createdAt' | 'author'>) => void;
   node: OrgNode | null;
 };
+
+const CONTRACTS_STORAGE_KEY = 'arpolarContracts';
 
 export function TicketModal({ isOpen, onClose, onSave, node }: TicketModalProps) {
   const { toast } = useToast();
@@ -49,23 +51,30 @@ export function TicketModal({ isOpen, onClose, onSave, node }: TicketModalProps)
   const [equipmentModel, setEquipmentModel] = useState('');
   const [cause, setCause] = useState('');
 
+  const [availableContracts, setAvailableContracts] = useState<Contract[]>([]);
+
   useEffect(() => {
-    if (node) {
-      setContractName(node.contract || '');
-      setSupervisor(node.name);
-      setContact(node.contact || '');
-    } else {
-      // Reset form when modal is closed or node is null
-      setContractName('');
-      setSupervisor('');
-      setContact('');
-      setMessage('');
-      setUrgency('Rotina');
-      setStatus('Em andamento');
-      setEquipmentName('');
-      setEquipmentBrand('');
-      setEquipmentModel('');
-      setCause('');
+    if (isOpen) {
+       const savedContracts = localStorage.getItem(CONTRACTS_STORAGE_KEY);
+       setAvailableContracts(savedContracts ? JSON.parse(savedContracts) : []);
+
+      if (node) {
+        setContractName(node.contract || '');
+        setSupervisor(node.name);
+        setContact(node.contact || '');
+      } else {
+        // Reset form when modal is closed or node is null
+        setContractName('');
+        setSupervisor('');
+        setContact('');
+        setMessage('');
+        setUrgency('Rotina');
+        setStatus('Em andamento');
+        setEquipmentName('');
+        setEquipmentBrand('');
+        setEquipmentModel('');
+        setCause('');
+      }
     }
   }, [node, isOpen]);
 
@@ -114,15 +123,22 @@ export function TicketModal({ isOpen, onClose, onSave, node }: TicketModalProps)
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="grid gap-2">
                   <Label htmlFor="contractName">Nome do Contrato (Cliente) <span className="text-red-500">*</span></Label>
-                  <Input id="contractName" value={contractName} onChange={(e) => setContractName(e.target.value)} />
+                   <Select onValueChange={setContractName} value={contractName}>
+                        <SelectTrigger><SelectValue placeholder="Selecione o contrato" /></SelectTrigger>
+                        <SelectContent>
+                        {availableContracts.map((c) => (
+                            <SelectItem key={c.id} value={c.name}>{c.name}</SelectItem>
+                        ))}
+                        </SelectContent>
+                    </Select>
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="supervisor">Supervisor Responsável <span className="text-red-500">*</span></Label>
-                  <Input id="supervisor" value={supervisor} onChange={(e) => setSupervisor(e.target.value)} />
+                  <Input id="supervisor" value={supervisor} onChange={(e) => setSupervisor(e.target.value)} disabled />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="contact">Contato <span className="text-red-500">*</span></Label>
-                  <Input id="contact" value={contact} onChange={(e) => setContact(e.target.value)} />
+                  <Input id="contact" value={contact} onChange={(e) => setContact(e.target.value)} disabled/>
                 </div>
                 <div className="grid gap-2">
                     <Label htmlFor="urgency">Urgência <span className="text-red-500">*</span></Label>

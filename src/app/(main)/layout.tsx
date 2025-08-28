@@ -12,6 +12,7 @@ import {
   FileText,
   MessageSquare,
   BookUser,
+  FileSignature,
 } from 'lucide-react';
 
 import {
@@ -48,6 +49,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
       { href: '/dashboard', icon: <MessageSquare />, label: 'Painel de Tickets' },
       { href: '/organograma', icon: <GitMerge />, label: 'Organograma' },
       { href: '/directory', icon: <BookUser />, label: 'Diretório' },
+      { href: '/contracts', icon: <FileSignature />, label: 'Contratos' },
       { href: '/evaluation', icon: <FileText />, label: 'Avaliação' },
     ];
 

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
@@ -30,9 +31,8 @@ function ContractCard({ contract }: { contract: Contract }) {
       <div 
         className="absolute inset-0 bg-cover bg-center -z-10"
         style={{ backgroundImage: `url('${contract.backgroundImage}')`}}
-      >
-        <div className="absolute inset-0 bg-black/50"></div>
-      </div>
+      />
+      <div className="absolute inset-0 bg-black/50 -z-10"></div>
       <CardHeader>
         <CardTitle className="text-xl font-bold font-headline">{contract.name}</CardTitle>
         <CardDescription className="text-white/80">{contract.address}</CardDescription>

@@ -30,10 +30,10 @@ function ContractCard({ contract }: { contract: Contract }) {
   return (
     <Card className="group flex flex-col justify-between text-white overflow-hidden shadow-lg hover:scale-105 transition-transform duration-300 relative min-h-[250px]">
        <div 
-        className="absolute inset-0 bg-cover bg-center -z-10 transition-all duration-300"
+        className="absolute inset-0 bg-cover bg-center -z-10"
         style={{ backgroundImage: `url('${contract.backgroundImage}')`}}
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent transition-colors duration-300 group-hover:from-black/60 -z-10"></div>
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent -z-10"></div>
       <CardHeader>
         <CardTitle className="text-xl font-bold font-headline">{contract.name}</CardTitle>
         <CardDescription className="text-white/80">{contract.address}</CardDescription>

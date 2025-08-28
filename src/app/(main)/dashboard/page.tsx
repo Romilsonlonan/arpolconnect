@@ -13,17 +13,26 @@ export default function DashboardPage() {
 
   useEffect(() => {
     setIsBrowser(true);
-    const storedMessages = localStorage.getItem('dashboardMessages');
-    if (storedMessages) {
-      setMessages(JSON.parse(storedMessages));
-    } else {
+    try {
+      const storedMessages = localStorage.getItem('dashboardMessages');
+      if (storedMessages) {
+        setMessages(JSON.parse(storedMessages));
+      } else {
+        setMessages(initialMessages);
+      }
+    } catch (error) {
+      console.error("Failed to parse messages from localStorage", error);
       setMessages(initialMessages);
     }
   }, []);
   
   useEffect(() => {
     if(isBrowser) {
-        localStorage.setItem('dashboardMessages', JSON.stringify(messages));
+        try {
+            localStorage.setItem('dashboardMessages', JSON.stringify(messages));
+        } catch (error) {
+            console.error("Failed to save messages to localStorage", error);
+        }
     }
   }, [messages, isBrowser]);
 

@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
-import { Upload, FileText, Send, Phone, UserCheck, Users, Calendar, UserPlus, Trash2 } from 'lucide-react';
+import { Upload, FileText, Send, Phone, UserCheck, Users, Calendar, UserPlus, Trash2, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -59,6 +59,7 @@ export default function DDSInfoPage() {
   const [newParticipantName, setNewParticipantName] = useState('');
   const [newParticipantPhone, setNewParticipantPhone] = useState('');
   const [isClient, setIsClient] = useState(false);
+  const [isSending, setIsSending] = useState(false);
 
   // --- Efeitos ---
   useEffect(() => {
@@ -102,16 +103,54 @@ export default function DDSInfoPage() {
     }
   };
   
-  const sendPost = () => {
+  const sendPost = async () => {
     if (!postContent.trim()) {
         toast({ title: 'Erro', description: 'O conteúdo do post não pode estar vazio.', variant: 'destructive' });
         return;
     }
-    toast({
-        title: 'Post Enviado!',
-        description: 'A mensagem do DDS foi enviada para os celulares da equipe.',
-    });
+    if (participants.length === 0) {
+        toast({ title: 'Nenhum participante', description: 'Adicione participantes para enviar a mensagem.', variant: 'destructive'});
+        return;
+    }
+
+    setIsSending(true);
+
+    const webhookUrl = 'https://seu-webhook-n8n.com/placeholder'; // <-- IMPORTANTE: SUBSTITUA ESTE URL!
+    
+    const payload = {
+        message: postContent,
+        phones: participants.map(p => p.phone)
+    };
+
+    try {
+        const response = await fetch(webhookUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+            // Se o webhook retornar um erro, lança uma exceção
+            throw new Error(`O webhook respondeu com o status: ${response.status}`);
+        }
+        
+        toast({
+            title: 'Post Enviado com Sucesso!',
+            description: 'A mensagem foi enviada para a fila de automação.',
+        });
+
+    } catch (error) {
+        console.error("Falha ao enviar para o webhook:", error);
+        toast({
+            title: 'Falha no Envio',
+            description: 'Não foi possível se conectar com o serviço de automação. Verifique o URL do webhook e tente novamente.',
+            variant: 'destructive',
+        });
+    } finally {
+        setIsSending(false);
+    }
   };
+
 
   const confirmPresence = () => {
     setHasConfirmed(true);
@@ -141,7 +180,9 @@ export default function DDSInfoPage() {
   const handleRemoveParticipant = (id: string) => {
     const participantToRemove = participants.find(p => p.id === id);
     setParticipants(participants.filter(p => p.id !== id));
-    toast({ title: 'Participante Removido', description: `${participantToRemove?.name} foi removido da lista.`});
+    if (participantToRemove) {
+      toast({ title: 'Participante Removido', description: `${participantToRemove.name} foi removido da lista.`});
+    }
   };
 
 
@@ -209,9 +250,18 @@ export default function DDSInfoPage() {
                     />
                 </CardContent>
                 <CardFooter>
-                    <Button className="w-full" onClick={sendPost}>
-                    <Send className="mr-2" />
-                    Enviar para Celular
+                    <Button className="w-full" onClick={sendPost} disabled={isSending}>
+                        {isSending ? (
+                            <>
+                                <Loader2 className="mr-2 animate-spin" />
+                                Enviando...
+                            </>
+                        ) : (
+                            <>
+                                <Send className="mr-2" />
+                                Enviar para Celular
+                            </>
+                        )}
                     </Button>
                 </CardFooter>
             </Card>
@@ -325,3 +375,5 @@ export default function DDSInfoPage() {
     </div>
   );
 }
+
+    

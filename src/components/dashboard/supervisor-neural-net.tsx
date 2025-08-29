@@ -35,10 +35,10 @@ function getVisibleNodes(tree: OrgNode): OrgNode[] {
     
     // Start from the root, but exclude the root itself from the final list
     findVisible(tree);
-    return visibleNodes.filter(node => node.id !== 'arpolar');
+    return visibleNodes.filter(node => node.id !== 'arpolar' && node.role === 'Supervisor');
 }
 
-function NodeAvatar({ node, alertLevel }: { node: OrgNode, alertLevel: 'critical' | 'warning' | 'none' }) {
+function NodeAvatar({ node, alertLevel, isSelected }: { node: OrgNode, alertLevel: 'critical' | 'warning' | 'none', isSelected: boolean }) {
     const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
     useEffect(() => {
@@ -49,17 +49,18 @@ function NodeAvatar({ node, alertLevel }: { node: OrgNode, alertLevel: 'critical
     const finalAvatarUrl = avatarUrl || node.avatar;
     
     const shadowClass = useMemo(() => {
+        if (isSelected) return 'ring-4 ring-offset-2 ring-accent';
         switch (alertLevel) {
             case 'critical': return 'animate-shadow-pulse-critical';
             case 'warning': return 'animate-shadow-pulse-warning';
             default: return '';
         }
-    }, [alertLevel]);
+    }, [alertLevel, isSelected]);
 
 
     return (
         <Avatar className={cn(
-            "w-16 h-16 border-4 border-background shadow-lg hover:scale-110 transition-transform cursor-pointer rounded-full",
+            "w-16 h-16 border-4 border-background shadow-lg hover:scale-110 transition-all cursor-pointer rounded-full",
             shadowClass
         )}>
             <AvatarImage src={finalAvatarUrl} alt={node.name} data-ai-hint="person portrait" />
@@ -69,7 +70,7 @@ function NodeAvatar({ node, alertLevel }: { node: OrgNode, alertLevel: 'critical
 }
 
 
-export function SupervisorNeuralNet() {
+export function SupervisorNeuralNet({ onNodeClick, selectedNodeId }: { onNodeClick: (nodeId: string | null) => void, selectedNodeId: string | null }) {
     const [nodes, setNodes] = useState<OrgNode[]>([]);
     const [messages, setMessages] = useState<Message[]>([]);
     const [isClient, setIsClient] = useState(false);
@@ -96,16 +97,15 @@ export function SupervisorNeuralNet() {
     }, []);
 
     const supervisorAlertLevels = useMemo(() => {
-        const levels = new Map<'critical' | 'warning' | 'none', string[]>();
         const criticalAuthors = new Set<string>();
         const warningAuthors = new Set<string>();
 
         messages.forEach(msg => {
             if (msg.status !== 'Finalizado') {
                 if (msg.urgency === 'Crítico') {
-                    criticalAuthors.add(msg.author);
+                    criticalAuthors.add(msg.supervisor);
                 } else if (msg.urgency === 'Atenção') {
-                    warningAuthors.add(msg.author);
+                    warningAuthors.add(msg.supervisor);
                 }
             }
         });
@@ -135,7 +135,12 @@ export function SupervisorNeuralNet() {
 
     return (
         <TooltipProvider>
-            <div className="relative w-full h-full flex items-center justify-center">
+            <div className="relative w-full h-full flex items-center justify-center" onClick={(e) => {
+                // If the click is on the background, deselect the node
+                if (e.target === e.currentTarget) {
+                    onNodeClick(null);
+                }
+            }}>
                 {/* Central Logo */}
                 <div className="z-10">
                    <Tooltip>
@@ -158,6 +163,7 @@ export function SupervisorNeuralNet() {
                     const y = radius * Math.sin(angle);
                     const rotation = (angle * 180 / Math.PI) + 90;
                     const alertLevel = supervisorAlertLevels.get(node.id) || 'none';
+                    const isSelected = selectedNodeId === node.id;
 
                     return (
                         <div key={node.id} className="absolute top-1/2 left-1/2">
@@ -179,8 +185,9 @@ export function SupervisorNeuralNet() {
                                         style={{
                                             transform: `translate(-50%, -50%) translate(${x}px, ${y}px)`
                                         }}
+                                        onClick={(e) => { e.stopPropagation(); onNodeClick(node.id); }}
                                     >
-                                        <NodeAvatar node={node} alertLevel={alertLevel} />
+                                        <NodeAvatar node={node} alertLevel={alertLevel} isSelected={isSelected} />
                                     </div>
                                 </TooltipTrigger>
                                 <TooltipContent>
@@ -196,3 +203,5 @@ export function SupervisorNeuralNet() {
         </TooltipProvider>
     )
 }
+
+    

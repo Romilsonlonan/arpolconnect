@@ -1,12 +1,15 @@
+
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { messages as initialMessages, Message } from '@/lib/data';
+import { messages as initialMessages, Message, initialOrgTree, type Contract, type OrgNode } from '@/lib/data';
 import { MessageCard } from '@/components/dashboard/message-card';
 import { SupervisorNeuralNet } from '@/components/dashboard/supervisor-neural-net';
+import { ContractCard } from '@/components/dashboard/contract-card';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlarmClock, CheckCircle, ShieldAlert, Zap } from 'lucide-react';
+import { AlarmClock, CheckCircle, ShieldAlert, Zap, Building } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { findNode } from '@/lib/tree-utils';
 
 function InfoCard({ title, value, icon, colorClass }: { title: string, value: number, icon: React.ReactNode, colorClass?: string }) {
   return (
@@ -22,30 +25,42 @@ function InfoCard({ title, value, icon, colorClass }: { title: string, value: nu
   );
 }
 
+const CONTRACTS_STORAGE_KEY = 'arpolarContracts';
+const ORG_CHART_STORAGE_KEY = 'orgChartTree';
 
 export default function DashboardPage() {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
+  const [contracts, setContracts] = useState<Contract[]>([]);
+  const [orgTree, setOrgTree] = useState<OrgNode>(initialOrgTree);
+  const [selectedSupervisor, setSelectedSupervisor] = useState<OrgNode | null>(null);
   const [isBrowser, setIsBrowser] = useState(false);
   const dragItem = useRef<number | null>(null);
   const dragOverItem = useRef<number | null>(null);
 
   useEffect(() => {
     setIsBrowser(true);
-    const loadMessages = () => {
+    const loadData = () => {
         try {
             const storedMessages = localStorage.getItem('dashboardMessages');
             setMessages(storedMessages ? JSON.parse(storedMessages) : initialMessages);
+
+            const savedContracts = localStorage.getItem(CONTRACTS_STORAGE_KEY);
+            setContracts(savedContracts ? JSON.parse(savedContracts) : []);
+
+            const savedTree = localStorage.getItem(ORG_CHART_STORAGE_KEY);
+            setOrgTree(savedTree ? JSON.parse(savedTree) : initialOrgTree);
+
         } catch (error) {
-            console.error("Failed to parse messages from localStorage", error);
+            console.error("Failed to parse data from localStorage", error);
             setMessages(initialMessages);
         }
     };
     
-    loadMessages();
-    window.addEventListener('storage', loadMessages);
+    loadData();
+    window.addEventListener('storage', loadData);
 
     return () => {
-        window.removeEventListener('storage', loadMessages);
+        window.removeEventListener('storage', loadData);
     }
   }, []);
   
@@ -79,6 +94,41 @@ export default function DashboardPage() {
       return acc;
     }, { rotina: 0, alerta: 0, critico: 0, finalizado: 0 });
   }, [messages]);
+
+  const handleSelectSupervisor = (nodeId: string | null) => {
+      if (nodeId === null) {
+          setSelectedSupervisor(null);
+          return;
+      }
+      if (selectedSupervisor?.id === nodeId) {
+          // Deselect if clicking the same node again
+          setSelectedSupervisor(null);
+      } else {
+        const node = findNode(orgTree, nodeId);
+        setSelectedSupervisor(node);
+      }
+  }
+
+  const supervisorContracts = useMemo(() => {
+    if (!selectedSupervisor) return [];
+    return contracts.filter(c => c.supervisorId === selectedSupervisor.id);
+  }, [selectedSupervisor, contracts]);
+
+  const contractAlertLevels = useMemo(() => {
+    const alertMap = new Map<string, 'critical' | 'warning' | 'none'>();
+    supervisorContracts.forEach(contract => {
+        const contractMessages = messages.filter(msg => msg.contractName === contract.name && msg.status !== 'Finalizado');
+        let level: 'critical' | 'warning' | 'none' = 'none';
+
+        if (contractMessages.some(msg => msg.urgency === 'Crítico')) {
+            level = 'critical';
+        } else if (contractMessages.some(msg => msg.urgency === 'Atenção')) {
+            level = 'warning';
+        }
+        alertMap.set(contract.id, level);
+    });
+    return alertMap;
+  }, [supervisorContracts, messages]);
 
 
   const handleDragSort = () => {
@@ -142,9 +192,34 @@ export default function DashboardPage() {
        <div>
         <h1 className="text-lg font-semibold md:text-2xl font-headline mb-4">Rede de Supervisores</h1>
         <div className="flex items-center justify-center p-4 bg-card rounded-lg shadow-sm min-h-[350px]">
-          <SupervisorNeuralNet />
+          <SupervisorNeuralNet onNodeClick={handleSelectSupervisor} selectedNodeId={selectedSupervisor?.id || null} />
         </div>
       </div>
+      
+       <div>
+            <h1 className="text-lg font-semibold md:text-2xl font-headline">
+                {selectedSupervisor ? `Contratos de ${selectedSupervisor.name}` : 'Painel de Contratos'}
+            </h1>
+            {supervisorContracts.length > 0 ? (
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mt-4">
+                    {supervisorContracts.map(contract => (
+                       <ContractCard 
+                         key={contract.id} 
+                         contract={contract} 
+                         alertLevel={contractAlertLevels.get(contract.id) || 'none'}
+                       />
+                    ))}
+                </div>
+             ) : (
+                 <div className="flex flex-col items-center justify-center flex-1 py-12 text-center bg-gray-100/50 rounded-lg mt-4">
+                    <Building className="w-12 h-12 text-muted-foreground mb-4" />
+                    <p className="text-lg font-semibold text-muted-foreground">
+                        {selectedSupervisor ? 'Nenhum contrato encontrado para este supervisor.' : 'Selecione um supervisor na rede para ver seus contratos.'}
+                    </p>
+                </div>
+             )}
+       </div>
+
 
       <div>
         <h1 className="text-lg font-semibold md:text-2xl font-headline">Painel de Tickets</h1>
@@ -176,3 +251,5 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+    

@@ -16,16 +16,11 @@ const ORG_CHART_STORAGE_KEY = 'orgChartTree';
 
 function ContractCard({ contract, onEdit }: { contract: Contract; onEdit: () => void; }) {
   return (
-    <Card className="group flex flex-col justify-between text-white overflow-hidden shadow-lg relative min-h-[250px]">
-      <Image 
-        src={contract.backgroundImage} 
-        alt={`Imagem de fundo para ${contract.name}`}
-        fill
-        style={{ objectFit: 'cover' }}
-        unoptimized
-        className="absolute inset-0 -z-10 opacity-60 group-hover:opacity-100 transition-opacity duration-300"
-      />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent z-0"></div>
+    <Card 
+      className="group flex flex-col justify-between text-white overflow-hidden shadow-lg relative min-h-[250px] bg-cover bg-center transition-all duration-300"
+      style={{ backgroundImage: `url(${contract.backgroundImage})` }}
+    >
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent z-0 opacity-100 group-hover:opacity-80 transition-opacity duration-300"></div>
       
       <Button 
         variant="ghost" 

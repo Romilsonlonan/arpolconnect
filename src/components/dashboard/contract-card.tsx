@@ -10,7 +10,17 @@ import Image from 'next/image';
 
 type AlertLevel = 'critical' | 'warning' | 'none';
 
-export function ContractCard({ contract, alertLevel }: { contract: Contract; alertLevel: AlertLevel }) {
+export function ContractCard({ 
+  contract, 
+  alertLevel, 
+  onClick, 
+  isSelected 
+}: { 
+  contract: Contract; 
+  alertLevel: AlertLevel;
+  onClick: () => void;
+  isSelected: boolean;
+}) {
 
   const shadowClass = useMemo(() => {
     switch (alertLevel) {
@@ -21,9 +31,12 @@ export function ContractCard({ contract, alertLevel }: { contract: Contract; ale
   }, [alertLevel]);
 
   return (
-    <Card className={cn(
-        "group flex flex-col justify-between text-white overflow-hidden shadow-lg relative min-h-[250px]",
-        shadowClass
+    <Card 
+      onClick={onClick}
+      className={cn(
+        "group flex flex-col justify-between text-white overflow-hidden shadow-lg relative min-h-[250px] cursor-pointer transition-all duration-300",
+        shadowClass,
+        isSelected && 'ring-4 ring-offset-2 ring-accent'
     )}>
        <Image 
         src={contract.backgroundImage} 
@@ -51,5 +64,3 @@ export function ContractCard({ contract, alertLevel }: { contract: Contract; ale
     </Card>
   );
 }
-
-    

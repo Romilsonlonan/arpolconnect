@@ -7,9 +7,11 @@ import { MessageCard } from '@/components/dashboard/message-card';
 import { SupervisorNeuralNet } from '@/components/dashboard/supervisor-neural-net';
 import { ContractCard } from '@/components/dashboard/contract-card';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlarmClock, CheckCircle, ShieldAlert, Zap, Building } from 'lucide-react';
+import { AlarmClock, CheckCircle, ShieldAlert, Zap, Building, FilterX } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { findNode } from '@/lib/tree-utils';
+import { Button } from '@/components/ui/button';
+
 
 function InfoCard({ title, value, icon, colorClass }: { title: string, value: number, icon: React.ReactNode, colorClass?: string }) {
   return (
@@ -33,6 +35,7 @@ export default function DashboardPage() {
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [orgTree, setOrgTree] = useState<OrgNode>(initialOrgTree);
   const [selectedSupervisor, setSelectedSupervisor] = useState<OrgNode | null>(null);
+  const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
   const [isBrowser, setIsBrowser] = useState(false);
   const dragItem = useRef<number | null>(null);
   const dragOverItem = useRef<number | null>(null);
@@ -98,14 +101,17 @@ export default function DashboardPage() {
   const handleSelectSupervisor = (nodeId: string | null) => {
       if (nodeId === null) {
           setSelectedSupervisor(null);
+          setSelectedContract(null);
           return;
       }
       if (selectedSupervisor?.id === nodeId) {
           // Deselect if clicking the same node again
           setSelectedSupervisor(null);
+          setSelectedContract(null);
       } else {
         const node = findNode(orgTree, nodeId);
         setSelectedSupervisor(node);
+        setSelectedContract(null); // Reset contract selection when supervisor changes
       }
   }
 
@@ -113,6 +119,10 @@ export default function DashboardPage() {
     if (!selectedSupervisor) return [];
     return contracts.filter(c => c.supervisorId === selectedSupervisor.id);
   }, [selectedSupervisor, contracts]);
+  
+  const handleSelectContract = (contract: Contract) => {
+    setSelectedContract(contract);
+  }
 
   const contractAlertLevels = useMemo(() => {
     const alertMap = new Map<string, 'critical' | 'warning' | 'none'>();
@@ -130,6 +140,23 @@ export default function DashboardPage() {
     return alertMap;
   }, [supervisorContracts, messages]);
 
+  const filteredMessages = useMemo(() => {
+    if (selectedContract) {
+      return messages.filter(msg => msg.contractName === selectedContract.name);
+    }
+    if (selectedSupervisor) {
+      const supervisorContractNames = contracts
+        .filter(c => c.supervisorId === selectedSupervisor.id)
+        .map(c => c.name);
+      return messages.filter(msg => supervisorContractNames.includes(msg.contractName));
+    }
+    return messages;
+  }, [selectedContract, selectedSupervisor, messages, contracts]);
+
+  const handleClearFilter = () => {
+    setSelectedSupervisor(null);
+    setSelectedContract(null);
+  }
 
   const handleDragSort = () => {
     if (dragItem.current === null || dragOverItem.current === null || dragItem.current === dragOverItem.current) {
@@ -207,6 +234,8 @@ export default function DashboardPage() {
                          key={contract.id} 
                          contract={contract} 
                          alertLevel={contractAlertLevels.get(contract.id) || 'none'}
+                         onClick={() => handleSelectContract(contract)}
+                         isSelected={selectedContract?.id === contract.id}
                        />
                     ))}
                 </div>
@@ -222,18 +251,40 @@ export default function DashboardPage() {
 
 
       <div>
-        <h1 className="text-lg font-semibold md:text-2xl font-headline">Painel de Tickets</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-lg font-semibold md:text-2xl font-headline">
+            {selectedContract 
+              ? `Tickets para ${selectedContract.name}` 
+              : selectedSupervisor 
+              ? `Tickets de ${selectedSupervisor.name}`
+              : 'Painel de Tickets'
+            }
+          </h1>
+          {(selectedSupervisor || selectedContract) && (
+            <Button variant="ghost" onClick={handleClearFilter}>
+                <FilterX className="mr-2 h-4 w-4" />
+                Limpar Filtro
+            </Button>
+          )}
+        </div>
       </div>
-      {messages.length === 0 ? (
+      {filteredMessages.length === 0 ? (
         <div className="flex flex-col items-center justify-center flex-1 py-12 text-center bg-gray-100/50 rounded-lg">
             <p className="text-lg font-semibold text-muted-foreground">Nenhum ticket encontrado.</p>
-            <p className="mt-2 text-sm text-muted-foreground">Crie um novo ticket a partir do organograma.</p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              {selectedContract 
+                ? 'Não há tickets para este contrato.' 
+                : selectedSupervisor
+                ? 'Não há tickets para os contratos deste supervisor.'
+                : 'Crie um novo ticket a partir do organograma.'
+              }
+            </p>
         </div>
         ) : (
             <div
             className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4"
             >
-            {messages.map((message, index) => (
+            {filteredMessages.map((message, index) => (
                 <div
                 key={message.id}
                 draggable
@@ -251,5 +302,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-    

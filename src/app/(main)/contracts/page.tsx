@@ -92,12 +92,14 @@ export default function ContractsPage() {
   const loadData = () => {
       try {
         const savedContracts = localStorage.getItem(CONTRACTS_STORAGE_KEY);
-        setContracts(savedContracts ? JSON.parse(savedContracts) : []);
-
-        const savedTree = localStorage.getItem(ORG_CHART_STORAGE_KEY);
-        const orgTree = savedTree ? JSON.parse(savedTree) : initialOrgTree;
-        
+        const orgTree = JSON.parse(localStorage.getItem(ORG_CHART_STORAGE_KEY) || JSON.stringify(initialOrgTree));
         const supervisorNodes = findSupervisorsInTree(orgTree);
+        const visibleSupervisorIds = new Set(supervisorNodes.map(s => s.id));
+        
+        const allContracts = savedContracts ? JSON.parse(savedContracts) : [];
+        const visibleContracts = allContracts.filter((c: Contract) => visibleSupervisorIds.has(c.supervisorId));
+
+        setContracts(visibleContracts);
         setSupervisors(supervisorNodes);
 
       } catch (error) {
@@ -123,13 +125,21 @@ export default function ContractsPage() {
   }
 
   const handleSaveContract = (contractData: Omit<Contract, 'id'>, id?: string) => {
+    let currentContracts: Contract[] = [];
+    try {
+       currentContracts = JSON.parse(localStorage.getItem(CONTRACTS_STORAGE_KEY) || '[]');
+    } catch (e) {
+      console.error("Failed to parse contracts from localStorage", e);
+      currentContracts = [];
+    }
+
     let updatedContracts: Contract[];
     let toastTitle = '';
     let toastDescription = '';
 
     if (id) {
         // Editing existing contract
-        updatedContracts = contracts.map(c => c.id === id ? { ...c, ...contractData, id } : c);
+        updatedContracts = currentContracts.map(c => c.id === id ? { ...c, ...contractData, id } : c);
         toastTitle = "Contrato Atualizado!";
         toastDescription = `O contrato "${contractData.name}" foi atualizado com sucesso.`;
     } else {
@@ -138,13 +148,15 @@ export default function ContractsPage() {
             ...contractData,
             id: `contract-${Date.now()}`
         };
-        updatedContracts = [...contracts, newContract];
+        updatedContracts = [...currentContracts, newContract];
         toastTitle = "Contrato Adicionado!";
         toastDescription = `O contrato "${newContract.name}" foi salvo com sucesso.`;
     }
       
-    setContracts(updatedContracts);
     localStorage.setItem(CONTRACTS_STORAGE_KEY, JSON.stringify(updatedContracts));
+    
+    // After saving, reload data to apply visibility filters
+    loadData();
 
     toast({
         title: toastTitle,
@@ -174,7 +186,7 @@ export default function ContractsPage() {
       {contracts.length === 0 ? (
         <div className="flex flex-col items-center justify-center flex-1 py-12 text-center bg-gray-100/50 rounded-lg">
             <p className="text-lg font-semibold text-muted-foreground">Nenhum contrato encontrado.</p>
-            <p className="mt-2 text-sm text-muted-foreground">Adicione um novo contrato para começar.</p>
+            <p className="mt-2 text-sm text-muted-foreground">Adicione um novo contrato ou verifique a visibilidade dos supervisores no organograma.</p>
         </div>
       ) : (
          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

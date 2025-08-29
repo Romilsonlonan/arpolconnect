@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -148,7 +149,8 @@ export default function OrganogramaPage() {
     if (!tree) return;
     const newTree = updateTree(tree, (node) => {
       if (node.id === nodeId) {
-        return { ...node, showInNeuralNet: node.showInNeuralNet !== false };
+        // Correctly toggle the boolean value, treating undefined as true
+        return { ...node, showInNeuralNet: !node.showInNeuralNet };
       }
       return node;
     });
@@ -342,3 +344,5 @@ export default function OrganogramaPage() {
     </div>
   );
 }
+
+    

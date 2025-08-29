@@ -59,14 +59,16 @@ function ContractCard({ contract, onEdit }: { contract: Contract; onEdit: () => 
 }
 
 function findSupervisorsInTree(node: OrgNode): OrgNode[] {
-    let supervisors: OrgNode[] = [];
-    
-    // Recursive function to traverse the tree
+    const supervisors: OrgNode[] = [];
+
+    // Helper function to traverse the tree recursively
     function traverse(currentNode: OrgNode) {
         // A supervisor is anyone with the role 'Supervisor', and is not hidden
         if (currentNode.role === 'Supervisor' && currentNode.showInNeuralNet !== false) {
             supervisors.push(currentNode);
         }
+        
+        // If the node has children, continue traversal
         if (currentNode.children) {
             for (const child of currentNode.children) {
                 traverse(child);
@@ -74,6 +76,7 @@ function findSupervisorsInTree(node: OrgNode): OrgNode[] {
         }
     }
     
+    // Start traversal from the initial node
     traverse(node);
     return supervisors;
 }

@@ -4,32 +4,20 @@
 import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { PlusCircle, User, MapPin, Upload } from 'lucide-react';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  DialogTrigger,
-  DialogClose,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useToast } from '@/hooks/use-toast';
+import { PlusCircle, User, MapPin, Pencil } from 'lucide-react';
 import { type OrgNode, type Contract, initialOrgTree } from '@/lib/data';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
+import { ContractModal } from '@/components/contracts/contract-modal';
+import { useToast } from '@/hooks/use-toast';
 
 const CONTRACTS_STORAGE_KEY = 'arpolarContracts';
 const ORG_CHART_STORAGE_KEY = 'orgChartTree';
 
-function ContractCard({ contract }: { contract: Contract }) {
+function ContractCard({ contract, onEdit }: { contract: Contract; onEdit: () => void; }) {
   return (
     <Card className="group flex flex-col justify-between text-white overflow-hidden shadow-lg relative min-h-[250px]">
-       <Image 
+      <Image 
         src={contract.backgroundImage} 
         alt={`Imagem de fundo para ${contract.name}`}
         fill
@@ -38,6 +26,19 @@ function ContractCard({ contract }: { contract: Contract }) {
         className="absolute inset-0 -z-10 opacity-60 group-hover:opacity-100 transition-opacity duration-300"
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent z-0"></div>
+      
+      <Button 
+        variant="ghost" 
+        size="icon" 
+        className="absolute top-2 right-2 h-8 w-8 text-white bg-black/20 hover:bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity z-20"
+        onClick={(e) => {
+          e.stopPropagation(); // Prevent card click event
+          onEdit();
+        }}
+      >
+        <Pencil className="h-4 w-4" />
+      </Button>
+
       <CardHeader>
         <CardTitle className="text-xl font-bold font-headline z-10">{contract.name}</CardTitle>
         <CardDescription className="text-white/80 z-10">{contract.address}</CardDescription>
@@ -57,176 +58,12 @@ function ContractCard({ contract }: { contract: Contract }) {
   );
 }
 
-function AddContractModal({ supervisors, onSave }: { supervisors: OrgNode[], onSave: (newContract: Omit<Contract, 'id'>) => void }) {
-    const [name, setName] = useState('');
-    const [supervisorId, setSupervisorId] = useState('');
-    const [address, setAddress] = useState('');
-    const [region, setRegion] = useState('');
-    const [backgroundImage, setBackgroundImage] = useState('');
-    const fileInputRef = useRef<HTMLInputElement>(null);
-    const { toast } = useToast();
-
-    const resizeImage = (file: File, maxWidth: number, maxHeight: number, quality: number): Promise<string> => {
-      return new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = (event) => {
-              const img = document.createElement('img');
-              img.src = event.target?.result as string;
-              img.onload = () => {
-                  const canvas = document.createElement('canvas');
-                  let { width, height } = img;
-
-                  if (width > height) {
-                      if (width > maxWidth) {
-                          height = Math.round((height * maxWidth) / width);
-                          width = maxWidth;
-                      }
-                  } else {
-                      if (height > maxHeight) {
-                          width = Math.round((width * maxHeight) / height);
-                          height = maxHeight;
-                      }
-                  }
-
-                  canvas.width = width;
-                  canvas.height = height;
-                  const ctx = canvas.getContext('2d');
-                  ctx?.drawImage(img, 0, 0, width, height);
-
-                  resolve(canvas.toDataURL('image/jpeg', quality));
-              };
-              img.onerror = reject;
-          };
-          reader.onerror = reject;
-          reader.readAsDataURL(file);
-      });
-    };
-
-    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-        const file = e.target.files?.[0];
-        if (file) {
-             if (file.size > 5 * 1024 * 1024) { // 5MB limit
-                toast({
-                    title: "Imagem Muito Grande",
-                    description: "Por favor, selecione uma imagem menor que 5MB.",
-                    variant: "destructive",
-                });
-                return;
-            }
-            try {
-              const resizedDataUrl = await resizeImage(file, 1200, 800, 0.9);
-              setBackgroundImage(resizedDataUrl);
-            } catch (error) {
-              console.error("Error resizing image:", error);
-              toast({
-                  title: "Erro ao processar imagem",
-                  description: "Houve um problema ao redimensionar a imagem. Tente novamente.",
-                  variant: "destructive"
-              });
-            }
-        }
-    };
-
-
-    const handleSubmit = () => {
-        if (!name || !supervisorId || !address || !region || !backgroundImage) {
-            toast({
-                title: "Campos Obrigatórios",
-                description: "Por favor, preencha todos os campos, incluindo a imagem.",
-                variant: "destructive",
-            });
-            return;
-        }
-
-        const supervisor = supervisors.find(s => s.id === supervisorId);
-        if (!supervisor) return;
-
-        onSave({
-            name,
-            supervisorId,
-            supervisorName: supervisor.name,
-            address,
-            region,
-            backgroundImage
-        });
-        // Reset state after save
-        setName('');
-        setSupervisorId('');
-        setAddress('');
-        setRegion('');
-        setBackgroundImage('');
-    }
-
-    return (
-        <Dialog>
-            <DialogTrigger asChild>
-                <Button>
-                    <PlusCircle className="mr-2" />
-                    Adicionar Contrato
-                </Button>
-            </DialogTrigger>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Adicionar Novo Contrato</DialogTitle>
-                    <DialogDescription>Preencha as informações para registrar um novo contrato.</DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                    <div className="grid gap-2">
-                        <Label htmlFor="name">Nome do Contrato (Cliente)</Label>
-                        <Input id="name" value={name} onChange={e => setName(e.target.value)} />
-                    </div>
-                    <div className="grid gap-2">
-                        <Label htmlFor="supervisor">Supervisor Responsável</Label>
-                        <Select onValueChange={setSupervisorId} value={supervisorId}>
-                            <SelectTrigger><SelectValue placeholder="Selecione um supervisor" /></SelectTrigger>
-                            <SelectContent>
-                                {supervisors.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                     <div className="grid gap-2">
-                        <Label htmlFor="address">Endereço</Label>
-                        <Input id="address" value={address} onChange={e => setAddress(e.target.value)} />
-                    </div>
-                     <div className="grid gap-2">
-                        <Label htmlFor="region">Região</Label>
-                        <Input id="region" value={region} onChange={e => setRegion(e.target.value)} />
-                    </div>
-                    <div className="grid gap-2">
-                        <Label>Imagem de Fundo</Label>
-                        {backgroundImage && (
-                            <div className="relative w-full h-32 rounded-md overflow-hidden border">
-                                <Image src={backgroundImage} alt="Pré-visualização da imagem" fill style={{objectFit: "cover"}} unoptimized/>
-                            </div>
-                        )}
-                        <Input 
-                            id="image-upload"
-                            type="file"
-                            accept="image/*"
-                            className="hidden"
-                            ref={fileInputRef}
-                            onChange={handleImageUpload}
-                        />
-                         <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
-                            <Upload className="mr-2" />
-                            Carregar Imagem
-                        </Button>
-                    </div>
-                </div>
-                <DialogFooter>
-                    <DialogClose asChild><Button variant="secondary">Cancelar</Button></DialogClose>
-                    <DialogClose asChild><Button onClick={handleSubmit}>Salvar</Button></DialogClose>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-    )
-}
-
 function findSupervisorsInTree(node: OrgNode): OrgNode[] {
     let supervisors: OrgNode[] = [];
     
     // Recursive function to traverse the tree
     function traverse(currentNode: OrgNode) {
+        // A supervisor can be anyone with direct children, or anyone with the role 'Supervisor'
         if (currentNode.role === 'Supervisor') {
             supervisors.push(currentNode);
         }
@@ -245,6 +82,8 @@ export default function ContractsPage() {
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [supervisors, setSupervisors] = useState<OrgNode[]>([]);
   const [isClient, setIsClient] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingContract, setEditingContract] = useState<Contract | null>(null);
   const { toast } = useToast();
 
   const loadData = () => {
@@ -270,21 +109,49 @@ export default function ContractsPage() {
       return () => window.removeEventListener('storage', loadData);
   }, []);
 
-  const handleSaveContract = (newContractData: Omit<Contract, 'id'>) => {
-      const newContract: Contract = {
-          ...newContractData,
-          id: `contract-${Date.now()}`
-      };
-      
-      const updatedContracts = [...contracts, newContract];
-      setContracts(updatedContracts);
-      localStorage.setItem(CONTRACTS_STORAGE_KEY, JSON.stringify(updatedContracts));
+  const handleOpenAddModal = () => {
+    setEditingContract(null);
+    setIsModalOpen(true);
+  }
 
-      toast({
-          title: "Contrato Adicionado!",
-          description: `O contrato "${newContract.name}" foi salvo com sucesso.`
-      });
+  const handleOpenEditModal = (contract: Contract) => {
+    setEditingContract(contract);
+    setIsModalOpen(true);
+  }
+
+  const handleSaveContract = (contractData: Omit<Contract, 'id'>, id?: string) => {
+    let updatedContracts: Contract[];
+    let toastTitle = '';
+    let toastDescription = '';
+
+    if (id) {
+        // Editing existing contract
+        updatedContracts = contracts.map(c => c.id === id ? { ...c, ...contractData, id } : c);
+        toastTitle = "Contrato Atualizado!";
+        toastDescription = `O contrato "${contractData.name}" foi atualizado com sucesso.`;
+    } else {
+        // Adding new contract
+        const newContract: Contract = {
+            ...contractData,
+            id: `contract-${Date.now()}`
+        };
+        updatedContracts = [...contracts, newContract];
+        toastTitle = "Contrato Adicionado!";
+        toastDescription = `O contrato "${newContract.name}" foi salvo com sucesso.`;
+    }
+      
+    setContracts(updatedContracts);
+    localStorage.setItem(CONTRACTS_STORAGE_KEY, JSON.stringify(updatedContracts));
+
+    toast({
+        title: toastTitle,
+        description: toastDescription
+    });
+
+    setIsModalOpen(false);
+    setEditingContract(null);
   };
+
 
   if (!isClient) return null;
 
@@ -293,9 +160,12 @@ export default function ContractsPage() {
       <div className="flex items-center justify-between">
         <div>
             <h1 className="text-lg font-semibold md:text-2xl font-headline">Gestão de Contratos</h1>
-            <p className="text-muted-foreground">Visualize e adicione novos contratos de clientes.</p>
+            <p className="text-muted-foreground">Visualize, adicione e edite os contratos de clientes.</p>
         </div>
-        <AddContractModal supervisors={supervisors} onSave={handleSaveContract} />
+        <Button onClick={handleOpenAddModal}>
+            <PlusCircle className="mr-2" />
+            Adicionar Contrato
+        </Button>
       </div>
 
       {contracts.length === 0 ? (
@@ -306,10 +176,18 @@ export default function ContractsPage() {
       ) : (
          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {contracts.map(contract => (
-                <ContractCard key={contract.id} contract={contract} />
+                <ContractCard key={contract.id} contract={contract} onEdit={() => handleOpenEditModal(contract)} />
             ))}
         </div>
       )}
+
+      <ContractModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSave={handleSaveContract}
+        supervisors={supervisors}
+        editingContract={editingContract}
+      />
     </div>
   );
 }

@@ -1,6 +1,7 @@
+
 'use client';
 
-import { useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import type { Message } from '@/lib/data';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -31,6 +32,14 @@ type StatusInfo = {
 };
 
 export function MessageCard({ message }: { message: Message }) {
+  const [timeAgo, setTimeAgo] = useState('');
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+    setTimeAgo(formatDistanceToNow(new Date(message.createdAt), { addSuffix: true }));
+  }, [message.createdAt]);
+
   const statusInfo = useMemo((): StatusInfo => {
     if (message.status === 'Finalizado') {
       return { label: 'Finalizado', colorClass: 'bg-status-resolved', pulse: false };
@@ -48,7 +57,7 @@ export function MessageCard({ message }: { message: Message }) {
 
   return (
     <Card className={cn(
-        "flex flex-col transition-transform duration-300 hover:scale-105",
+        "flex flex-col transition-transform duration-300",
         statusInfo.shadowClass
     )}>
       <CardHeader>
@@ -91,7 +100,7 @@ export function MessageCard({ message }: { message: Message }) {
       <CardFooter className="flex justify-between items-center text-xs text-muted-foreground">
         <div className="flex items-center gap-1">
           <Clock className="w-3 h-3" />
-          <span>{formatDistanceToNow(new Date(message.createdAt), { addSuffix: true })}</span>
+          <span>{isClient ? timeAgo : '...'}</span>
         </div>
         <Dialog>
           <DialogTrigger asChild>

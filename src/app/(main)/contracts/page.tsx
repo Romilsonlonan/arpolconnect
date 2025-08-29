@@ -33,7 +33,7 @@ function ContractCard({ contract }: { contract: Contract }) {
         className="absolute inset-0 bg-cover bg-center -z-10"
         style={{ backgroundImage: `url('${contract.backgroundImage}')`}}
       />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent -z-10"></div>
+      <div className="absolute inset-0 bg-cover bg-center opacity-70 group-hover:opacity-100 transition-opacity duration-300 z-0"></div>
       <CardHeader>
         <CardTitle className="text-xl font-bold font-headline">{contract.name}</CardTitle>
         <CardDescription className="text-white/80">{contract.address}</CardDescription>

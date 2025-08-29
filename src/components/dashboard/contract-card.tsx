@@ -33,19 +33,13 @@ export function ContractCard({
   return (
     <Card 
       onClick={onClick}
+      style={{ backgroundImage: `url(${contract.backgroundImage})` }}
       className={cn(
-        "group flex flex-col justify-between text-white overflow-hidden shadow-lg relative min-h-[250px] cursor-pointer transition-all duration-300",
+        "group flex flex-col justify-between text-white overflow-hidden shadow-lg relative min-h-[250px] cursor-pointer transition-all duration-300 bg-cover bg-center",
         shadowClass,
         isSelected && 'ring-4 ring-offset-2 ring-accent'
     )}>
-       <Image 
-        src={contract.backgroundImage} 
-        alt={`Imagem de fundo para ${contract.name}`}
-        layout="fill"
-        objectFit="cover"
-        className="absolute inset-0 -z-10 opacity-60 group-hover:opacity-100 transition-opacity duration-300"
-      />
-      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent z-0"></div>
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent z-0 opacity-100 group-hover:opacity-80 transition-opacity duration-300"></div>
       <CardHeader>
         <CardTitle className="text-xl font-bold font-headline z-10">{contract.name}</CardTitle>
         <CardDescription className="text-white/80 z-10">{contract.address}</CardDescription>
@@ -64,3 +58,4 @@ export function ContractCard({
     </Card>
   );
 }
+

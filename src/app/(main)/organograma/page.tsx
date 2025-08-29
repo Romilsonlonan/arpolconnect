@@ -86,45 +86,9 @@ export default function OrganogramaPage() {
     }
   }, [contractSettings, isClient]);
 
-  const syncContractList = (newContractName: string, supervisorNode: OrgNode) => {
-    if (!newContractName || supervisorNode.role !== 'Supervisor') return;
-
-    try {
-        const savedContracts = localStorage.getItem(CONTRACTS_STORAGE_KEY);
-        const contracts: Contract[] = savedContracts ? JSON.parse(savedContracts) : [];
-
-        // Check if contract with the same name already exists
-        if (!contracts.some(c => c.name === newContractName)) {
-            const newContract: Contract = {
-                id: `contract-${Date.now()}`,
-                name: newContractName,
-                supervisorId: supervisorNode.id,
-                supervisorName: supervisorNode.name,
-                address: "Não definido",
-                region: "Não definida",
-                backgroundImage: `https://picsum.photos/600/400?random=${Math.random()}`
-            };
-            const updatedContracts = [...contracts, newContract];
-            localStorage.setItem(CONTRACTS_STORAGE_KEY, JSON.stringify(updatedContracts));
-        }
-    } catch (error) {
-        console.error("Failed to sync contract list", error);
-    }
-  };
-
-
   const handleUpdateNode = (nodeId: string, values: Partial<OrgNode>) => {
     if (!tree) return;
-    let parentNode: OrgNode | null = null;
     
-    // Find parent to sync contract
-    updateTree(tree, (node) => {
-        if(node.children?.some(c => c.id === nodeId)) {
-            parentNode = node;
-        }
-        return node;
-    });
-
     const newTree = updateTree(tree, (node) => {
       if (node.id === nodeId) {
         // If a new avatar data URL is passed, save it separately
@@ -139,10 +103,6 @@ export default function OrganogramaPage() {
     });
 
     saveTree(newTree);
-
-    if (values.contract && parentNode) {
-        syncContractList(values.contract, parentNode);
-    }
   };
 
   const handleToggleVisibility = (nodeId: string) => {
@@ -150,7 +110,7 @@ export default function OrganogramaPage() {
     const newTree = updateTree(tree, (node) => {
       if (node.id === nodeId) {
         // Correctly toggle the boolean value, treating undefined as true
-        return { ...node, showInNeuralNet: !node.showInNeuralNet };
+        return { ...node, showInNeuralNet: node.showInNeuralNet === false };
       }
       return node;
     });
@@ -160,12 +120,9 @@ export default function OrganogramaPage() {
 
   const handleAddChildNode = (parentId: string, child: Omit<OrgNode, 'children' | 'id'>) => {
     if (!tree) return;
-
-    let parentNode: OrgNode | null = null;
     
     const newTree = updateTree(tree, (node) => {
       if (node.id === parentId) {
-        parentNode = node;
         const newNodeId = `node-${Date.now()}-${Math.random()}`;
         const newNode: OrgNode = {
           ...child,
@@ -185,10 +142,6 @@ export default function OrganogramaPage() {
     });
 
     saveTree(newTree);
-
-    if(child.contract && parentNode) {
-        syncContractList(child.contract, parentNode);
-    }
   };
 
   const handleRemoveNode = (nodeId: string) => {

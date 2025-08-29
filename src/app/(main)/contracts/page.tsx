@@ -220,14 +220,20 @@ function AddContractModal({ supervisors, onSave }: { supervisors: OrgNode[], onS
 
 function findSupervisorsInTree(node: OrgNode): OrgNode[] {
     let supervisors: OrgNode[] = [];
-    if (node.role === 'Supervisor') {
-        supervisors.push(node);
-    }
-    if (node.children) {
-        for (const child of node.children) {
-            supervisors = supervisors.concat(findSupervisorsInTree(child));
+    
+    // Recursive function to traverse the tree
+    function traverse(currentNode: OrgNode) {
+        if (currentNode.role === 'Supervisor') {
+            supervisors.push(currentNode);
+        }
+        if (currentNode.children) {
+            for (const child of currentNode.children) {
+                traverse(child);
+            }
         }
     }
+    
+    traverse(node);
     return supervisors;
 }
 

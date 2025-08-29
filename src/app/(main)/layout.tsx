@@ -1,7 +1,9 @@
+
 'use client';
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import Image from 'next/image';
 import {
   Bell,
   Home,
@@ -37,7 +39,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Logo } from '@/components/icons/logo';
 import { cn } from '@/lib/utils';
 
 
@@ -64,7 +65,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
                 "flex items-center gap-2 font-semibold font-headline text-primary-foreground",
                 !open && "justify-center"
              )}>
-                <Logo className="h-6 w-6" />
+                <Image src="https://i.ibb.co/ksM7sG9D/Logo.png" alt="Arpolar Connect Logo" width={36} height={36} className="h-9 w-9" />
                 {open && <span>Arpolar Connect</span>}
               </Link>
           </SidebarHeader>

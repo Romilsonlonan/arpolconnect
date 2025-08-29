@@ -1,10 +1,11 @@
+
 'use client'
 
 import { useState, useEffect, useMemo } from 'react';
+import Image from 'next/image';
 import { initialOrgTree, type OrgNode, type Message } from '@/lib/data';
 import { getAvatar } from '@/lib/avatar-storage';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
-import { Logo } from '../icons/logo';
 import {
   Tooltip,
   TooltipContent,
@@ -139,8 +140,8 @@ export function SupervisorNeuralNet() {
                 <div className="z-10">
                    <Tooltip>
                         <TooltipTrigger>
-                           <div className="w-24 h-24 text-primary bg-primary/10 rounded-full flex items-center justify-center p-4">
-                                <Logo />
+                           <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center p-2">
+                                <Image src="https://i.ibb.co/ksM7sG9D/Logo.png" alt="Arpolar Connect Logo" width={96} height={96} />
                            </div>
                         </TooltipTrigger>
                         <TooltipContent>

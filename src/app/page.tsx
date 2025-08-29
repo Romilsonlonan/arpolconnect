@@ -1,11 +1,12 @@
+
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Logo } from '@/components/icons/logo';
 
 export default function LoginPage() {
   return (
@@ -16,8 +17,8 @@ export default function LoginPage() {
       <Card className="mx-auto max-w-sm w-full bg-white/30 backdrop-blur-lg border border-white/50 shadow-lg">
         <CardHeader className="space-y-4">
           <div className="flex justify-center text-primary">
-            <div className="w-24 h-24 text-primary">
-              <Logo />
+            <div className="w-24 h-24">
+              <Image src="https://i.ibb.co/ksM7sG9D/Logo.png" alt="Arpolar Connect Logo" width={96} height={96} />
             </div>
           </div>
           <div className="text-center">

@@ -7,10 +7,19 @@ import { MessageCard } from '@/components/dashboard/message-card';
 import { SupervisorNeuralNet } from '@/components/dashboard/supervisor-neural-net';
 import { ContractCard } from '@/components/dashboard/contract-card';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlarmClock, CheckCircle, ShieldAlert, Zap, Building, FilterX } from 'lucide-react';
+import { AlarmClock, CheckCircle, ShieldAlert, Zap, Building, FilterX, List } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { findNode } from '@/lib/tree-utils';
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
 
 
 function InfoCard({ title, value, icon, colorClass }: { title: string, value: number, icon: React.ReactNode, colorClass?: string }) {
@@ -36,6 +45,7 @@ export default function DashboardPage() {
   const [orgTree, setOrgTree] = useState<OrgNode>(initialOrgTree);
   const [selectedSupervisor, setSelectedSupervisor] = useState<OrgNode | null>(null);
   const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
+  const [viewingContractTickets, setViewingContractTickets] = useState<Contract | null>(null);
   const [isBrowser, setIsBrowser] = useState(false);
   const dragItem = useRef<number | null>(null);
   const dragOverItem = useRef<number | null>(null);
@@ -121,8 +131,13 @@ export default function DashboardPage() {
   }, [selectedSupervisor, contracts]);
   
   const handleSelectContract = (contract: Contract) => {
-    setSelectedContract(contract);
+    // This now filters the main ticket list
+    setSelectedContract(prev => prev?.id === contract.id ? null : contract);
   }
+
+  const handleViewContractTickets = (contract: Contract) => {
+    setViewingContractTickets(contract);
+  };
 
   const contractAlertLevels = useMemo(() => {
     const alertMap = new Map<string, 'critical' | 'warning' | 'none'>();
@@ -152,6 +167,12 @@ export default function DashboardPage() {
     }
     return messages;
   }, [selectedContract, selectedSupervisor, messages, contracts]);
+
+  const pendingTicketsForModal = useMemo(() => {
+    if (!viewingContractTickets) return [];
+    return messages.filter(msg => msg.contractName === viewingContractTickets.name && msg.status !== 'Finalizado');
+  }, [viewingContractTickets, messages]);
+
 
   const handleClearFilter = () => {
     setSelectedSupervisor(null);
@@ -224,9 +245,17 @@ export default function DashboardPage() {
       </div>
       
        <div>
-            <h1 className="text-lg font-semibold md:text-2xl font-headline">
-                {selectedSupervisor ? `Contratos de ${selectedSupervisor.name}` : 'Painel de Contratos'}
-            </h1>
+            <div className="flex items-center justify-between">
+              <h1 className="text-lg font-semibold md:text-2xl font-headline">
+                  {selectedSupervisor ? `Contratos de ${selectedSupervisor.name}` : 'Painel de Contratos'}
+              </h1>
+              {selectedSupervisor && (
+                <Button variant="ghost" onClick={() => handleSelectContract(selectedContract!)} disabled={!selectedContract}>
+                  <List className="mr-2 h-4 w-4" />
+                  {selectedContract ? `Filtrando por ${selectedContract.name}` : 'Filtrar Tickets por Contrato'}
+                </Button>
+              )}
+            </div>
             {supervisorContracts.length > 0 ? (
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 mt-4">
                     {supervisorContracts.map(contract => (
@@ -234,7 +263,11 @@ export default function DashboardPage() {
                          key={contract.id} 
                          contract={contract} 
                          alertLevel={contractAlertLevels.get(contract.id) || 'none'}
-                         onClick={() => handleSelectContract(contract)}
+                         onCardClick={() => handleViewContractTickets(contract)}
+                         onSelectClick={(e) => {
+                           e.stopPropagation();
+                           handleSelectContract(contract);
+                         }}
                          isSelected={selectedContract?.id === contract.id}
                        />
                     ))}
@@ -299,6 +332,37 @@ export default function DashboardPage() {
             ))}
             </div>
       )}
+       <Dialog open={!!viewingContractTickets} onOpenChange={(isOpen) => !isOpen && setViewingContractTickets(null)}>
+            <DialogContent className="sm:max-w-2xl">
+                <DialogHeader>
+                    <DialogTitle>Tickets Pendentes: {viewingContractTickets?.name}</DialogTitle>
+                    <DialogDescription>
+                        Abaixo estão todos os tickets com status "Em andamento" para este contrato.
+                    </DialogDescription>
+                </DialogHeader>
+                <ScrollArea className="max-h-[60vh] -mx-6 px-6">
+                    <div className="py-4 space-y-4">
+                        {pendingTicketsForModal.length > 0 ? (
+                            pendingTicketsForModal.map((ticket, index) => (
+                                <div key={ticket.id}>
+                                    <div className="font-semibold text-md">
+                                        Problema: <span className="font-normal text-muted-foreground">{ticket.message}</span>
+                                    </div>
+                                    <div className="text-sm space-y-1 mt-2">
+                                        <p><strong>Autor:</strong> {ticket.author}</p>
+                                        <p><strong>Urgência:</strong> {ticket.urgency}</p>
+                                        <p><strong>Equipamento:</strong> {ticket.equipmentName || 'N/A'}</p>
+                                    </div>
+                                    {index < pendingTicketsForModal.length - 1 && <Separator className="mt-4" />}
+                                </div>
+                            ))
+                        ) : (
+                            <p className="text-muted-foreground text-center py-8">Nenhum ticket pendente para este contrato.</p>
+                        )}
+                    </div>
+                </ScrollArea>
+            </DialogContent>
+        </Dialog>
     </div>
   );
 }

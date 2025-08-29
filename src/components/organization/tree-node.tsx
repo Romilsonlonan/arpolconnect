@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -42,16 +43,9 @@ type TreeNodeProps = {
 };
 
 function NodeAvatar({ node }: { node: OrgNode }) {
-    const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
-
-    useEffect(() => {
-        if (node.avatar?.startsWith('avatar:')) {
-            const url = getAvatar(node.id);
-            setAvatarUrl(url);
-        } else {
-            setAvatarUrl(node.avatar);
-        }
-    }, [node.id, node.avatar]);
+    // Direct synchronous lookup for the avatar.
+    // This avoids useEffect complexities and ensures the avatar is present on initial render.
+    const avatarUrl = getAvatar(node.id) || node.avatar;
 
     return (
         <Avatar className="w-16 h-16 border-2 border-primary">
@@ -287,3 +281,5 @@ export function TreeNode({ node, onUpdate, onAddChild, onRemove, onMoveNode, onC
     </TooltipProvider>
   );
 }
+
+    

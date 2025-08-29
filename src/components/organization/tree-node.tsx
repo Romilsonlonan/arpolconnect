@@ -6,7 +6,7 @@ import { getAvatar } from '@/lib/avatar-storage';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Pencil, Trash2, Phone, Briefcase, Building, MessageSquarePlus, Eye, EyeOff } from 'lucide-react';
+import { Plus, Pencil, Trash2, Phone, Briefcase, Building, MessageSquarePlus, Eye, EyeOff, ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { EmployeeModal } from './employee-modal';
 import { ContractSettingsModal } from './contract-settings-modal';
@@ -66,6 +66,7 @@ export function TreeNode({ node, onUpdate, onAddChild, onRemove, onMoveNode, onC
   const [contractModalOpen, setContractModalOpen] = useState(false);
   const [editingNode, setEditingNode] = useState<OrgNode | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
 
   const handleAdd = () => {
     setEditingNode(null);
@@ -229,6 +230,16 @@ export function TreeNode({ node, onUpdate, onAddChild, onRemove, onMoveNode, onC
             </AlertDialog>
           </div>
         </CardContent>
+        {node.children && node.children.length > 0 && (
+            <Button 
+                variant="ghost" 
+                size="icon" 
+                className="absolute -bottom-5 left-1/2 -translate-x-1/2 h-6 w-6 rounded-full bg-primary/20 hover:bg-primary/30"
+                onClick={() => setIsExpanded(prev => !prev)}
+            >
+                {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+            </Button>
+        )}
       </Card>
       
       <EmployeeModal
@@ -246,8 +257,7 @@ export function TreeNode({ node, onUpdate, onAddChild, onRemove, onMoveNode, onC
         hideBackgroundImage
       />
 
-
-      {node.children && node.children.length > 0 && (
+      {isExpanded && node.children && node.children.length > 0 && (
         <>
           <div className="absolute top-full h-8 w-px bg-slate-600 left-1/2 -translate-x-1/2"></div>
           
@@ -277,5 +287,3 @@ export function TreeNode({ node, onUpdate, onAddChild, onRemove, onMoveNode, onC
     </TooltipProvider>
   );
 }
-
-    

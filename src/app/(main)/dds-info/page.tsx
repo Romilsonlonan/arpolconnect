@@ -115,7 +115,8 @@ export default function DDSInfoPage() {
 
     setIsSending(true);
 
-    const webhookUrl = 'https://seu-webhook-n8n.com/placeholder'; // <-- IMPORTANTE: SUBSTITUA ESTE URL!
+    // IMPORTANTE: Substitua este URL pelo seu webhook real do n8n quando estiver pronto.
+    const webhookUrl = 'https://seu-webhook-n8n.com/placeholder'; 
     
     const payload = {
         message: postContent,
@@ -123,6 +124,12 @@ export default function DDSInfoPage() {
     };
 
     try {
+        // --- INÍCIO DA ALTERAÇÃO: Chamada de rede comentada para evitar erros ---
+        console.log("Simulando envio para o webhook:", webhookUrl);
+        console.log("Payload:", JSON.stringify(payload, null, 2));
+
+        // Descomente o bloco abaixo e substitua o webhookUrl quando estiver pronto para testar de verdade.
+        /*
         const response = await fetch(webhookUrl, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -130,14 +137,18 @@ export default function DDSInfoPage() {
         });
 
         if (!response.ok) {
-            // Se o webhook retornar um erro, lança uma exceção
             throw new Error(`O webhook respondeu com o status: ${response.status}`);
         }
+        */
+
+        // Simulação de delay da rede
+        await new Promise(resolve => setTimeout(resolve, 1000));
         
         toast({
-            title: 'Post Enviado com Sucesso!',
+            title: 'Post Enviado com Sucesso! (Simulação)',
             description: 'A mensagem foi enviada para a fila de automação.',
         });
+        // --- FIM DA ALTERAÇÃO ---
 
     } catch (error) {
         console.error("Falha ao enviar para o webhook:", error);
@@ -375,5 +386,3 @@ export default function DDSInfoPage() {
     </div>
   );
 }
-
-    

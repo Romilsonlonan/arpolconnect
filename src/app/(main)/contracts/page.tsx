@@ -63,8 +63,8 @@ function findSupervisorsInTree(node: OrgNode): OrgNode[] {
     
     // Recursive function to traverse the tree
     function traverse(currentNode: OrgNode) {
-        // A supervisor can be anyone with direct children, or anyone with the role 'Supervisor'
-        if (currentNode.role === 'Supervisor') {
+        // A supervisor is anyone with the role 'Supervisor', and is not hidden
+        if (currentNode.role === 'Supervisor' && currentNode.showInNeuralNet !== false) {
             supervisors.push(currentNode);
         }
         if (currentNode.children) {

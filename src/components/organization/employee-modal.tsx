@@ -25,6 +25,7 @@ import { getAvatar } from '@/lib/avatar-storage';
 import { ScrollArea } from '../ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import { Upload } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 type EmployeeModalProps = {
   isOpen: boolean;
@@ -65,6 +66,7 @@ export function EmployeeModal({ isOpen, onClose, onSave, editingNode }: Employee
   const [avatar, setAvatar] = useState(PLACEHOLDER_AVATAR);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [availableContracts, setAvailableContracts] = useState<Contract[]>([]);
+  const { toast } = useToast();
 
 
   useEffect(() => {
@@ -108,20 +110,66 @@ export function EmployeeModal({ isOpen, onClose, onSave, editingNode }: Employee
     });
     onClose();
   };
+  
+  const resizeImage = (file: File, maxWidth: number, maxHeight: number, quality: number): Promise<string> => {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target?.result as string;
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let { width, height } = img;
 
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+                if (width > height) {
+                    if (width > maxWidth) {
+                        height = Math.round((height * maxWidth) / width);
+                        width = maxWidth;
+                    }
+                } else {
+                    if (height > maxHeight) {
+                        width = Math.round((width * maxHeight) / height);
+                        height = maxHeight;
+                    }
+                }
+
+                canvas.width = width;
+                canvas.height = height;
+                const ctx = canvas.getContext('2d');
+                ctx?.drawImage(img, 0, 0, width, height);
+
+                resolve(canvas.toDataURL('image/jpeg', quality));
+            };
+            img.onerror = reject;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+  };
+
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      if (file.size > 2 * 1024 * 1024) { // 2MB limit
-        alert("O arquivo é muito grande. Selecione uma imagem menor que 2MB.");
+      if (file.size > 5 * 1024 * 1024) { // 5MB limit
+        toast({
+            title: "Arquivo muito grande",
+            description: "Por favor, selecione uma imagem menor que 5MB.",
+            variant: "destructive"
+        });
         return;
       }
       
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        setAvatar(event.target?.result as string);
-      };
-      reader.readAsDataURL(file);
+      try {
+        const resizedDataUrl = await resizeImage(file, 256, 256, 0.9);
+        setAvatar(resizedDataUrl);
+      } catch (error) {
+        console.error("Error resizing image:", error);
+        toast({
+            title: "Erro ao processar imagem",
+            description: "Houve um problema ao redimensionar a imagem. Tente novamente.",
+            variant: "destructive"
+        });
+      }
     }
   };
 

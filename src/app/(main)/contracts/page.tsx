@@ -30,7 +30,7 @@ function ContractCard({ contract }: { contract: Contract }) {
   return (
     <Card className="group flex flex-col justify-between text-white overflow-hidden shadow-lg relative min-h-[250px]">
        <div 
-        className="absolute inset-0 bg-cover bg-center opacity-70 group-hover:opacity-100 transition-opacity duration-300 z-0"
+        className="absolute inset-0 bg-cover bg-center -z-10"
         style={{ backgroundImage: `url('${contract.backgroundImage}')`}}
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent -z-10"></div>
@@ -62,22 +62,64 @@ function AddContractModal({ supervisors, onSave }: { supervisors: OrgNode[], onS
     const fileInputRef = useRef<HTMLInputElement>(null);
     const { toast } = useToast();
 
-    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const resizeImage = (file: File, maxWidth: number, maxHeight: number, quality: number): Promise<string> => {
+      return new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = (event) => {
+              const img = new Image();
+              img.src = event.target?.result as string;
+              img.onload = () => {
+                  const canvas = document.createElement('canvas');
+                  let { width, height } = img;
+
+                  if (width > height) {
+                      if (width > maxWidth) {
+                          height = Math.round((height * maxWidth) / width);
+                          width = maxWidth;
+                      }
+                  } else {
+                      if (height > maxHeight) {
+                          width = Math.round((width * maxHeight) / height);
+                          height = maxHeight;
+                      }
+                  }
+
+                  canvas.width = width;
+                  canvas.height = height;
+                  const ctx = canvas.getContext('2d');
+                  ctx?.drawImage(img, 0, 0, width, height);
+
+                  resolve(canvas.toDataURL('image/jpeg', quality));
+              };
+              img.onerror = reject;
+          };
+          reader.onerror = reject;
+          reader.readAsDataURL(file);
+      });
+    };
+
+    const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
         if (file) {
-             if (file.size > 2 * 1024 * 1024) { // 2MB limit
+             if (file.size > 5 * 1024 * 1024) { // 5MB limit
                 toast({
                     title: "Imagem Muito Grande",
-                    description: "Por favor, selecione uma imagem menor que 2MB.",
+                    description: "Por favor, selecione uma imagem menor que 5MB.",
                     variant: "destructive",
                 });
                 return;
             }
-            const reader = new FileReader();
-            reader.onload = (event) => {
-                setBackgroundImage(event.target?.result as string);
-            };
-            reader.readAsDataURL(file);
+            try {
+              const resizedDataUrl = await resizeImage(file, 1200, 800, 0.9);
+              setBackgroundImage(resizedDataUrl);
+            } catch (error) {
+              console.error("Error resizing image:", error);
+              toast({
+                  title: "Erro ao processar imagem",
+                  description: "Houve um problema ao redimensionar a imagem. Tente novamente.",
+                  variant: "destructive"
+              });
+            }
         }
     };
 

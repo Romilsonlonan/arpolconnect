@@ -29,10 +29,13 @@ const ORG_CHART_STORAGE_KEY = 'orgChartTree';
 function ContractCard({ contract }: { contract: Contract }) {
   return (
     <Card className="group flex flex-col justify-between text-white overflow-hidden shadow-lg relative min-h-[250px]">
-       <img 
+       <Image 
         src={contract.backgroundImage} 
         alt={`Imagem de fundo para ${contract.name}`}
-        className="absolute inset-0 -z-10 w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity duration-300"
+        fill
+        style={{ objectFit: 'cover' }}
+        unoptimized
+        className="absolute inset-0 -z-10 opacity-60 group-hover:opacity-100 transition-opacity duration-300"
       />
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent z-0"></div>
       <CardHeader>
@@ -193,7 +196,7 @@ function AddContractModal({ supervisors, onSave }: { supervisors: OrgNode[], onS
                         <Label>Imagem de Fundo</Label>
                         {backgroundImage && (
                             <div className="relative w-full h-32 rounded-md overflow-hidden border">
-                                <Image src={backgroundImage} alt="Pré-visualização da imagem" layout="fill" objectFit="cover" />
+                                <Image src={backgroundImage} alt="Pré-visualização da imagem" fill style={{objectFit: "cover"}} unoptimized/>
                             </div>
                         )}
                         <Input 

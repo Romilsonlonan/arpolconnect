@@ -136,7 +136,7 @@ export function TreeNode({ node, onUpdate, onAddChild, onRemove, onMoveNode, onC
         isDragOver && "ring-2 ring-primary ring-offset-2",
         !isRoot && "cursor-move"
         )}>
-        <CardContent className="p-4 flex flex-col items-center gap-2">
+        <CardContent className="p-4 flex flex-col items-center gap-2 relative">
           <NodeAvatar node={node} />
           <div className="mt-2">
             <p className="font-bold text-lg font-headline">{node.name}</p>
@@ -229,17 +229,17 @@ export function TreeNode({ node, onUpdate, onAddChild, onRemove, onMoveNode, onC
               </AlertDialogContent>
             </AlertDialog>
           </div>
+            {node.children && node.children.length > 0 && (
+                <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="absolute -bottom-1 -right-1 h-7 w-7 rounded-full bg-primary/10 hover:bg-primary/20 z-10"
+                    onClick={() => setIsExpanded(prev => !prev)}
+                >
+                    {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                </Button>
+            )}
         </CardContent>
-        {node.children && node.children.length > 0 && (
-            <Button 
-                variant="ghost" 
-                size="icon" 
-                className="absolute -bottom-5 left-1/2 -translate-x-1/2 h-6 w-6 rounded-full bg-primary/20 hover:bg-primary/30"
-                onClick={() => setIsExpanded(prev => !prev)}
-            >
-                {isExpanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-            </Button>
-        )}
       </Card>
       
       <EmployeeModal

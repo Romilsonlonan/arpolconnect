@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
-import { Upload, FileText, Send, Phone, UserCheck, Users, Calendar, UserPlus, Trash2, Loader2 } from 'lucide-react';
+import { Upload, FileText, Send, Phone, UserCheck, Users, Calendar, UserPlus, Trash2, Loader2, Link } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -29,6 +29,14 @@ type DdsParticipant = {
   avatar?: string;
 };
 
+type LiveAttendee = {
+    id: string;
+    fullName: string;
+    role: string;
+    contractName: string;
+    timestamp: string;
+};
+
 const mockFiles: DdsFile[] = [
   { name: 'DDS_Seguranca_Altura_Semana23.pdf', date: '2024-06-10', size: '1.2 MB' },
   { name: 'DDS_EPI_Semana22.pdf', date: '2024-06-03', size: '850 KB' },
@@ -44,6 +52,8 @@ const initialAttendance = {
 };
 
 const DDS_PARTICIPANTS_STORAGE_KEY = 'ddsParticipants';
+const LIVE_ATTENDEES_STORAGE_KEY = 'liveAttendees';
+
 
 export default function DDSInfoPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -58,20 +68,49 @@ export default function DDSInfoPage() {
   const [participants, setParticipants] = useState<DdsParticipant[]>([]);
   const [newParticipantName, setNewParticipantName] = useState('');
   const [newParticipantPhone, setNewParticipantPhone] = useState('');
+  
+  const [liveAttendees, setLiveAttendees] = useState<LiveAttendee[]>([]);
+
   const [isClient, setIsClient] = useState(false);
   const [isSending, setIsSending] = useState(false);
 
   // --- Efeitos ---
   useEffect(() => {
     setIsClient(true);
-    try {
-      const savedParticipants = localStorage.getItem(DDS_PARTICIPANTS_STORAGE_KEY);
-      if (savedParticipants) {
-        setParticipants(JSON.parse(savedParticipants));
+    
+    const loadData = () => {
+        try {
+            const savedParticipants = localStorage.getItem(DDS_PARTICIPANTS_STORAGE_KEY);
+            if (savedParticipants) {
+                setParticipants(JSON.parse(savedParticipants));
+            }
+            const savedAttendees = localStorage.getItem(LIVE_ATTENDEES_STORAGE_KEY);
+            if (savedAttendees) {
+                setLiveAttendees(JSON.parse(savedAttendees));
+            }
+        } catch (error) {
+            console.error('Failed to load data from localStorage', error);
+        }
+    };
+    
+    loadData();
+
+    // Listen for storage changes to update live attendees in real-time
+    const handleStorageChange = (event: StorageEvent) => {
+      if (event.key === LIVE_ATTENDEES_STORAGE_KEY && event.newValue) {
+        setLiveAttendees(JSON.parse(event.newValue));
       }
-    } catch (error) {
-      console.error('Failed to load participants from localStorage', error);
-    }
+      if (event.key === DDS_PARTICIPANTS_STORAGE_KEY && event.newValue) {
+        setParticipants(JSON.parse(event.newValue));
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+
+    return () => {
+      window.removeEventListener('storage', handleStorageChange);
+    };
+
   }, []);
 
   useEffect(() => {
@@ -115,7 +154,6 @@ export default function DDSInfoPage() {
 
     setIsSending(true);
 
-    // IMPORTANTE: Substitua este URL pelo seu webhook real do n8n quando estiver pronto.
     const webhookUrl = 'https://seu-webhook-n8n.com/placeholder'; 
     
     const payload = {
@@ -124,31 +162,15 @@ export default function DDSInfoPage() {
     };
 
     try {
-        // --- INÍCIO DA ALTERAÇÃO: Chamada de rede comentada para evitar erros ---
         console.log("Simulando envio para o webhook:", webhookUrl);
         console.log("Payload:", JSON.stringify(payload, null, 2));
 
-        // Descomente o bloco abaixo e substitua o webhookUrl quando estiver pronto para testar de verdade.
-        /*
-        const response = await fetch(webhookUrl, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-
-        if (!response.ok) {
-            throw new Error(`O webhook respondeu com o status: ${response.status}`);
-        }
-        */
-
-        // Simulação de delay da rede
         await new Promise(resolve => setTimeout(resolve, 1000));
         
         toast({
             title: 'Post Enviado com Sucesso! (Simulação)',
             description: 'A mensagem foi enviada para a fila de automação.',
         });
-        // --- FIM DA ALTERAÇÃO ---
 
     } catch (error) {
         console.error("Falha ao enviar para o webhook:", error);
@@ -196,6 +218,22 @@ export default function DDSInfoPage() {
     }
   };
 
+  const generatePresenceLink = () => {
+    const link = `${window.location.origin}/live-presence`;
+    navigator.clipboard.writeText(link).then(() => {
+      toast({
+        title: "Link Copiado!",
+        description: "O link de presença foi copiado para sua área de transferência."
+      });
+    }).catch(err => {
+      console.error('Failed to copy link: ', err);
+      toast({
+        title: "Falha ao Copiar",
+        description: "Não foi possível copiar o link.",
+        variant: "destructive"
+      });
+    });
+  };
 
   if (!isClient) {
     return null;
@@ -207,126 +245,83 @@ export default function DDSInfoPage() {
         <h1 className="text-lg font-semibold md:text-2xl font-headline">DDS Info Center</h1>
         <p className="text-muted-foreground">Gerencie os arquivos, comunicados e a participação da equipe no DDS.</p>
       </div>
+      
+      <div className="flex justify-end">
+        <Button onClick={generatePresenceLink}>
+          <Link className="mr-2" />
+          Gerar Link de Presença
+        </Button>
+      </div>
 
       <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
         
-        {/* Combined Live Call & Post Section */}
-        <div className="flex flex-col gap-6">
-            {/* Live Call Section */}
-            <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                        <Phone className="h-5 w-5" />
-                        Chamada DDS Ao Vivo
-                    </CardTitle>
-                    <CardDescription>Confirme sua presença e veja quem está online.</CardDescription>
-                </CardHeader>
-                <CardContent className="flex flex-col items-center gap-4">
-                    <div className="flex items-center gap-2 text-green-500">
-                        <Users className="h-5 w-5" />
-                        <span className="font-bold">{participants.length} Participantes Online</span>
-                    </div>
-                    <div className="flex -space-x-2 overflow-hidden">
-                        {participants.slice(0, 7).map(p => ( // Show max 7 avatars
-                            <Avatar key={p.id} className="inline-block h-10 w-10 rounded-full ring-2 ring-background">
-                                <AvatarImage src={p.avatar} alt={p.name} />
-                                <AvatarFallback>{p.name.charAt(0)}</AvatarFallback>
-                            </Avatar>
-                        ))}
-                    </div>
-                </CardContent>
-                <CardFooter>
-                    <Button className="w-full" onClick={confirmPresence} disabled={hasConfirmed}>
-                        <UserCheck className="mr-2"/>
-                        {hasConfirmed ? 'Presença Confirmada' : 'Confirmar Presença'}
-                    </Button>
-                </CardFooter>
-            </Card>
-
-             {/* Post Section */}
-            <Card>
-                <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                    <Send className="h-5 w-5" />
-                    Enviar Post Semanal
-                    </CardTitle>
-                    <CardDescription>Envie um lembrete ou post sobre o DDS para a equipe.</CardDescription>
-                </CardHeader>
-                <CardContent>
-                    <Textarea 
-                        placeholder="Escreva a mensagem aqui..." 
-                        className="min-h-[100px]"
-                        value={postContent}
-                        onChange={(e) => setPostContent(e.target.value)}
-                    />
-                </CardContent>
-                <CardFooter>
-                    <Button className="w-full" onClick={sendPost} disabled={isSending}>
-                        {isSending ? (
-                            <>
-                                <Loader2 className="mr-2 animate-spin" />
-                                Enviando...
-                            </>
-                        ) : (
-                            <>
-                                <Send className="mr-2" />
-                                Enviar para Celular
-                            </>
-                        )}
-                    </Button>
-                </CardFooter>
-            </Card>
-        </div>
-
-        {/* Participant Management Section */}
-        <Card>
+        {/* Live Presence List */}
+        <Card className="lg:col-span-1 xl:col-span-1">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                    <UserPlus className="h-5 w-5" />
-                    Gerenciamento de Participantes
+                    <UserCheck className="h-5 w-5" />
+                    Presença da Live
                 </CardTitle>
-                <CardDescription>Adicione ou remova participantes da lista de contatos do DDS.</CardDescription>
+                <CardDescription>Participantes que registraram presença através do link.</CardDescription>
             </CardHeader>
             <CardContent>
-                <div className="flex flex-col gap-4">
-                    <div className="grid gap-2">
-                        <Label htmlFor="participant-name">Nome</Label>
-                        <Input id="participant-name" placeholder="Nome do participante" value={newParticipantName} onChange={e => setNewParticipantName(e.target.value)} />
-                    </div>
-                    <div className="grid gap-2">
-                        <Label htmlFor="participant-phone">Telefone</Label>
-                        <Input id="participant-phone" placeholder="(XX) XXXXX-XXXX" value={newParticipantPhone} onChange={e => setNewParticipantPhone(e.target.value)} />
-                    </div>
-                    <Button onClick={handleAddParticipant}>
-                        <UserPlus className="mr-2"/>
-                        Adicionar Participante
-                    </Button>
-                </div>
-                <Separator className="my-4" />
-                <h3 className="text-sm font-medium text-muted-foreground mb-2">Lista de Participantes ({participants.length})</h3>
-                <ScrollArea className="h-48">
+                <ScrollArea className="h-80">
                     <div className="space-y-3 pr-4">
-                        {participants.length > 0 ? participants.map(p => (
-                            <div key={p.id} className="flex items-center justify-between text-sm p-2 rounded-lg hover:bg-muted/50">
+                        {liveAttendees.length > 0 ? liveAttendees.map(p => (
+                            <div key={p.id} className="flex items-start justify-between text-sm p-2 rounded-lg hover:bg-muted/50">
                                 <div>
-                                    <p className="font-semibold">{p.name}</p>
-                                    <p className="text-xs text-muted-foreground">{p.phone}</p>
+                                    <p className="font-semibold">{p.fullName}</p>
+                                    <p className="text-xs text-muted-foreground">{p.role} - {p.contractName}</p>
+                                    <p className="text-xs text-muted-foreground">Registrado em: {new Date(p.timestamp).toLocaleString()}</p>
                                 </div>
-                                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleRemoveParticipant(p.id)}>
-                                    <Trash2 className="h-4 w-4" />
-                                </Button>
                             </div>
                         )) : (
-                            <p className="text-center text-muted-foreground pt-4">Nenhum participante cadastrado.</p>
+                            <p className="text-center text-muted-foreground pt-4">Nenhum participante registrou presença ainda.</p>
                         )}
                     </div>
                 </ScrollArea>
             </CardContent>
+             <CardFooter>
+                <div className="text-sm text-muted-foreground w-full text-center">Total de Participantes: {liveAttendees.length}</div>
+            </CardFooter>
         </Card>
 
-
+        {/* Post Section */}
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                <Send className="h-5 w-5" />
+                Enviar Post Semanal
+                </CardTitle>
+                <CardDescription>Envie um lembrete ou post sobre o DDS para os contatos de automação.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <Textarea 
+                    placeholder="Escreva a mensagem aqui..." 
+                    className="min-h-[100px]"
+                    value={postContent}
+                    onChange={(e) => setPostContent(e.target.value)}
+                />
+            </CardContent>
+            <CardFooter>
+                <Button className="w-full" onClick={sendPost} disabled={isSending}>
+                    {isSending ? (
+                        <>
+                            <Loader2 className="mr-2 animate-spin" />
+                            Enviando...
+                        </>
+                    ) : (
+                        <>
+                            <Send className="mr-2" />
+                            Enviar para Celular
+                        </>
+                    )}
+                </Button>
+            </CardFooter>
+        </Card>
+        
         {/* Attendance Dashboard Section */}
-        <Card className="xl:col-span-1">
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Calendar className="h-5 w-5" />
@@ -347,8 +342,54 @@ export default function DDSInfoPage() {
           </CardContent>
         </Card>
 
+        {/* Participant Management Section */}
+        <Card>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                    <UserPlus className="h-5 w-5" />
+                    Gerenciamento de Contatos (Automação)
+                </CardTitle>
+                <CardDescription>Adicione ou remova participantes da lista de contatos para envio de mensagens via n8n.</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div className="flex flex-col gap-4">
+                    <div className="grid gap-2">
+                        <Label htmlFor="participant-name">Nome</Label>
+                        <Input id="participant-name" placeholder="Nome do participante" value={newParticipantName} onChange={e => setNewParticipantName(e.target.value)} />
+                    </div>
+                    <div className="grid gap-2">
+                        <Label htmlFor="participant-phone">Telefone</Label>
+                        <Input id="participant-phone" placeholder="(XX) XXXXX-XXXX" value={newParticipantPhone} onChange={e => setNewParticipantPhone(e.target.value)} />
+                    </div>
+                    <Button onClick={handleAddParticipant}>
+                        <UserPlus className="mr-2"/>
+                        Adicionar Contato
+                    </Button>
+                </div>
+                <Separator className="my-4" />
+                <h3 className="text-sm font-medium text-muted-foreground mb-2">Lista de Contatos ({participants.length})</h3>
+                <ScrollArea className="h-48">
+                    <div className="space-y-3 pr-4">
+                        {participants.length > 0 ? participants.map(p => (
+                            <div key={p.id} className="flex items-center justify-between text-sm p-2 rounded-lg hover:bg-muted/50">
+                                <div>
+                                    <p className="font-semibold">{p.name}</p>
+                                    <p className="text-xs text-muted-foreground">{p.phone}</p>
+                                </div>
+                                <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => handleRemoveParticipant(p.id)}>
+                                    <Trash2 className="h-4 w-4" />
+                                </Button>
+                            </div>
+                        )) : (
+                            <p className="text-center text-muted-foreground pt-4">Nenhum contato cadastrado.</p>
+                        )}
+                    </div>
+                </ScrollArea>
+            </CardContent>
+        </Card>
+
         {/* Repository Section */}
-        <Card className="xl:col-span-3">
+        <Card className="lg:col-span-2 xl:col-span-2">
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5" />

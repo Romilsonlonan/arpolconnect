@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
-import { Upload, FileText, Send, Phone, UserCheck, Users, Calendar, UserPlus, Trash2, Loader2, Link } from 'lucide-react';
+import { Upload, FileText, Send, Phone, UserCheck, Users, Calendar, UserPlus, Trash2, Loader2, Link, Download } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -78,23 +78,17 @@ export default function DDSInfoPage() {
   useEffect(() => {
     setIsClient(true);
     
-    const loadData = () => {
-        try {
-            const savedParticipants = localStorage.getItem(DDS_PARTICIPANTS_STORAGE_KEY);
-            if (savedParticipants) {
-                setParticipants(JSON.parse(savedParticipants));
-            }
-            const savedAttendees = localStorage.getItem(LIVE_ATTENDEES_STORAGE_KEY);
-            if (savedAttendees) {
-                setLiveAttendees(JSON.parse(savedAttendees));
-            }
-        } catch (error) {
-            console.error('Failed to load data from localStorage', error);
-        }
-    };
+    // Initial load
+    try {
+        const savedParticipants = localStorage.getItem(DDS_PARTICIPANTS_STORAGE_KEY);
+        setParticipants(savedParticipants ? JSON.parse(savedParticipants) : []);
+        
+        const savedAttendees = localStorage.getItem(LIVE_ATTENDEES_STORAGE_KEY);
+        setLiveAttendees(savedAttendees ? JSON.parse(savedAttendees) : []);
+    } catch (error) {
+        console.error('Failed to load data from localStorage on mount', error);
+    }
     
-    loadData();
-
     // Listen for storage changes to update live attendees in real-time
     const handleStorageChange = (event: StorageEvent) => {
       if (event.key === LIVE_ATTENDEES_STORAGE_KEY && event.newValue) {
@@ -246,6 +240,56 @@ export default function DDSInfoPage() {
     });
   };
 
+  const downloadPresenceReport = (period: 'daily' | 'weekly' | 'monthly') => {
+    if (liveAttendees.length === 0) {
+      toast({ title: 'Nenhum registro', description: 'Não há registros de presença para gerar um relatório.', variant: 'destructive' });
+      return;
+    }
+
+    const now = new Date();
+    const filteredAttendees = liveAttendees.filter(attendee => {
+        const attendeeDate = new Date(attendee.timestamp);
+        if (period === 'daily') {
+            return attendeeDate.toDateString() === now.toDateString();
+        }
+        if (period === 'weekly') {
+            const oneWeekAgo = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 7);
+            return attendeeDate >= oneWeekAgo;
+        }
+        if (period === 'monthly') {
+            const oneMonthAgo = new Date(now.getFullYear(), now.getMonth() - 1, now.getDate());
+            return attendeeDate >= oneMonthAgo;
+        }
+        return false;
+    });
+
+    if (filteredAttendees.length === 0) {
+      toast({ title: 'Nenhum registro no período', description: `Não há registros de presença para o período ${period}.`, variant: 'destructive' });
+      return;
+    }
+
+    const csvHeader = ['Nome Completo', 'Função', 'Contrato', 'Data e Hora do Registro\n'];
+    const csvRows = filteredAttendees.map(p => 
+        [
+            `"${p.fullName}"`,
+            `"${p.role}"`,
+            `"${p.contractName}"`,
+            `"${new Date(p.timestamp).toLocaleString('pt-BR')}"`
+        ].join(',')
+    );
+
+    const csvContent = csvHeader.join(',') + csvRows.join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.setAttribute('href', url);
+    link.setAttribute('download', `relatorio_presenca_${period}_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+
   if (!isClient) {
     return null;
   }
@@ -283,7 +327,7 @@ export default function DDSInfoPage() {
                                 <div>
                                     <p className="font-semibold">{p.fullName}</p>
                                     <p className="text-xs text-muted-foreground">{p.role} - {p.contractName}</p>
-                                    <p className="text-xs text-muted-foreground">Registrado em: {new Date(p.timestamp).toLocaleString()}</p>
+                                    <p className="text-xs text-muted-foreground">Registrado em: {new Date(p.timestamp).toLocaleString('pt-BR')}</p>
                                 </div>
                             </div>
                         )) : (
@@ -295,6 +339,37 @@ export default function DDSInfoPage() {
              <CardFooter>
                 <div className="text-sm text-muted-foreground w-full text-center">Total de Participantes: {liveAttendees.length}</div>
             </CardFooter>
+        </Card>
+
+        {/* Presence Dashboard */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="h-5 w-5" />
+              Dashboard de Presença
+            </CardTitle>
+            <CardDescription>Exporte relatórios de presença da equipe.</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">Clique para fazer o download da lista de presença em formato CSV, compatível com Excel.</p>
+             <div className="flex flex-col gap-2">
+                <Button onClick={() => downloadPresenceReport('daily')}>
+                    <Download className="mr-2"/>
+                    Download Diário
+                </Button>
+                <Button onClick={() => downloadPresenceReport('weekly')} variant="secondary">
+                    <Download className="mr-2"/>
+                    Download Semanal
+                </Button>
+                <Button onClick={() => downloadPresenceReport('monthly')} variant="outline">
+                    <Download className="mr-2"/>
+                    Download Mensal
+                </Button>
+            </div>
+          </CardContent>
+          <CardFooter>
+            <p className="text-xs text-muted-foreground text-center w-full">Os relatórios são baseados na data e hora do registro de presença.</p>
+          </CardFooter>
         </Card>
 
         {/* Post Section */}
@@ -331,28 +406,6 @@ export default function DDSInfoPage() {
             </CardFooter>
         </Card>
         
-        {/* Attendance Dashboard Section */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              Dashboard de Presença
-            </CardTitle>
-            <CardDescription>Comparecimento da equipe nos DDS da semana.</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {Object.entries(attendance).map(([day, value]) => (
-              <div key={day}>
-                <div className="flex justify-between items-center mb-1">
-                  <p className="text-sm font-medium">{day}</p>
-                  <p className="text-sm font-bold">{value}%</p>
-                </div>
-                <Progress value={value} className="h-3" />
-              </div>
-            ))}
-          </CardContent>
-        </Card>
-
         {/* Participant Management Section */}
         <Card>
             <CardHeader>
@@ -438,5 +491,7 @@ export default function DDSInfoPage() {
     </div>
   );
 }
+
+    
 
     

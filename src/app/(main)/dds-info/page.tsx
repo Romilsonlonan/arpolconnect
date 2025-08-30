@@ -165,6 +165,17 @@ export default function DDSInfoPage() {
         console.log("Simulando envio para o webhook:", webhookUrl);
         console.log("Payload:", JSON.stringify(payload, null, 2));
 
+        // Comente a chamada de rede para evitar erros de CORS/rede com o placeholder
+        // const response = await fetch(webhookUrl, {
+        //     method: 'POST',
+        //     headers: { 'Content-Type': 'application/json' },
+        //     body: JSON.stringify(payload)
+        // });
+        // if (!response.ok) {
+        //   throw new Error('Network response was not ok');
+        // }
+        
+        // Simulação de sucesso
         await new Promise(resolve => setTimeout(resolve, 1000));
         
         toast({
@@ -427,3 +438,5 @@ export default function DDSInfoPage() {
     </div>
   );
 }
+
+    

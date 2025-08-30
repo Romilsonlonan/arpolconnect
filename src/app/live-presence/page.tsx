@@ -55,12 +55,11 @@ export default function LivePresencePage() {
       const updatedAttendees = [...currentAttendees, newAttendee];
       localStorage.setItem(LIVE_ATTENDEES_STORAGE_KEY, JSON.stringify(updatedAttendees));
       
-      // We dispatch a storage event to notify other open tabs (like the main DDS info page)
+      // Dispatch a storage event to notify other open tabs (like the main DDS info page)
+      // This is the key for real-time updates on other pages.
       window.dispatchEvent(new StorageEvent('storage', {
           key: LIVE_ATTENDEES_STORAGE_KEY,
           newValue: JSON.stringify(updatedAttendees),
-          oldValue: JSON.stringify(currentAttendees),
-          storageArea: localStorage,
       }));
 
       setTimeout(() => {
@@ -166,3 +165,4 @@ export default function LivePresencePage() {
     </div>
   );
 }
+

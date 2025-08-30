@@ -78,24 +78,35 @@ export default function DDSInfoPage() {
   useEffect(() => {
     setIsClient(true);
     
-    // Initial load
-    try {
-        const savedParticipants = localStorage.getItem(DDS_PARTICIPANTS_STORAGE_KEY);
-        setParticipants(savedParticipants ? JSON.parse(savedParticipants) : []);
-        
-        const savedAttendees = localStorage.getItem(LIVE_ATTENDEES_STORAGE_KEY);
-        setLiveAttendees(savedAttendees ? JSON.parse(savedAttendees) : []);
-    } catch (error) {
-        console.error('Failed to load data from localStorage on mount', error);
-    }
+    const loadInitialData = () => {
+        try {
+            const savedParticipants = localStorage.getItem(DDS_PARTICIPANTS_STORAGE_KEY);
+            setParticipants(savedParticipants ? JSON.parse(savedParticipants) : []);
+            
+            const savedAttendees = localStorage.getItem(LIVE_ATTENDEES_STORAGE_KEY);
+            setLiveAttendees(savedAttendees ? JSON.parse(savedAttendees) : []);
+        } catch (error) {
+            console.error('Failed to load data from localStorage on mount', error);
+        }
+    };
+    
+    loadInitialData();
     
     // Listen for storage changes to update live attendees in real-time
     const handleStorageChange = (event: StorageEvent) => {
       if (event.key === LIVE_ATTENDEES_STORAGE_KEY && event.newValue) {
-        setLiveAttendees(JSON.parse(event.newValue));
+        try {
+            setLiveAttendees(JSON.parse(event.newValue));
+        } catch (error) {
+            console.error('Failed to parse live attendees from storage change', error);
+        }
       }
       if (event.key === DDS_PARTICIPANTS_STORAGE_KEY && event.newValue) {
-        setParticipants(JSON.parse(event.newValue));
+         try {
+            setParticipants(JSON.parse(event.newValue));
+        } catch (error) {
+            console.error('Failed to parse participants from storage change', error);
+        }
       }
     };
 
@@ -264,21 +275,15 @@ export default function DDSInfoPage() {
     });
 
     if (filteredAttendees.length === 0) {
-      toast({ title: 'Nenhum registro no período', description: `Não há registros de presença para o período ${period}.`, variant: 'destructive' });
+      toast({ title: 'Nenhum registro no período', description: `Nenhum registro de presença para o período selecionado.`, variant: 'destructive' });
       return;
     }
 
-    const csvHeader = ['Nome Completo', 'Função', 'Contrato', 'Data e Hora do Registro\n'];
-    const csvRows = filteredAttendees.map(p => 
-        [
-            `"${p.fullName}"`,
-            `"${p.role}"`,
-            `"${p.contractName}"`,
-            `"${new Date(p.timestamp).toLocaleString('pt-BR')}"`
-        ].join(',')
-    );
-
-    const csvContent = csvHeader.join(',') + csvRows.join('\n');
+    let csvContent = 'Nome Completo,Função,Contrato,Data e Hora do Registro\n';
+    filteredAttendees.forEach(p => {
+        csvContent += `"${p.fullName}","${p.role}","${p.contractName}","${new Date(p.timestamp).toLocaleString('pt-BR')}"\n`;
+    });
+    
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -322,7 +327,7 @@ export default function DDSInfoPage() {
             <CardContent>
                 <ScrollArea className="h-80">
                     <div className="space-y-3 pr-4">
-                        {liveAttendees.length > 0 ? liveAttendees.map(p => (
+                        {liveAttendees.length > 0 ? [...liveAttendees].reverse().map(p => (
                             <div key={p.id} className="flex items-start justify-between text-sm p-2 rounded-lg hover:bg-muted/50">
                                 <div>
                                     <p className="font-semibold">{p.fullName}</p>
@@ -337,7 +342,7 @@ export default function DDSInfoPage() {
                 </ScrollArea>
             </CardContent>
              <CardFooter>
-                <div className="text-sm text-muted-foreground w-full text-center">Total de Participantes: {liveAttendees.length}</div>
+                <div className="text-sm text-muted-foreground w-full text-center">Total de Registros: {liveAttendees.length}</div>
             </CardFooter>
         </Card>
 

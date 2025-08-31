@@ -1,3 +1,4 @@
+
 // src/lib/avatar-storage.ts
 'use client';
 
@@ -12,6 +13,8 @@ export function saveAvatar(employeeId: string, avatarDataUrl: string): void {
   } catch (error) {
     console.error(`Failed to save avatar for employee ${employeeId}:`, error);
     // Here you could implement a more robust strategy, like clearing old avatars
+    // For now, we'll throw the error so the user gets feedback via toast.
+    throw error;
   }
 }
 
@@ -21,5 +24,6 @@ export function getAvatar(employeeId: string): string | null {
 }
 
 export function removeAvatar(employeeId: string): void {
+  if (typeof window === 'undefined') return;
   localStorage.removeItem(`${AVATAR_STORAGE_PREFIX}${employeeId}`);
 }

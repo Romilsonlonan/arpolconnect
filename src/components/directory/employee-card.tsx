@@ -2,12 +2,12 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import type { Employee, Supervisor } from '@/lib/data';
+import type { Employee } from '@/lib/data';
 import { getAvatar } from '@/lib/avatar-storage';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
-import { Mail, Phone, Briefcase, Trash2 } from 'lucide-react';
+import { Mail, Phone, Briefcase, Trash2, Pencil } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,24 +19,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  DialogTrigger,
-  DialogClose,
-} from '@/components/ui/dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { useToast } from '@/hooks/use-toast';
 
 const AVATAR_STORAGE_PREFIX = 'avatar_';
 
@@ -74,20 +56,43 @@ function EmployeeAvatar({ employee }: { employee: Employee }) {
     );
 }
 
-// The onRemove prop is no longer needed here as re-assignment is handled by drag-and-drop
-// and removal should happen from the main organogram page.
-export function EmployeeCard({ employee, supervisors }: { employee: Employee; supervisors: Supervisor[]; }) {
-  const { toast } = useToast();
-
-  const handleReassign = () => {
-    toast({
-      title: "Função Desativada",
-      description: "Por favor, use o método de arrastar e soltar para reatribuir funcionários.",
-    })
-  }
-  
+export function EmployeeCard({ 
+    employee, 
+    onEdit, 
+    onDelete 
+}: { 
+    employee: Employee; 
+    onEdit: () => void; 
+    onDelete: () => void;
+}) {
   return (
-    <Card className="flex flex-col bg-card transition-transform duration-300 hover:scale-105">
+    <Card className="flex flex-col bg-card transition-transform duration-300 hover:scale-105 relative group">
+      <div className="absolute top-2 right-2 flex flex-col gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
+          <Button variant="outline" size="icon" className="h-7 w-7 bg-white/80" onClick={onEdit}>
+            <Pencil className="h-4 w-4" />
+          </Button>
+           <AlertDialog>
+              <AlertDialogTrigger asChild>
+                  <Button variant="destructive" size="icon" className="h-7 w-7">
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                  <AlertDialogHeader>
+                  <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                      Esta ação não pode ser desfeita. Isso removerá permanentemente o funcionário.
+                  </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction onClick={onDelete}>
+                      Continuar
+                  </AlertDialogAction>
+                  </AlertDialogFooter>
+              </AlertDialogContent>
+           </AlertDialog>
+      </div>
       <CardHeader>
         <div className="flex items-center gap-4">
           <EmployeeAvatar employee={employee} />

@@ -3,7 +3,7 @@
 
 import { useState, useEffect } from 'react';
 import { type Employee, type Supervisor, initialOrgTree, type OrgNode } from '@/lib/data';
-import { flattenTreeToEmployees, updateTree, findNode } from '@/lib/tree-utils';
+import { flattenTreeToEmployees, updateTree, findNode, removeNodeFromTree } from '@/lib/tree-utils';
 import { EmployeeCard } from '@/components/directory/employee-card';
 import { EmployeeModal } from '@/components/organization/employee-modal';
 import {
@@ -19,7 +19,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { PlusCircle } from 'lucide-react';
-import { saveAvatar } from '@/lib/avatar-storage';
+import { saveAvatar, removeAvatar } from '@/lib/avatar-storage';
 
 type GroupedEmployees = {
   supervisorId: string;
@@ -38,6 +38,7 @@ export default function DirectoryPage() {
   const [draggedEmployeeId, setDraggedEmployeeId] = useState<string | null>(null);
   const [dropTargetId, setDropTargetId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingEmployee, setEditingEmployee] = useState<OrgNode | null>(null);
   const [selectedSupervisorId, setSelectedSupervisorId] = useState('');
   const { toast } = useToast();
 
@@ -81,46 +82,94 @@ export default function DirectoryPage() {
   }, []);
 
   const handleSaveEmployee = (values: Omit<OrgNode, 'id' | 'children'>, supervisorId?: string) => {
-    if (!supervisorId) {
-        toast({
-            title: "Supervisor não selecionado",
-            description: "Por favor, selecione um supervisor para o novo funcionário.",
-            variant: "destructive",
-        });
-        return;
-    }
-    
-    const savedTree = localStorage.getItem(ORG_CHART_STORAGE_KEY);
-    let orgTree = savedTree ? JSON.parse(savedTree) : initialOrgTree;
+     const savedTree = localStorage.getItem(ORG_CHART_STORAGE_KEY);
+     let orgTree = savedTree ? JSON.parse(savedTree) : initialOrgTree;
 
-    const newTree = updateTree(orgTree, (node) => {
-        if (node.id === supervisorId) {
-            const newNodeId = `node-${Date.now()}-${Math.random()}`;
-            const newNode: OrgNode = {
-                ...values,
-                id: newNodeId,
-                children: [],
-                showInNeuralNet: true,
-            };
-            if (newNode.avatar && newNode.avatar.startsWith('data:image')) {
-                saveAvatar(newNodeId, newNode.avatar);
-                newNode.avatar = `avatar:${newNodeId}`;
+     let newTree: OrgNode;
+     let toastTitle = '';
+     let toastDescription = '';
+
+     if (editingEmployee) {
+        // --- Editing existing employee ---
+        newTree = updateTree(orgTree, (node) => {
+            if (node.id === editingEmployee.id) {
+                if (values.avatar && values.avatar.startsWith('data:image')) {
+                    saveAvatar(editingEmployee.id, values.avatar);
+                    values.avatar = `avatar:${editingEmployee.id}`;
+                }
+                return { ...node, ...values };
             }
-            return { ...node, children: [...(node.children || []), newNode] };
+            return node;
+        });
+        toastTitle = "Funcionário Atualizado!";
+        toastDescription = `${values.name} foi atualizado com sucesso.`;
+        setEditingEmployee(null);
+
+     } else {
+        // --- Adding new employee ---
+        if (!supervisorId) {
+            toast({ title: "Supervisor não selecionado", description: "Por favor, selecione um supervisor.", variant: "destructive" });
+            return;
         }
-        return node;
-    });
+        newTree = updateTree(orgTree, (node) => {
+            if (node.id === supervisorId) {
+                const newNodeId = `node-${Date.now()}-${Math.random()}`;
+                const newNode: OrgNode = {
+                    ...values,
+                    id: newNodeId,
+                    children: [],
+                    showInNeuralNet: true,
+                };
+                if (newNode.avatar && newNode.avatar.startsWith('data:image')) {
+                    saveAvatar(newNodeId, newNode.avatar);
+                    newNode.avatar = `avatar:${newNodeId}`;
+                }
+                return { ...node, children: [...(node.children || []), newNode] };
+            }
+            return node;
+        });
+        toastTitle = "Funcionário Adicionado!";
+        toastDescription = `${values.name} foi adicionado à equipe de ${supervisorsData.find(s => s.id === supervisorId)?.name}.`;
+     }
 
     localStorage.setItem(ORG_CHART_STORAGE_KEY, JSON.stringify(newTree));
     loadData(); // Reload data to reflect changes
     setIsModalOpen(false); // Close modal on save
     setSelectedSupervisorId(''); // Reset selection
-    toast({
-        title: "Funcionário Adicionado!",
-        description: `${values.name} foi adicionado à equipe de ${supervisorsData.find(s => s.id === supervisorId)?.name}.`
-    });
+    toast({ title: toastTitle, description: toastDescription });
   };
   
+  const handleDeleteEmployee = (employeeId: string) => {
+    const savedTree = localStorage.getItem(ORG_CHART_STORAGE_KEY);
+    let orgTree = savedTree ? JSON.parse(savedTree) : initialOrgTree;
+    
+    const employeeToDelete = employees.find(e => e.id === employeeId);
+
+    const newTree = removeNodeFromTree(orgTree, employeeId);
+
+    localStorage.setItem(ORG_CHART_STORAGE_KEY, JSON.stringify(newTree));
+    removeAvatar(employeeId); // Also remove avatar from storage
+    loadData(); // Reload data
+    
+    toast({
+        title: "Funcionário Removido",
+        description: `${employeeToDelete?.name || 'O funcionário'} foi removido do sistema.`
+    });
+  }
+
+  const handleOpenEditModal = (employee: Employee) => {
+      const savedTree = localStorage.getItem(ORG_CHART_STORAGE_KEY);
+      const orgTree = savedTree ? JSON.parse(savedTree) : initialOrgTree;
+      const nodeToEdit = findNode(orgTree, employee.id);
+      if (nodeToEdit) {
+        setEditingEmployee(nodeToEdit);
+        setIsModalOpen(true);
+      } else {
+        toast({ title: "Erro", description: "Não foi possível encontrar os dados do funcionário para edição.", variant: "destructive" });
+      }
+  };
+
+
   const handleDrop = (targetSupervisorId: string) => {
     if (!draggedEmployeeId || !targetSupervisorId || draggedEmployeeId === targetSupervisorId) {
       setDropTargetId(null);
@@ -222,7 +271,7 @@ export default function DirectoryPage() {
                 ))}
             </SelectContent>
             </Select>
-            <Button onClick={() => setIsModalOpen(true)} className="w-full sm:w-auto">
+            <Button onClick={() => { setEditingEmployee(null); setIsModalOpen(true); }} className="w-full sm:w-auto">
               <PlusCircle className="mr-2"/>
               Adicionar Funcionário
             </Button>
@@ -255,7 +304,8 @@ export default function DirectoryPage() {
               >
                 <EmployeeCard
                   employee={employee}
-                  supervisors={supervisorsData}
+                  onEdit={() => handleOpenEditModal(employee)}
+                  onDelete={() => handleDeleteEmployee(employee.id)}
                 />
               </div>
             ))}
@@ -272,11 +322,13 @@ export default function DirectoryPage() {
 
       <EmployeeModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={() => { setIsModalOpen(false); setEditingEmployee(null); }}
         onSave={(values) => {
-           handleSaveEmployee(values, selectedSupervisorId);
+           editingEmployee 
+                ? handleSaveEmployee(values)
+                : handleSaveEmployee(values, selectedSupervisorId);
         }}
-        editingNode={null}
+        editingNode={editingEmployee}
         supervisors={supervisorsData}
         selectedSupervisor={selectedSupervisorId}
         onSupervisorChange={setSelectedSupervisorId}

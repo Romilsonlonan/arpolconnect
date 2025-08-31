@@ -21,9 +21,11 @@ const AVATAR_STORAGE_PREFIX = 'avatar_';
 
 function getVisibleNodes(tree: OrgNode): OrgNode[] {
     const visibleNodes: OrgNode[] = [];
+    const rolesToShow = ['Supervisor', 'Supervisor de Qualidade'];
 
     function findVisible(node: OrgNode) {
-        if (node.showInNeuralNet !== false) {
+        // Check if the node's role is one of the roles to be shown and if it's not hidden
+        if (node.showInNeuralNet !== false && rolesToShow.includes(node.role)) {
              visibleNodes.push(node);
         }
 
@@ -34,9 +36,11 @@ function getVisibleNodes(tree: OrgNode): OrgNode[] {
         }
     }
     
-    // Start from the root, but exclude the root itself from the final list
+    // Start traversal from the root
     findVisible(tree);
-    return visibleNodes.filter(node => node.id !== 'arpolar' && node.role === 'Supervisor');
+    
+    // The filter for id 'arpolar' is redundant if we only push nodes with specific roles, but it's good for safety.
+    return visibleNodes.filter(node => node.id !== 'arpolar');
 }
 
 function NodeAvatar({ node, alertLevel, isSelected }: { node: OrgNode, alertLevel: 'critical' | 'warning' | 'none', isSelected: boolean }) {

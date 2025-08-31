@@ -496,7 +496,3 @@ export default function DDSInfoPage() {
     </div>
   );
 }
-
-    
-
-    

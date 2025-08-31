@@ -66,7 +66,7 @@ export function EmployeeCard({
     onDelete: () => void;
 }) {
   return (
-    <Card className="flex flex-col bg-card transition-transform duration-300 hover:scale-105 relative group">
+    <Card className="flex flex-col h-full bg-card transition-transform duration-300 hover:scale-105 relative group">
       <div className="absolute top-2 right-2 flex flex-col gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-10">
           <Button variant="outline" size="icon" className="h-7 w-7 bg-white/80" onClick={onEdit}>
             <Pencil className="h-4 w-4" />

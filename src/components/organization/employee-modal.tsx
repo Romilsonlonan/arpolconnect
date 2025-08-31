@@ -21,7 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import type { OrgNode, Contract } from '@/lib/data';
+import type { OrgNode, Contract, Supervisor } from '@/lib/data';
 import { getAvatar } from '@/lib/avatar-storage';
 import { ScrollArea } from '../ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
@@ -31,8 +31,9 @@ import { useToast } from '@/hooks/use-toast';
 type EmployeeModalProps = {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (values: Omit<OrgNode, 'id' | 'children'>) => void;
+  onSave: (values: Omit<OrgNode, 'id' | 'children'>, supervisorId?: string) => void;
   editingNode: OrgNode | null;
+  supervisors?: Supervisor[]; // Make supervisors optional for reuse
 };
 
 const defaultRoles = [
@@ -59,12 +60,13 @@ const defaultRoles = [
 const PLACEHOLDER_AVATAR = 'https://placehold.co/100x100';
 const CONTRACTS_STORAGE_KEY = 'arpolarContracts';
 
-export function EmployeeModal({ isOpen, onClose, onSave, editingNode }: EmployeeModalProps) {
+export function EmployeeModal({ isOpen, onClose, onSave, editingNode, supervisors }: EmployeeModalProps) {
   const [name, setName] = useState('');
   const [role, setRole] = useState('');
   const [contact, setContact] = useState('');
   const [contract, setContract] = useState('');
   const [avatar, setAvatar] = useState(PLACEHOLDER_AVATAR);
+  const [selectedSupervisor, setSelectedSupervisor] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [availableContracts, setAvailableContracts] = useState<Contract[]>([]);
   const { toast } = useToast();
@@ -90,6 +92,7 @@ export function EmployeeModal({ isOpen, onClose, onSave, editingNode }: Employee
           setContact('');
           setContract('');
           setAvatar(PLACEHOLDER_AVATAR);
+          setSelectedSupervisor('');
         }
     }
   }, [editingNode, isOpen]);
@@ -103,16 +106,22 @@ export function EmployeeModal({ isOpen, onClose, onSave, editingNode }: Employee
       });
       return;
     }
+    if (!editingNode && supervisors && !selectedSupervisor) {
+      toast({
+        title: "Supervisor obrigatório",
+        description: "Por favor, selecione um supervisor para o novo funcionário.",
+        variant: "destructive",
+      });
+      return;
+    }
 
-    // The `avatar` state here is a data URL. 
-    // The parent component (`OrganogramaPage`) is responsible for saving it to storage.
     onSave({
       name,
       role,
       contact,
       contract,
       avatar,
-    });
+    }, selectedSupervisor);
     onClose();
   };
   
@@ -211,6 +220,21 @@ export function EmployeeModal({ isOpen, onClose, onSave, editingNode }: Employee
                     Carregar Imagem
                 </Button>
             </div>
+            {supervisors && !editingNode && (
+                <div className="grid gap-2">
+                    <Label htmlFor="supervisor-select">Supervisor</Label>
+                    <Select onValueChange={setSelectedSupervisor} value={selectedSupervisor}>
+                        <SelectTrigger id="supervisor-select">
+                            <SelectValue placeholder="Selecione um supervisor" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            {supervisors.map((s) => (
+                                <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+            )}
             <div className="grid gap-2">
                 <Label htmlFor="name">Nome</Label>
                 <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />

@@ -1,9 +1,11 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
 import { type Employee, type Supervisor, initialOrgTree, type OrgNode } from '@/lib/data';
 import { flattenTreeToEmployees, updateTree, findNode } from '@/lib/tree-utils';
 import { EmployeeCard } from '@/components/directory/employee-card';
+import { EmployeeModal } from '@/components/organization/employee-modal';
 import {
   Select,
   SelectContent,
@@ -13,8 +15,11 @@ import {
 } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
+import { PlusCircle } from 'lucide-react';
+import { saveAvatar } from '@/lib/avatar-storage';
 
 type GroupedEmployees = {
   supervisorId: string;
@@ -32,6 +37,7 @@ export default function DirectoryPage() {
   const [isClient, setIsClient] = useState(false);
   const [draggedEmployeeId, setDraggedEmployeeId] = useState<string | null>(null);
   const [dropTargetId, setDropTargetId] = useState<string | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const { toast } = useToast();
 
   const loadData = () => {
@@ -39,13 +45,22 @@ export default function DirectoryPage() {
     const orgTree = savedTree ? JSON.parse(savedTree) : initialOrgTree;
     const allEmployees = flattenTreeToEmployees(orgTree);
     
-    const supervisorNodes = orgTree.children || [];
+    // Find all nodes with the role of 'Supervisor' or roles that manage others
+    const supervisorNodes: OrgNode[] = [];
+    updateTree(orgTree, (node) => {
+        // Assuming supervisors can be at different levels
+        if (['Supervisor', 'Gerente', 'Coordenador', 'Diretor'].includes(node.role)) {
+            supervisorNodes.push(node);
+        }
+        return node;
+    });
+
     const supData = supervisorNodes.map((node: OrgNode) => ({
       id: node.id,
       name: node.name,
       email: node.contact || '',
       avatar: node.avatar,
-      region: 'N/A' // Region might need to be stored in the node itself
+      region: 'N/A' 
     }));
 
     setEmployees(allEmployees);
@@ -63,6 +78,46 @@ export default function DirectoryPage() {
         window.removeEventListener('storage', handleStorageChange);
     };
   }, []);
+
+  const handleSaveEmployee = (values: Omit<OrgNode, 'id' | 'children'>, supervisorId?: string) => {
+    if (!supervisorId) {
+        toast({
+            title: "Supervisor não selecionado",
+            description: "Por favor, selecione um supervisor para o novo funcionário.",
+            variant: "destructive",
+        });
+        return;
+    }
+    
+    const savedTree = localStorage.getItem(ORG_CHART_STORAGE_KEY);
+    let orgTree = savedTree ? JSON.parse(savedTree) : initialOrgTree;
+
+    const newTree = updateTree(orgTree, (node) => {
+        if (node.id === supervisorId) {
+            const newNodeId = `node-${Date.now()}-${Math.random()}`;
+            const newNode: OrgNode = {
+                ...values,
+                id: newNodeId,
+                children: [],
+                showInNeuralNet: true,
+            };
+            if (newNode.avatar && newNode.avatar.startsWith('data:image')) {
+                saveAvatar(newNodeId, newNode.avatar);
+                newNode.avatar = `avatar:${newNodeId}`;
+            }
+            return { ...node, children: [...(node.children || []), newNode] };
+        }
+        return node;
+    });
+
+    localStorage.setItem(ORG_CHART_STORAGE_KEY, JSON.stringify(newTree));
+    loadData(); // Reload data to reflect changes
+    setIsModalOpen(false); // Close modal on save
+    toast({
+        title: "Funcionário Adicionado!",
+        description: `${values.name} foi adicionado à equipe de ${supervisorsData.find(s => s.id === supervisorId)?.name}.`
+    });
+  };
   
   const handleDrop = (targetSupervisorId: string) => {
     if (!draggedEmployeeId || !targetSupervisorId || draggedEmployeeId === targetSupervisorId) {
@@ -143,7 +198,7 @@ export default function DirectoryPage() {
     <div className="flex flex-col gap-6">
        <div>
         <h1 className="text-lg font-semibold md:text-2xl font-headline">Diretório de Funcionários</h1>
-        <p className="text-muted-foreground">Encontre, gerencie e reatribua os funcionários da sua equipe arrastando e soltando.</p>
+        <p className="text-muted-foreground">Encontre, gerencie, adicione e reatribua os funcionários da sua equipe.</p>
        </div>
       
        <Card className="p-4">
@@ -165,6 +220,10 @@ export default function DirectoryPage() {
                 ))}
             </SelectContent>
             </Select>
+            <Button onClick={() => setIsModalOpen(true)} className="w-full sm:w-auto">
+              <PlusCircle className="mr-2"/>
+              Adicionar Funcionário
+            </Button>
         </div>
        </Card>
 
@@ -205,9 +264,23 @@ export default function DirectoryPage() {
       {filteredEmployees.length === 0 && (
          <div className="flex flex-col items-center justify-center flex-1 py-12 text-center bg-gray-100/50 rounded-lg">
             <p className="text-lg font-semibold text-muted-foreground">Nenhum funcionário encontrado.</p>
-            <p className="mt-2 text-sm text-muted-foreground">Ajuste os filtros ou adicione novos funcionários no organograma.</p>
+            <p className="mt-2 text-sm text-muted-foreground">Ajuste os filtros ou adicione novos funcionários.</p>
         </div>
       )}
+
+      {/* Reusing the employee modal, but need a different onSave logic */}
+      <EmployeeModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        onSave={(values) => {
+           // A supervisor must be chosen for a new employee from the directory
+           const supervisorField = document.getElementById('supervisor-select') as HTMLSelectElement | null;
+           const supervisorId = supervisorField?.value;
+           handleSaveEmployee(values, supervisorId);
+        }}
+        editingNode={null}
+        supervisors={supervisorsData}
+      />
     </div>
   );
 }

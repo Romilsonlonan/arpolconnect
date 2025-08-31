@@ -96,7 +96,11 @@ export function EmployeeModal({ isOpen, onClose, onSave, editingNode }: Employee
 
   const handleSubmit = () => {
     if (!name || !role) {
-      alert('Nome e Função são obrigatórios.');
+      toast({
+        title: 'Campos obrigatórios',
+        description: 'Nome e Função são obrigatórios.',
+        variant: 'destructive',
+      });
       return;
     }
 

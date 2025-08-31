@@ -57,7 +57,7 @@ export function MessageCard({ message }: { message: Message }) {
 
   return (
     <Card className={cn(
-        "flex flex-col transition-transform duration-300",
+        "flex flex-col transition-transform duration-300 h-full",
         statusInfo.shadowClass
     )}>
       <CardHeader>
@@ -95,9 +95,9 @@ export function MessageCard({ message }: { message: Message }) {
       </CardHeader>
       <CardContent className="flex-grow">
         <p className="text-sm font-semibold mb-2">Problema:</p>
-        <p className="text-sm text-muted-foreground">{message.message}</p>
+        <p className="text-sm text-muted-foreground line-clamp-3">{message.message}</p>
       </CardContent>
-      <CardFooter className="flex justify-between items-center text-xs text-muted-foreground">
+      <CardFooter className="flex justify-between items-center text-xs text-muted-foreground mt-auto">
         <div className="flex items-center gap-1">
           <Clock className="w-3 h-3" />
           <span>{isClient ? timeAgo : '...'}</span>

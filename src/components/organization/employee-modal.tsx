@@ -120,7 +120,7 @@ export function EmployeeModal({ isOpen, onClose, onSave, editingNode }: Employee
     return new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onload = (event) => {
-            const img = new Image();
+            const img = document.createElement('img');
             img.src = event.target?.result as string;
             img.onload = () => {
                 const canvas = document.createElement('canvas');

@@ -2,14 +2,14 @@
 'use client';
 
 import { useState, useEffect, useMemo, useRef } from 'react';
-import { messages as initialMessages, Message, initialOrgTree, type Contract, type OrgNode } from '@/lib/data';
+import { messages as initialMessages, Message, initialOrgTree, type Contract, type OrgNode, type Employee } from '@/lib/data';
 import { MessageCard } from '@/components/dashboard/message-card';
 import { SupervisorNeuralNet } from '@/components/dashboard/supervisor-neural-net';
 import { ContractCard } from '@/components/dashboard/contract-card';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlarmClock, CheckCircle, ShieldAlert, Zap, Building, FilterX, List } from 'lucide-react';
+import { AlarmClock, CheckCircle, ShieldAlert, Zap, Building, FilterX, List, User, Phone } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { findNode } from '@/lib/tree-utils';
+import { findNode, flattenTreeToEmployees } from '@/lib/tree-utils';
 import { Button } from '@/components/ui/button';
 import {
   Dialog,
@@ -20,6 +20,8 @@ import {
 } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import { getAvatar } from '@/lib/avatar-storage';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 
 function InfoCard({ title, value, icon, colorClass }: { title: string, value: number, icon: React.ReactNode, colorClass?: string }) {
@@ -39,9 +41,28 @@ function InfoCard({ title, value, icon, colorClass }: { title: string, value: nu
 const CONTRACTS_STORAGE_KEY = 'arpolarContracts';
 const ORG_CHART_STORAGE_KEY = 'orgChartTree';
 
+function EmployeeAvatar({ employee }: { employee: Employee }) {
+    const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+
+    useEffect(() => {
+        const url = getAvatar(employee.id);
+        setAvatarUrl(url);
+    }, [employee.id]);
+
+    const finalAvatarUrl = avatarUrl || employee.avatar;
+
+    return (
+        <Avatar className="w-12 h-12">
+            <AvatarImage src={finalAvatarUrl ?? undefined} data-ai-hint="person portrait" draggable="false" />
+            <AvatarFallback>{employee.name.charAt(0)}</AvatarFallback>
+        </Avatar>
+    );
+}
+
 export default function DashboardPage() {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [contracts, setContracts] = useState<Contract[]>([]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
   const [orgTree, setOrgTree] = useState<OrgNode>(initialOrgTree);
   const [selectedSupervisor, setSelectedSupervisor] = useState<OrgNode | null>(null);
   const [selectedContract, setSelectedContract] = useState<Contract | null>(null);
@@ -61,7 +82,9 @@ export default function DashboardPage() {
             setContracts(savedContracts ? JSON.parse(savedContracts) : []);
 
             const savedTree = localStorage.getItem(ORG_CHART_STORAGE_KEY);
-            setOrgTree(savedTree ? JSON.parse(savedTree) : initialOrgTree);
+            const tree = savedTree ? JSON.parse(savedTree) : initialOrgTree;
+            setOrgTree(tree);
+            setEmployees(flattenTreeToEmployees(tree));
 
         } catch (error) {
             console.error("Failed to parse data from localStorage", error);
@@ -172,6 +195,11 @@ export default function DashboardPage() {
     if (!viewingContractTickets) return [];
     return messages.filter(msg => msg.contractName === viewingContractTickets.name && msg.status !== 'Finalizado');
   }, [viewingContractTickets, messages]);
+
+  const teamForModal = useMemo(() => {
+    if (!viewingContractTickets) return [];
+    return employees.filter(emp => emp.contract === viewingContractTickets.name);
+  }, [viewingContractTickets, employees]);
 
 
   const handleClearFilter = () => {
@@ -341,7 +369,7 @@ export default function DashboardPage() {
                     </DialogDescription>
                 </DialogHeader>
                 <ScrollArea className="max-h-[60vh] -mx-6 px-6">
-                    <div className="py-4 space-y-4">
+                    <div className="py-4 space-y-6">
                         {pendingTicketsForModal.length > 0 ? (
                             pendingTicketsForModal.map((ticket, index) => (
                                 <div key={ticket.id}>
@@ -353,11 +381,33 @@ export default function DashboardPage() {
                                         <p><strong>Urgência:</strong> {ticket.urgency}</p>
                                         <p><strong>Equipamento:</strong> {ticket.equipmentName || 'N/A'}</p>
                                     </div>
-                                    {index < pendingTicketsForModal.length - 1 && <Separator className="mt-4" />}
+                                    {index < pendingTicketsForModal.length - 1 && <Separator className="mt-6" />}
                                 </div>
                             ))
                         ) : (
                             <p className="text-muted-foreground text-center py-8">Nenhum ticket pendente para este contrato.</p>
+                        )}
+
+                        {teamForModal.length > 0 && (
+                            <div>
+                                <Separator className="my-6" />
+                                <h3 className="text-lg font-semibold mb-4">Equipe Local</h3>
+                                <div className="space-y-4">
+                                    {teamForModal.map(employee => (
+                                        <div key={employee.id} className="flex items-center gap-4 p-2 rounded-lg bg-muted/50">
+                                           <EmployeeAvatar employee={employee} />
+                                            <div className="text-sm">
+                                                <p className="font-semibold">{employee.name}</p>
+                                                <p className="text-muted-foreground">{employee.role}</p>
+                                                <div className="flex items-center gap-2 mt-1">
+                                                    <Phone className="w-3 h-3 text-muted-foreground" />
+                                                    <span className="text-xs text-muted-foreground">{employee.phone || 'N/A'}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
                         )}
                     </div>
                 </ScrollArea>

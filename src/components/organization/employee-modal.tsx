@@ -33,7 +33,9 @@ type EmployeeModalProps = {
   onClose: () => void;
   onSave: (values: Omit<OrgNode, 'id' | 'children'>, supervisorId?: string) => void;
   editingNode: OrgNode | null;
-  supervisors?: Supervisor[]; // Make supervisors optional for reuse
+  supervisors?: Supervisor[];
+  selectedSupervisor?: string;
+  onSupervisorChange?: (id: string) => void;
 };
 
 const defaultRoles = [
@@ -60,13 +62,12 @@ const defaultRoles = [
 const PLACEHOLDER_AVATAR = 'https://placehold.co/100x100';
 const CONTRACTS_STORAGE_KEY = 'arpolarContracts';
 
-export function EmployeeModal({ isOpen, onClose, onSave, editingNode, supervisors }: EmployeeModalProps) {
+export function EmployeeModal({ isOpen, onClose, onSave, editingNode, supervisors, selectedSupervisor, onSupervisorChange }: EmployeeModalProps) {
   const [name, setName] = useState('');
   const [role, setRole] = useState('');
   const [contact, setContact] = useState('');
   const [contract, setContract] = useState('');
   const [avatar, setAvatar] = useState(PLACEHOLDER_AVATAR);
-  const [selectedSupervisor, setSelectedSupervisor] = useState('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [availableContracts, setAvailableContracts] = useState<Contract[]>([]);
   const { toast } = useToast();
@@ -74,7 +75,6 @@ export function EmployeeModal({ isOpen, onClose, onSave, editingNode, supervisor
 
   useEffect(() => {
     if (isOpen) {
-        // Load contracts from localStorage
         const savedContracts = localStorage.getItem(CONTRACTS_STORAGE_KEY);
         setAvailableContracts(savedContracts ? JSON.parse(savedContracts) : []);
 
@@ -86,16 +86,15 @@ export function EmployeeModal({ isOpen, onClose, onSave, editingNode, supervisor
           const storedAvatar = getAvatar(editingNode.id);
           setAvatar(storedAvatar || editingNode.avatar || PLACEHOLDER_AVATAR);
         } else {
-          // Reset form when adding a new node
           setName('');
           setRole('');
           setContact('');
           setContract('');
           setAvatar(PLACEHOLDER_AVATAR);
-          setSelectedSupervisor('');
+          onSupervisorChange?.('');
         }
     }
-  }, [editingNode, isOpen]);
+  }, [editingNode, isOpen, onSupervisorChange]);
 
   const handleSubmit = () => {
     if (!name || !role) {
@@ -128,10 +127,8 @@ export function EmployeeModal({ isOpen, onClose, onSave, editingNode, supervisor
   const resizeImage = (file: File, maxWidth: number, maxHeight: number, quality: number): Promise<string> => {
     return new Promise((resolve, reject) => {
       const reader = new FileReader();
-      reader.readAsDataURL(file);
       reader.onload = (event) => {
         const img = document.createElement('img');
-        img.src = event.target?.result as string;
         img.onload = () => {
           const canvas = document.createElement('canvas');
           let { width, height } = img;
@@ -159,8 +156,10 @@ export function EmployeeModal({ isOpen, onClose, onSave, editingNode, supervisor
           resolve(canvas.toDataURL('image/jpeg', quality));
         };
         img.onerror = (error) => reject(error);
+        img.src = event.target?.result as string;
       };
       reader.onerror = (error) => reject(error);
+      reader.readAsDataURL(file);
     });
   };
 
@@ -223,7 +222,7 @@ export function EmployeeModal({ isOpen, onClose, onSave, editingNode, supervisor
             {supervisors && !editingNode && (
                 <div className="grid gap-2">
                     <Label htmlFor="supervisor-select">Supervisor</Label>
-                    <Select onValueChange={setSelectedSupervisor} value={selectedSupervisor}>
+                    <Select onValueChange={onSupervisorChange} value={selectedSupervisor}>
                         <SelectTrigger id="supervisor-select">
                             <SelectValue placeholder="Selecione um supervisor" />
                         </SelectTrigger>

@@ -38,6 +38,7 @@ export default function DirectoryPage() {
   const [draggedEmployeeId, setDraggedEmployeeId] = useState<string | null>(null);
   const [dropTargetId, setDropTargetId] = useState<string | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedSupervisorId, setSelectedSupervisorId] = useState('');
   const { toast } = useToast();
 
   const loadData = () => {
@@ -113,6 +114,7 @@ export default function DirectoryPage() {
     localStorage.setItem(ORG_CHART_STORAGE_KEY, JSON.stringify(newTree));
     loadData(); // Reload data to reflect changes
     setIsModalOpen(false); // Close modal on save
+    setSelectedSupervisorId(''); // Reset selection
     toast({
         title: "Funcionário Adicionado!",
         description: `${values.name} foi adicionado à equipe de ${supervisorsData.find(s => s.id === supervisorId)?.name}.`
@@ -268,18 +270,16 @@ export default function DirectoryPage() {
         </div>
       )}
 
-      {/* Reusing the employee modal, but need a different onSave logic */}
       <EmployeeModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSave={(values) => {
-           // A supervisor must be chosen for a new employee from the directory
-           const supervisorField = document.getElementById('supervisor-select') as HTMLSelectElement | null;
-           const supervisorId = supervisorField?.value;
-           handleSaveEmployee(values, supervisorId);
+           handleSaveEmployee(values, selectedSupervisorId);
         }}
         editingNode={null}
         supervisors={supervisorsData}
+        selectedSupervisor={selectedSupervisorId}
+        onSupervisorChange={setSelectedSupervisorId}
       />
     </div>
   );

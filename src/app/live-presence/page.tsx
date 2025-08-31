@@ -41,41 +41,40 @@ export default function LivePresencePage() {
 
     setIsSubmitting(true);
 
-    try {
-      const currentAttendees: LiveAttendee[] = JSON.parse(localStorage.getItem(LIVE_ATTENDEES_STORAGE_KEY) || '[]');
-      
-      const newAttendee: LiveAttendee = {
-        id: `attendee-${Date.now()}`,
-        fullName,
-        role,
-        contractName,
-        timestamp: new Date().toISOString(),
-      };
-      
-      const updatedAttendees = [...currentAttendees, newAttendee];
-      localStorage.setItem(LIVE_ATTENDEES_STORAGE_KEY, JSON.stringify(updatedAttendees));
-      
-      // Dispatch a storage event to notify other open tabs (like the main DDS info page)
-      // This is the key for real-time updates on other pages.
-      window.dispatchEvent(new StorageEvent('storage', {
-          key: LIVE_ATTENDEES_STORAGE_KEY,
-          newValue: JSON.stringify(updatedAttendees),
-      }));
+    // Simulate server delay
+    setTimeout(() => {
+        try {
+            const currentAttendees: LiveAttendee[] = JSON.parse(localStorage.getItem(LIVE_ATTENDEES_STORAGE_KEY) || '[]');
+            
+            const newAttendee: LiveAttendee = {
+                id: `attendee-${Date.now()}`,
+                fullName,
+                role,
+                contractName,
+                timestamp: new Date().toISOString(),
+            };
+            
+            const updatedAttendees = [...currentAttendees, newAttendee];
+            localStorage.setItem(LIVE_ATTENDEES_STORAGE_KEY, JSON.stringify(updatedAttendees));
+            
+            window.dispatchEvent(new StorageEvent('storage', {
+                key: LIVE_ATTENDEES_STORAGE_KEY,
+                newValue: JSON.stringify(updatedAttendees),
+            }));
 
-      setTimeout(() => {
-        setIsSubmitted(true);
-        setIsSubmitting(false);
-      }, 1000);
+            setIsSubmitted(true);
+            setIsSubmitting(false);
 
-    } catch (error) {
-      console.error('Failed to save attendance:', error);
-      toast({
-        title: 'Erro ao Salvar',
-        description: 'Não foi possível registrar sua presença. Tente novamente.',
-        variant: 'destructive',
-      });
-      setIsSubmitting(false);
-    }
+        } catch (error) {
+            console.error('Failed to save attendance:', error);
+            toast({
+                title: 'Erro ao Salvar',
+                description: 'Não foi possível registrar sua presença. Tente novamente.',
+                variant: 'destructive',
+            });
+            setIsSubmitting(false);
+        }
+    }, 4000);
   };
 
   return (

@@ -60,10 +60,8 @@ export function ContractModal({ isOpen, onClose, supervisors, onSave, editingCon
     const resizeImage = (file: File, maxWidth: number, maxHeight: number, quality: number): Promise<string> => {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
-        reader.readAsDataURL(file);
         reader.onload = (event) => {
           const img = document.createElement('img');
-          img.src = event.target?.result as string;
           img.onload = () => {
             const canvas = document.createElement('canvas');
             let { width, height } = img;
@@ -91,8 +89,10 @@ export function ContractModal({ isOpen, onClose, supervisors, onSave, editingCon
             resolve(canvas.toDataURL('image/jpeg', quality));
           };
           img.onerror = (error) => reject(error);
+          img.src = event.target?.result as string;
         };
         reader.onerror = (error) => reject(error);
+        reader.readAsDataURL(file);
       });
     };
 

@@ -95,7 +95,7 @@ export default function DirectoryPage() {
             if (node.id === editingEmployee.id) {
                 if (values.avatar && values.avatar.startsWith('data:image')) {
                     saveAvatar(editingEmployee.id, values.avatar);
-                    values.avatar = `avatar:${editingEmployee.id}`;
+                    // The reference in the tree doesn't need to change if it's already using `avatar:${id}`
                 }
                 return { ...node, ...values };
             }
@@ -122,6 +122,7 @@ export default function DirectoryPage() {
                 };
                 if (newNode.avatar && newNode.avatar.startsWith('data:image')) {
                     saveAvatar(newNodeId, newNode.avatar);
+                    // The value saved in the tree should be a reference, not the data url
                     newNode.avatar = `avatar:${newNodeId}`;
                 }
                 return { ...node, children: [...(node.children || []), newNode] };

@@ -121,7 +121,7 @@ export default function OrganogramaPage() {
   const handleAddChildNode = (parentId: string, child: Omit<OrgNode, 'children' | 'id'>) => {
     if (!tree) return;
     
-    const newTree = updateTree(tree, (node) => {
+    let newTree = updateTree(tree, (node) => {
       if (node.id === parentId) {
         const newNodeId = `node-${Date.now()}-${Math.random()}`;
         const newNode: OrgNode = {
@@ -141,6 +141,7 @@ export default function OrganogramaPage() {
       return node;
     });
 
+    // This was the missing piece: save the updated tree to localStorage
     saveTree(newTree);
   };
 
@@ -298,4 +299,5 @@ export default function OrganogramaPage() {
   );
 }
 
+    
     

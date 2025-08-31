@@ -91,6 +91,10 @@ export default {
         'shadow-pulse-critical': {
           '0%, 100%': { boxShadow: '0 0 0 0 rgba(13, 13, 13, 0.7)' }, // Cor preta de 'status-critical'
           '50%': { boxShadow: '0 0 12px 3px rgba(13, 13, 13, 0.4)' },
+        },
+        'pulse-slow': {
+          '0%, 100%': { opacity: '1' },
+          '50%': { opacity: '0.8' },
         }
       },
       animation: {
@@ -98,6 +102,7 @@ export default {
         'accordion-up': 'accordion-up 0.2s ease-out',
         'shadow-pulse-warning': 'shadow-pulse-warning 2s infinite',
         'shadow-pulse-critical': 'shadow-pulse-critical 2s infinite',
+        'pulse-slow': 'pulse-slow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite',
       },
     },
   },

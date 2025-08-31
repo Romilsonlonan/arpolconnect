@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils';
 
 const ORG_CHART_STORAGE_KEY = 'orgChartTree';
 const DASHBOARD_MESSAGES_KEY = 'dashboardMessages';
+const AVATAR_STORAGE_PREFIX = 'avatar_';
 
 
 function getVisibleNodes(tree: OrgNode): OrgNode[] {
@@ -42,8 +43,21 @@ function NodeAvatar({ node, alertLevel, isSelected }: { node: OrgNode, alertLeve
     const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
     useEffect(() => {
-        const url = getAvatar(node.id);
-        setAvatarUrl(url);
+        const updateAvatar = () => {
+            const url = getAvatar(node.id);
+            setAvatarUrl(url);
+        };
+
+        updateAvatar(); // Initial load
+
+        const handleStorageChange = (event: StorageEvent) => {
+            if (event.key === `${AVATAR_STORAGE_PREFIX}${node.id}`) {
+                updateAvatar();
+            }
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+        return () => window.removeEventListener('storage', handleStorageChange);
     }, [node.id]);
 
     const finalAvatarUrl = avatarUrl || node.avatar;
@@ -63,7 +77,7 @@ function NodeAvatar({ node, alertLevel, isSelected }: { node: OrgNode, alertLeve
             "w-16 h-16 border-4 border-background shadow-lg hover:scale-110 transition-all cursor-pointer rounded-full",
             shadowClass
         )}>
-            <AvatarImage src={finalAvatarUrl} alt={node.name} data-ai-hint="person portrait" />
+            <AvatarImage src={finalAvatarUrl ?? undefined} alt={node.name} data-ai-hint="person portrait" />
             <AvatarFallback>{node.name.substring(0, 2)}</AvatarFallback>
         </Avatar>
     );
@@ -203,5 +217,3 @@ export function SupervisorNeuralNet({ onNodeClick, selectedNodeId }: { onNodeCli
         </TooltipProvider>
     )
 }
-
-    

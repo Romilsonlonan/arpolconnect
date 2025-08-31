@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -37,20 +38,37 @@ import {
 } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
 
+const AVATAR_STORAGE_PREFIX = 'avatar_';
+
 function EmployeeAvatar({ employee }: { employee: Employee }) {
     const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
     useEffect(() => {
-        // Fetch avatar from localStorage on the client
-        const url = getAvatar(employee.id);
-        setAvatarUrl(url);
+        const updateAvatar = () => {
+            const url = getAvatar(employee.id);
+            setAvatarUrl(url);
+        };
+
+        updateAvatar(); // Initial load
+
+        const handleStorageChange = (event: StorageEvent) => {
+            if (event.key === `${AVATAR_STORAGE_PREFIX}${employee.id}`) {
+                updateAvatar();
+            }
+        };
+        
+        window.addEventListener('storage', handleStorageChange);
+
+        return () => {
+            window.removeEventListener('storage', handleStorageChange);
+        };
     }, [employee.id]);
 
     const finalAvatarUrl = avatarUrl || employee.avatar;
 
     return (
         <Avatar className="w-16 h-16">
-            <AvatarImage src={finalAvatarUrl} data-ai-hint="person portrait" draggable="false" />
+            <AvatarImage src={finalAvatarUrl ?? undefined} data-ai-hint="person portrait" draggable="false" />
             <AvatarFallback>{employee.name.charAt(0)}</AvatarFallback>
         </Avatar>
     );

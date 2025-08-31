@@ -40,13 +40,31 @@ function InfoCard({ title, value, icon, colorClass }: { title: string, value: nu
 
 const CONTRACTS_STORAGE_KEY = 'arpolarContracts';
 const ORG_CHART_STORAGE_KEY = 'orgChartTree';
+const AVATAR_STORAGE_PREFIX = 'avatar_';
+
 
 function EmployeeAvatar({ employee }: { employee: Employee }) {
     const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
     useEffect(() => {
-        const url = getAvatar(employee.id);
-        setAvatarUrl(url);
+        const updateAvatar = () => {
+            const url = getAvatar(employee.id);
+            setAvatarUrl(url);
+        };
+
+        updateAvatar(); // Initial load
+
+        const handleStorageChange = (event: StorageEvent) => {
+            if (event.key === `${AVATAR_STORAGE_PREFIX}${employee.id}`) {
+                updateAvatar();
+            }
+        };
+        
+        window.addEventListener('storage', handleStorageChange);
+
+        return () => {
+            window.removeEventListener('storage', handleStorageChange);
+        };
     }, [employee.id]);
 
     const finalAvatarUrl = avatarUrl || employee.avatar;

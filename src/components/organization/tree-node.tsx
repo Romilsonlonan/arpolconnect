@@ -125,31 +125,34 @@ export function TreeNode({ node, onUpdate, onAddChild, onRemove, onMoveNode, onC
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         className={cn(
-        "min-w-60 text-center shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105 relative group",
+        "w-60 text-center shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105 relative group min-h-[260px]",
         "bg-card",
         isDragOver && "ring-2 ring-primary ring-offset-2",
         !isRoot && "cursor-move"
         )}>
-        <CardContent className="p-4 flex flex-col items-center gap-2 relative">
+        <CardContent className="p-4 flex flex-col items-center gap-2 relative h-full">
           <NodeAvatar node={node} />
-          <div className="mt-2">
+          <div className="mt-2 flex-grow">
             <p className="font-bold text-lg font-headline">{node.name}</p>
             <p className="text-sm text-muted-foreground">{node.role}</p>
           </div>
 
-          {node.contact && (
-             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Phone className="w-4 h-4" />
-                <span>{node.contact}</span>
-             </div>
-          )}
+          <div className="space-y-2">
+            {node.contact && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                  <Phone className="w-4 h-4" />
+                  <span>{node.contact}</span>
+              </div>
+            )}
 
-          {node.contract && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <Briefcase className="w-4 h-4" />
-                    <span>{node.contract}</span>
-                </div>
-           )}
+            {node.contract && (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Briefcase className="w-4 h-4" />
+                      <span>{node.contract}</span>
+                  </div>
+            )}
+          </div>
+
 
           <div className="absolute top-2 right-2 flex flex-col gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
              <Tooltip>

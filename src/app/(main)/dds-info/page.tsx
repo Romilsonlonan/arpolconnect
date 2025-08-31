@@ -484,7 +484,7 @@ export default function DDSInfoPage() {
             </ScrollArea>
           </CardContent>
           <CardFooter>
-            <Input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" />
+            <Input type="file" ref={fileInputRef} onChange={handleFileUpload} className="hidden" accept="image/jpeg, image/png, image/webp, .pdf, .doc, .docx" />
             <Button className="w-full" onClick={() => fileInputRef.current?.click()}>
               <Upload className="mr-2" />
               Carregar Arquivo

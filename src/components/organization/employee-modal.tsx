@@ -194,7 +194,7 @@ export function EmployeeModal({ isOpen, onClose, onSave, editingNode }: Employee
                 <Input 
                     id="avatar-upload"
                     type="file"
-                    accept="image/*"
+                    accept="image/jpeg, image/png, image/webp"
                     className="hidden"
                     ref={fileInputRef}
                     onChange={handleAvatarChange}

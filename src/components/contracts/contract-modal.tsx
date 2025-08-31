@@ -190,7 +190,7 @@ export function ContractModal({ isOpen, onClose, supervisors, onSave, editingCon
                             <Input 
                                 id="image-upload"
                                 type="file"
-                                accept="image/*"
+                                accept="image/jpeg, image/png, image/webp"
                                 className="hidden"
                                 ref={fileInputRef}
                                 onChange={handleImageUpload}

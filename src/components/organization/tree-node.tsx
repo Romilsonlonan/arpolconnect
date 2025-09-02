@@ -7,7 +7,7 @@ import { getAvatar } from '@/lib/avatar-storage';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Pencil, Trash2, Phone, Briefcase, Building, MessageSquarePlus, Eye, EyeOff, ChevronDown, ChevronUp, Bell, FileSignature } from 'lucide-react';
+import { Plus, Pencil, Trash2, Phone, Briefcase, Building, MessageSquarePlus, Eye, EyeOff, ChevronDown, ChevronUp, Bell, FileSignature, Mail } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { EmployeeModal } from './employee-modal';
 import {
@@ -40,6 +40,12 @@ type TreeNodeProps = {
   privateTicketCount: number;
   isRoot?: boolean;
 };
+
+const WhatsAppIcon = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4">
+        <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+    </svg>
+)
 
 function NodeAvatar({ node }: { node: OrgNode }) {
     const avatarUrl = getAvatar(node.id) || node.avatar;
@@ -117,6 +123,8 @@ export function TreeNode({ node, onUpdate, onAddChild, onRemove, onMoveNode, onO
     }
   };
   
+  const formattedPhone = node.contact?.replace(/\D/g, '');
+
   return (
     <TooltipProvider>
     <div className="flex flex-col items-center text-center relative px-4">
@@ -161,7 +169,6 @@ export function TreeNode({ node, onUpdate, onAddChild, onRemove, onMoveNode, onO
                   </div>
             )}
           </div>
-
 
           <div className="absolute top-2 right-2 flex flex-col gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
              <Tooltip>
@@ -223,6 +230,30 @@ export function TreeNode({ node, onUpdate, onAddChild, onRemove, onMoveNode, onO
                     <TooltipContent side="left"><p>Você tem {privateTicketCount} tickets privados</p></TooltipContent>
                 </Tooltip>
              )}
+            {!isContractNode && node.contact && (
+                <div className="flex flex-col gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <Tooltip>
+                        <TooltipTrigger asChild>
+                             <a href={`mailto:${node.contact}`}>
+                                <Button variant="outline" size="icon" className="h-7 w-7 bg-white/80">
+                                    <Mail className="h-4 w-4" />
+                                </Button>
+                            </a>
+                        </TooltipTrigger>
+                        <TooltipContent side="left"><p>Enviar Email</p></TooltipContent>
+                    </Tooltip>
+                     <Tooltip>
+                        <TooltipTrigger asChild>
+                            <a href={`https://wa.me/${formattedPhone}`} target="_blank" rel="noopener noreferrer">
+                                <Button variant="outline" size="icon" className="h-7 w-7 bg-white/80">
+                                    <WhatsAppIcon />
+                                </Button>
+                            </a>
+                        </TooltipTrigger>
+                        <TooltipContent side="left"><p>Enviar WhatsApp</p></TooltipContent>
+                    </Tooltip>
+                </div>
+            )}
              <AlertDialog>
               <Tooltip>
                 <TooltipTrigger asChild>

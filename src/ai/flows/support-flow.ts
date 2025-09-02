@@ -9,11 +9,13 @@
 import { ai } from '@/ai/genkit';
 import { z } from 'zod';
 
-const SupportInputSchema = z.string().describe('A pergunta técnica do usuário.');
+const SupportInputSchema = z.object({
+    prompt: z.string().describe('A pergunta técnica do usuário.'),
+});
 const SupportOutputSchema = z.string().describe('A resposta detalhada e técnica do assistente de IA.');
 
 export async function technicalSupport(input: string): Promise<string> {
-  const { output } = await supportFlow(input);
+  const { output } = await supportFlow({ prompt: input });
   return output!;
 }
 

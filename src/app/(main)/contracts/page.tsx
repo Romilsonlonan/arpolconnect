@@ -4,17 +4,29 @@
 import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { PlusCircle, User, MapPin, Pencil } from 'lucide-react';
+import { PlusCircle, User, MapPin, Pencil, Trash2 } from 'lucide-react';
 import { type OrgNode, type Contract, initialOrgTree } from '@/lib/data';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { ContractModal } from '@/components/contracts/contract-modal';
 import { useToast } from '@/hooks/use-toast';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
+import { removeNodeFromTree } from '@/lib/tree-utils';
 
 const CONTRACTS_STORAGE_KEY = 'arpolarContracts';
 const ORG_CHART_STORAGE_KEY = 'orgChartTree';
 
-function ContractCard({ contract, onEdit }: { contract: Contract; onEdit: () => void; }) {
+function ContractCard({ contract, onEdit, onDelete }: { contract: Contract; onEdit: () => void; onDelete: () => void; }) {
   return (
     <Card 
       className="group flex flex-col justify-between text-white overflow-hidden shadow-lg relative min-h-[250px] bg-cover bg-center transition-all duration-300"
@@ -22,17 +34,45 @@ function ContractCard({ contract, onEdit }: { contract: Contract; onEdit: () => 
     >
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent z-0 opacity-100 group-hover:opacity-80 transition-opacity duration-300"></div>
       
-      <Button 
-        variant="ghost" 
-        size="icon" 
-        className="absolute top-2 right-2 h-8 w-8 text-white bg-black/20 hover:bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity z-20"
-        onClick={(e) => {
-          e.stopPropagation(); // Prevent card click event
-          onEdit();
-        }}
-      >
-        <Pencil className="h-4 w-4" />
-      </Button>
+      <div className="absolute top-2 right-2 flex flex-col gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity z-20">
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="h-8 w-8 text-white bg-black/20 hover:bg-black/50"
+          onClick={(e) => {
+            e.stopPropagation();
+            onEdit();
+          }}
+        >
+          <Pencil className="h-4 w-4" />
+        </Button>
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button
+              variant="destructive"
+              size="icon"
+              className="h-8 w-8"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <Trash2 className="h-4 w-4" />
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent onClick={(e) => e.stopPropagation()}>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Esta ação não pode ser desfeita. Isso removerá permanentemente o contrato e o desalocará de qualquer funcionário associado no organograma.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction onClick={onDelete}>
+                Continuar
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      </div>
 
       <CardHeader>
         <CardTitle className="text-xl font-bold font-headline z-10">{contract.name}</CardTitle>
@@ -56,14 +96,11 @@ function ContractCard({ contract, onEdit }: { contract: Contract; onEdit: () => 
 function findSupervisorsInTree(node: OrgNode): OrgNode[] {
     const supervisors: OrgNode[] = [];
 
-    // Helper function to traverse the tree recursively
     function traverse(currentNode: OrgNode) {
-        // A supervisor is anyone with the role 'Supervisor', and is not hidden
         if (currentNode.role === 'Supervisor' && currentNode.showInNeuralNet !== false) {
             supervisors.push(currentNode);
         }
         
-        // If the node has children, continue traversal
         if (currentNode.children) {
             for (const child of currentNode.children) {
                 traverse(child);
@@ -71,7 +108,6 @@ function findSupervisorsInTree(node: OrgNode): OrgNode[] {
         }
     }
     
-    // Start traversal from the initial node
     traverse(node);
     return supervisors;
 }
@@ -133,12 +169,10 @@ export default function ContractsPage() {
     let toastDescription = '';
 
     if (id) {
-        // Editing existing contract
         updatedContracts = currentContracts.map(c => c.id === id ? { ...c, ...contractData, id } : c);
         toastTitle = "Contrato Atualizado!";
         toastDescription = `O contrato "${contractData.name}" foi atualizado com sucesso.`;
     } else {
-        // Adding new contract
         const newContract: Contract = {
             ...contractData,
             id: `contract-${Date.now()}`
@@ -150,7 +184,6 @@ export default function ContractsPage() {
       
     localStorage.setItem(CONTRACTS_STORAGE_KEY, JSON.stringify(updatedContracts));
     
-    // After saving, reload data to apply visibility filters
     loadData();
 
     toast({
@@ -160,6 +193,43 @@ export default function ContractsPage() {
 
     setIsModalOpen(false);
     setEditingContract(null);
+  };
+  
+  const handleDeleteContract = (contractId: string) => {
+    try {
+        const contractToDelete = contracts.find(c => c.id === contractId);
+        if (!contractToDelete) return;
+
+        // Remove from contracts list
+        const currentContracts: Contract[] = JSON.parse(localStorage.getItem(CONTRACTS_STORAGE_KEY) || '[]');
+        const updatedContracts = currentContracts.filter(c => c.id !== contractId);
+        localStorage.setItem(CONTRACTS_STORAGE_KEY, JSON.stringify(updatedContracts));
+
+        // Remove from org chart
+        const savedTree = localStorage.getItem(ORG_CHART_STORAGE_KEY);
+        let orgTree = savedTree ? JSON.parse(savedTree) : initialOrgTree;
+        const newTree = removeNodeFromTree(orgTree, contractId);
+        localStorage.setItem(ORG_CHART_STORAGE_KEY, JSON.stringify(newTree));
+
+        // Dispatch storage event to notify other components like organograma
+        window.dispatchEvent(new StorageEvent('storage', { key: CONTRACTS_STORAGE_KEY }));
+        window.dispatchEvent(new StorageEvent('storage', { key: ORG_CHART_STORAGE_KEY }));
+
+        toast({
+            title: 'Contrato Deletado',
+            description: `O contrato "${contractToDelete.name}" foi removido com sucesso.`
+        });
+        
+        loadData();
+
+    } catch (error) {
+        console.error('Failed to delete contract:', error);
+        toast({
+            title: 'Erro ao Deletar',
+            description: 'Não foi possível remover o contrato.',
+            variant: 'destructive'
+        });
+    }
   };
 
 
@@ -186,7 +256,12 @@ export default function ContractsPage() {
       ) : (
          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {contracts.map(contract => (
-                <ContractCard key={contract.id} contract={contract} onEdit={() => handleOpenEditModal(contract)} />
+                <ContractCard 
+                  key={contract.id} 
+                  contract={contract} 
+                  onEdit={() => handleOpenEditModal(contract)}
+                  onDelete={() => handleDeleteContract(contract.id)}
+                />
             ))}
         </div>
       )}

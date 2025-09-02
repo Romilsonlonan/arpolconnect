@@ -31,10 +31,9 @@ export function flattenTreeToEmployees(root: OrgNode): Employee[] {
   const employees: Employee[] = [];
 
   function traverse(node: OrgNode, supervisorId?: string) {
-    // We consider any node that is not the root and has a supervisor as an employee.
-    // We also exclude 'Contrato' nodes from being listed as employees.
-    if (supervisorId && node.id !== 'arpolar' && node.role !== 'Contrato') {
-      employees.push({
+    // This is a valid employee if it's not a contract and has a supervisor
+    if (supervisorId && node.role !== 'Contrato' && node.id !== 'arpolar') {
+       employees.push({
         id: node.id,
         name: node.name,
         // @ts-ignore
@@ -47,18 +46,17 @@ export function flattenTreeToEmployees(root: OrgNode): Employee[] {
       });
     }
 
-    // Recursively traverse children, passing the current node's ID as the new supervisorId.
+    // Recursively traverse children, passing the current node's ID as the supervisorId for them.
     if (node.children) {
       node.children.forEach(child => traverse(child, node.id));
     }
   }
 
-  // Start traversal from the root node.
-  traverse(root);
+  // Start the traversal from the root's children.
+  // The root itself (Arpolar) is not an employee.
+  root.children?.forEach(child => traverse(child, root.id));
   
-  // The initial call to traverse with just `root` will handle all nodes recursively.
-  // We remove the root company node itself from the list if it gets added.
-  return employees.filter(emp => emp.id !== 'arpolar');
+  return employees;
 }
 
 

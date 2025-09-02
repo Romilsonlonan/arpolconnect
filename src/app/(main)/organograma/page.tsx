@@ -6,60 +6,56 @@ import { initialOrgTree, type OrgNode, type Contract } from '@/lib/data';
 import { TreeNode } from '@/components/organization/tree-node';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
-import { ZoomIn, ZoomOut, RotateCcw, Settings, Building } from 'lucide-react';
-import { updateTree, getAllNodes } from '@/lib/tree-utils';
-import { ContractSettingsModal } from '@/components/organization/contract-settings-modal';
+import { ZoomIn, ZoomOut, RotateCcw, Settings, Building, FileSignature } from 'lucide-react';
+import { updateTree, getAllNodes, findNode } from '@/lib/tree-utils';
+import { ContractModal } from '@/components/contracts/contract-modal';
 import { TicketModal } from '@/components/organization/ticket-modal';
 import type { Message } from '@/lib/data';
 import { saveAvatar, getAvatar } from '@/lib/avatar-storage';
+import { useToast } from '@/hooks/use-toast';
 
 const ORG_CHART_STORAGE_KEY = 'orgChartTree';
-const CONTRACT_SETTINGS_STORAGE_KEY = 'contractSettings';
 const DASHBOARD_MESSAGES_KEY = 'dashboardMessages';
 const CONTRACTS_STORAGE_KEY = 'arpolarContracts';
-
-
-type ContractSettings = {
-  contractName: string;
-  region: string;
-  address: string;
-  responsible: string;
-};
 
 
 export default function OrganogramaPage() {
   const [zoom, setZoom] = useState(1);
   const [tree, setTree] = useState<OrgNode | null>(null);
   const [isClient, setIsClient] = useState(false);
-  const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
   const [ticketNode, setTicketNode] = useState<OrgNode | null>(null);
   const [allNodes, setAllNodes] = useState<OrgNode[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
 
-  const [contractSettings, setContractSettings] = useState<ContractSettings>({
-    contractName: 'Contrato Principal',
-    region: 'N/A',
-    address: 'N/A',
-    responsible: 'N/A',
-  });
-  
-  const [nodeContractSettings, setNodeContractSettings] = useState(null);
+  // State for Contract Modal
+  const [isContractModalOpen, setIsContractModalOpen] = useState(false);
+  const [supervisors, setSupervisors] = useState<OrgNode[]>([]);
+  const [editingContract, setEditingContract] = useState<Contract | null>(null);
 
+  const { toast } = useToast();
+  
   const loadData = () => {
      try {
       const savedTree = localStorage.getItem(ORG_CHART_STORAGE_KEY);
-      const savedSettings = localStorage.getItem(CONTRACT_SETTINGS_STORAGE_KEY);
       const savedMessages = localStorage.getItem(DASHBOARD_MESSAGES_KEY);
       
       const treeToLoad = savedTree ? JSON.parse(savedTree) : initialOrgTree;
 
+      // Find all supervisors from the tree to populate the select dropdown
+      const supervisorNodes: OrgNode[] = [];
+      updateTree(treeToLoad, (node) => {
+        if (['Supervisor', 'Gerente', 'Coordenador', 'Diretor', 'Supervisor de Qualidade'].includes(node.role)) {
+            supervisorNodes.push(node);
+        }
+        return node;
+      });
+      setSupervisors(supervisorNodes);
+
+
       setTree(treeToLoad);
       setAllNodes(getAllNodes(treeToLoad));
       
-      if (savedSettings) {
-        setContractSettings(JSON.parse(savedSettings));
-      }
       if (savedMessages) {
         setMessages(JSON.parse(savedMessages));
       }
@@ -88,26 +84,13 @@ export default function OrganogramaPage() {
     }
   };
 
-
-   useEffect(() => {
-    if (isClient) {
-      try {
-        localStorage.setItem(CONTRACT_SETTINGS_STORAGE_KEY, JSON.stringify(contractSettings));
-      } catch (error) {
-        console.error("Failed to save contract settings to localStorage", error);
-      }
-    }
-  }, [contractSettings, isClient]);
-
   const handleUpdateNode = (nodeId: string, values: Partial<OrgNode>) => {
     if (!tree) return;
     
     const newTree = updateTree(tree, (node) => {
       if (node.id === nodeId) {
-        // If a new avatar data URL is passed, save it separately
         if (values.avatar && values.avatar.startsWith('data:image')) {
             saveAvatar(nodeId, values.avatar);
-            // Don't store the full data URL in the main tree
             values.avatar = `avatar:${nodeId}`;
         }
         return { ...node, ...values };
@@ -122,7 +105,6 @@ export default function OrganogramaPage() {
     if (!tree) return;
     const newTree = updateTree(tree, (node) => {
       if (node.id === nodeId) {
-        // Correctly toggle the boolean value, treating undefined as true
         return { ...node, showInNeuralNet: node.showInNeuralNet === false };
       }
       return node;
@@ -143,10 +125,8 @@ export default function OrganogramaPage() {
           children: [],
           showInNeuralNet: true,
         };
-        // If a new avatar data URL is passed, save it separately
         if (newNode.avatar && newNode.avatar.startsWith('data:image')) {
             saveAvatar(newNodeId, newNode.avatar);
-            // Don't store the full data URL in the main tree
             newNode.avatar = `avatar:${newNodeId}`;
         }
         return { ...node, children: [...(node.children || []), newNode] };
@@ -161,9 +141,6 @@ export default function OrganogramaPage() {
     if (!tree) return;
     
     if (nodeId === tree.id) {
-       setTree(null);
-       localStorage.removeItem(ORG_CHART_STORAGE_KEY);
-       // This might be too aggressive, maybe just clear children
        saveTree(initialOrgTree);
        return;
     }
@@ -183,7 +160,6 @@ export default function OrganogramaPage() {
     let draggedNode: OrgNode | null = null;
     let newTree = { ...tree };
 
-    // Find and remove the dragged node from its original parent
     newTree = updateTree(newTree, (node) => {
       if (node.children) {
         const childIndex = node.children.findIndex(c => c.id === draggedNodeId);
@@ -197,7 +173,6 @@ export default function OrganogramaPage() {
 
     if (!draggedNode) return;
 
-    // Add the dragged node to the target node's children
     newTree = updateTree(newTree, (node) => {
       if (node.id === targetNodeId) {
         return { ...node, children: [...(node.children || []), draggedNode!] };
@@ -208,18 +183,52 @@ export default function OrganogramaPage() {
     saveTree(newTree);
   };
 
-  
-  const handleSaveSettings = (newSettings: ContractSettings) => {
-    setContractSettings(newSettings);
-    setIsSettingsModalOpen(false);
+  const handleSaveContract = (contractData: Omit<Contract, 'id'>, id?: string) => {
+    let currentContracts: Contract[] = [];
+    try {
+       currentContracts = JSON.parse(localStorage.getItem(CONTRACTS_STORAGE_KEY) || '[]');
+    } catch (e) {
+      console.error("Failed to parse contracts from localStorage", e);
+      currentContracts = [];
+    }
+
+    let updatedContracts: Contract[];
+    let toastTitle = '';
+    let toastDescription = '';
+
+    if (id) {
+        // Editing existing contract
+        updatedContracts = currentContracts.map(c => c.id === id ? { ...c, ...contractData, id } : c);
+        toastTitle = "Contrato Atualizado!";
+        toastDescription = `O contrato "${contractData.name}" foi atualizado com sucesso.`;
+    } else {
+        // Adding new contract
+        const newContract: Contract = {
+            ...contractData,
+            id: `contract-${Date.now()}`
+        };
+        updatedContracts = [...currentContracts, newContract];
+        toastTitle = "Contrato Adicionado!";
+        toastDescription = `O contrato "${newContract.name}" foi salvo com sucesso.`;
+    }
+      
+    localStorage.setItem(CONTRACTS_STORAGE_KEY, JSON.stringify(updatedContracts));
+    
+    // Dispatch a storage event to notify other pages
+    window.dispatchEvent(new StorageEvent('storage', { key: CONTRACTS_STORAGE_KEY }));
+
+    toast({
+        title: toastTitle,
+        description: toastDescription
+    });
+
+    setIsContractModalOpen(false);
+    setEditingContract(null);
   };
 
-  const handleNodeContractSettingsChange = (newSettings: any) => {
-    if(nodeContractSettings) {
-        // @ts-ignore
-        handleUpdateNode(nodeContractSettings.id, { contractSettings: newSettings})
-    }
-    setNodeContractSettings(null);
+  const handleOpenContractModal = () => {
+    setEditingContract(null);
+    setIsContractModalOpen(true);
   }
 
   const handleOpenTicketModal = (node: OrgNode) => {
@@ -239,7 +248,7 @@ export default function OrganogramaPage() {
 
     const existingMessages: Message[] = JSON.parse(localStorage.getItem(DASHBOARD_MESSAGES_KEY) || '[]');
     localStorage.setItem(DASHBOARD_MESSAGES_KEY, JSON.stringify([newTicket, ...existingMessages]));
-    setMessages([newTicket, ...existingMessages]); // Update local state
+    setMessages([newTicket, ...existingMessages]);
     
     setIsTicketModalOpen(false);
     setTicketNode(null);
@@ -265,8 +274,8 @@ export default function OrganogramaPage() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center pb-4 border-b gap-4">
         <div className="flex items-center gap-2">
             <h1 className="text-lg font-semibold md:text-2xl font-headline">Organograma</h1>
-             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setIsSettingsModalOpen(true)}>
-                <Settings className="h-5 w-5" />
+             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={handleOpenContractModal}>
+                <FileSignature className="h-5 w-5" />
             </Button>
         </div>
         <div className="ml-0 sm:ml-auto flex items-center gap-2 sm:gap-4">
@@ -298,20 +307,20 @@ export default function OrganogramaPage() {
             onAddChild={handleAddChildNode}
             onRemove={handleRemoveNode}
             onMoveNode={handleMoveNode}
-            onContractSettingsChange={handleSaveSettings}
             onOpenTicketModal={handleOpenTicketModal}
             onToggleVisibility={handleToggleVisibility}
+            onOpenContractModal={handleOpenContractModal}
             privateTicketCount={privateTicketCounts.get(tree.id) || 0}
-            contractSettings={contractSettings}
             isRoot={true}
           />
         </div>
       </div>
-       <ContractSettingsModal
-        isOpen={isSettingsModalOpen}
-        onClose={() => setIsSettingsModalOpen(false)}
-        onSave={handleSaveSettings}
-        settings={contractSettings}
+       <ContractModal
+        isOpen={isContractModalOpen}
+        onClose={() => setIsContractModalOpen(false)}
+        onSave={handleSaveContract}
+        supervisors={supervisors}
+        editingContract={editingContract}
       />
       <TicketModal
         isOpen={isTicketModalOpen}

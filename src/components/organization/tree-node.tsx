@@ -7,10 +7,9 @@ import { getAvatar } from '@/lib/avatar-storage';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Pencil, Trash2, Phone, Briefcase, Building, MessageSquarePlus, Eye, EyeOff, ChevronDown, ChevronUp, Bell } from 'lucide-react';
+import { Plus, Pencil, Trash2, Phone, Briefcase, Building, MessageSquarePlus, Eye, EyeOff, ChevronDown, ChevronUp, Bell, FileSignature } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { EmployeeModal } from './employee-modal';
-import { ContractSettingsModal } from './contract-settings-modal';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,17 +34,14 @@ type TreeNodeProps = {
   onAddChild: (parentId: string, child: Omit<OrgNode, 'children' | 'id'>) => void;
   onRemove: (nodeId: string) => void;
   onMoveNode: (draggedNodeId: string, targetNodeId: string) => void;
-  onContractSettingsChange: (settings: any) => void;
+  onOpenContractModal: () => void;
   onOpenTicketModal: (node: OrgNode) => void;
   onToggleVisibility: (nodeId: string) => void;
   privateTicketCount: number;
-  contractSettings: any;
   isRoot?: boolean;
 };
 
 function NodeAvatar({ node }: { node: OrgNode }) {
-    // Direct synchronous lookup for the avatar.
-    // This avoids useEffect complexities and ensures the avatar is present on initial render.
     const avatarUrl = getAvatar(node.id) || node.avatar;
 
     return (
@@ -56,9 +52,8 @@ function NodeAvatar({ node }: { node: OrgNode }) {
     );
 }
 
-export function TreeNode({ node, onUpdate, onAddChild, onRemove, onMoveNode, onContractSettingsChange, onOpenTicketModal, onToggleVisibility, privateTicketCount, contractSettings, isRoot = false }: TreeNodeProps) {
+export function TreeNode({ node, onUpdate, onAddChild, onRemove, onMoveNode, onOpenContractModal, onOpenTicketModal, onToggleVisibility, privateTicketCount, isRoot = false }: TreeNodeProps) {
   const [employeeModalOpen, setEmployeeModalOpen] = useState(false);
-  const [contractModalOpen, setContractModalOpen] = useState(false);
   const [editingNode, setEditingNode] = useState<OrgNode | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [isExpanded, setIsExpanded] = useState(true);
@@ -75,19 +70,12 @@ export function TreeNode({ node, onUpdate, onAddChild, onRemove, onMoveNode, onC
   
   const handleSaveEmployee = (values: Omit<OrgNode, 'id' | 'children'>) => {
     if (editingNode) {
-      // Editing existing node
       onUpdate(editingNode.id, values);
     } else {
-      // Adding new node as a child
       onAddChild(node.id, values);
     }
   };
 
-  const handleOpenContractSettings = () => {
-    setContractModalOpen(true);
-  }
-
-  // --- Drag and Drop Handlers ---
   const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
     if (isRoot) return;
     e.dataTransfer.setData('text/plain', node.id);
@@ -184,11 +172,11 @@ export function TreeNode({ node, onUpdate, onAddChild, onRemove, onMoveNode, onC
             )}
              <Tooltip>
                 <TooltipTrigger asChild>
-                    <Button variant="outline" size="icon" className="h-7 w-7 bg-white/80" onClick={handleOpenContractSettings}>
-                        <Building className="h-4 w-4" />
+                    <Button variant="outline" size="icon" className="h-7 w-7 bg-white/80" onClick={onOpenContractModal}>
+                        <FileSignature className="h-4 w-4" />
                     </Button>
                 </TooltipTrigger>
-                <TooltipContent><p>Configurar Contrato</p></TooltipContent>
+                <TooltipContent><p>Gerenciar Contratos</p></TooltipContent>
             </Tooltip>
              <Tooltip>
                 <TooltipTrigger asChild>
@@ -262,14 +250,6 @@ export function TreeNode({ node, onUpdate, onAddChild, onRemove, onMoveNode, onC
         editingNode={editingNode}
       />
 
-      <ContractSettingsModal
-        isOpen={contractModalOpen}
-        onClose={() => setContractModalOpen(false)}
-        onSave={onContractSettingsChange}
-        settings={contractSettings}
-        hideBackgroundImage
-      />
-
       {isExpanded && node.children && node.children.length > 0 && (
         <>
           <div className="absolute top-full h-8 w-px bg-slate-600 left-1/2 -translate-x-1/2"></div>
@@ -286,11 +266,10 @@ export function TreeNode({ node, onUpdate, onAddChild, onRemove, onMoveNode, onC
                   onAddChild={onAddChild} 
                   onRemove={onRemove}
                   onMoveNode={onMoveNode}
-                  onContractSettingsChange={onContractSettingsChange}
+                  onOpenContractModal={onOpenContractModal}
                   onOpenTicketModal={onOpenTicketModal}
                   onToggleVisibility={onToggleVisibility}
                   privateTicketCount={privateTicketCount}
-                  contractSettings={contractSettings}
                 />
               </div>
             ))}

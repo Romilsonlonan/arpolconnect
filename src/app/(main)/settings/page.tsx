@@ -53,7 +53,7 @@ export default function SettingsPage() {
         const savedThemeId = localStorage.getItem(APP_THEME_STORAGE_KEY);
         const themeToApply = themes.find(t => t.id === savedThemeId) || themes[0];
         setActiveTheme(themeToApply.id);
-        applyTheme(themeToApply);
+        applyTheme(themeToApply, false); // Don't save again on initial load
 
     } catch (error) {
         console.error("Failed to load settings from localStorage", error);
@@ -65,7 +65,8 @@ export default function SettingsPage() {
     try {
         const settings = { name, email, phone };
         localStorage.setItem(USER_SETTINGS_STORAGE_KEY, JSON.stringify(settings));
-        
+        window.dispatchEvent(new StorageEvent('storage', { key: USER_SETTINGS_STORAGE_KEY }));
+
         toast({
             title: 'Configurações Salvas',
             description: 'Suas informações pessoais foram atualizadas.'
@@ -88,6 +89,8 @@ export default function SettingsPage() {
         try {
             localStorage.setItem(USER_AVATAR_STORAGE_KEY, result);
             setAvatar(result);
+            window.dispatchEvent(new StorageEvent('storage', { key: USER_AVATAR_STORAGE_KEY }));
+            
             toast({
                 title: 'Avatar Atualizado',
                 description: 'Sua nova foto de perfil foi salva.'
@@ -104,15 +107,18 @@ export default function SettingsPage() {
     }
   };
 
-  const applyTheme = (theme: typeof themes[0]) => {
+  const applyTheme = (theme: typeof themes[0], save: boolean = true) => {
     document.documentElement.style.setProperty('--primary', theme.primary);
     document.documentElement.style.setProperty('--accent', theme.accent);
     document.documentElement.style.setProperty('--background', theme.background);
-    try {
-        localStorage.setItem(APP_THEME_STORAGE_KEY, theme.id);
-        setActiveTheme(theme.id);
-    } catch (error) {
-        console.error("Failed to save theme to localStorage", error);
+    setActiveTheme(theme.id);
+    
+    if (save) {
+        try {
+            localStorage.setItem(APP_THEME_STORAGE_KEY, theme.id);
+        } catch (error) {
+            console.error("Failed to save theme to localStorage", error);
+        }
     }
   };
 

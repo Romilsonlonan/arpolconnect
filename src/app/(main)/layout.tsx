@@ -43,11 +43,51 @@ import {
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
+import { useState, useEffect } from 'react';
+
+
+const USER_AVATAR_STORAGE_KEY = 'userAvatar';
+const USER_SETTINGS_STORAGE_KEY = 'userSettings';
 
 
 function MainLayoutContent({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const { open } = useSidebar();
+    const [userAvatar, setUserAvatar] = useState('https://placehold.co/100x100');
+    const [userName, setUserName] = useState('AC');
+
+
+    useEffect(() => {
+        const updateUserData = () => {
+            const savedAvatar = localStorage.getItem(USER_AVATAR_STORAGE_KEY);
+            const savedSettings = localStorage.getItem(USER_SETTINGS_STORAGE_KEY);
+            if (savedAvatar) {
+                setUserAvatar(savedAvatar);
+            }
+            if (savedSettings) {
+                try {
+                    const settings = JSON.parse(savedSettings);
+                    setUserName(settings.name || 'AC');
+                } catch(e) {
+                    console.error("Failed to parse user settings", e);
+                }
+            }
+        };
+
+        updateUserData();
+
+        const handleStorageChange = (event: StorageEvent) => {
+            if (event.key === USER_AVATAR_STORAGE_KEY || event.key === USER_SETTINGS_STORAGE_KEY) {
+                updateUserData();
+            }
+        };
+
+        window.addEventListener('storage', handleStorageChange);
+
+        return () => {
+            window.removeEventListener('storage', handleStorageChange);
+        };
+    }, []);
 
     const navItems = [
       { href: '/dashboard', icon: <MessageSquare />, label: 'Painel de Tickets' },
@@ -102,8 +142,8 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
               <DropdownMenuTrigger asChild>
                 <Button variant="secondary" size="icon" className="rounded-full">
                   <Avatar>
-                    <AvatarImage src="https://placehold.co/100x100" alt="@user" />
-                    <AvatarFallback>AC</AvatarFallback>
+                    <AvatarImage src={userAvatar} alt="@user" />
+                    <AvatarFallback>{userName.charAt(0)}</AvatarFallback>
                   </Avatar>
                   <span className="sr-only">Toggle user menu</span>
                 </Button>

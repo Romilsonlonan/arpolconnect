@@ -25,5 +25,6 @@ export async function technicalSupport(input: string): Promise<string> {
     }
   });
 
-  return response.text();
+  return response.text;
 }
+

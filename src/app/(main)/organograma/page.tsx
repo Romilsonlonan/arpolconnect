@@ -184,6 +184,8 @@ export default function OrganogramaPage() {
   };
 
   const handleSaveContract = (contractData: Omit<Contract, 'id'>, id?: string) => {
+    if (!tree) return;
+
     let currentContracts: Contract[] = [];
     try {
        currentContracts = JSON.parse(localStorage.getItem(CONTRACTS_STORAGE_KEY) || '[]');
@@ -195,14 +197,28 @@ export default function OrganogramaPage() {
     let updatedContracts: Contract[];
     let toastTitle = '';
     let toastDescription = '';
+    let newTree = tree;
 
     if (id) {
-        // Editing existing contract
+        // --- Editing existing contract ---
         updatedContracts = currentContracts.map(c => c.id === id ? { ...c, ...contractData, id } : c);
         toastTitle = "Contrato Atualizado!";
         toastDescription = `O contrato "${contractData.name}" foi atualizado com sucesso.`;
+        
+        // Also update the node in the tree if it exists
+        newTree = updateTree(tree, (node) => {
+            if (node.id === id) { // Contract nodes have the same ID as the contract
+                return {
+                    ...node,
+                    name: contractData.name,
+                    avatar: contractData.backgroundImage, // Update avatar which is the contract image
+                };
+            }
+            return node;
+        });
+
     } else {
-        // Adding new contract
+        // --- Adding new contract ---
         const newContract: Contract = {
             ...contractData,
             id: `contract-${Date.now()}`
@@ -210,10 +226,29 @@ export default function OrganogramaPage() {
         updatedContracts = [...currentContracts, newContract];
         toastTitle = "Contrato Adicionado!";
         toastDescription = `O contrato "${newContract.name}" foi salvo com sucesso.`;
+        
+        // --- Add contract as a node in the tree ---
+        newTree = updateTree(tree, (node) => {
+            if (node.id === newContract.supervisorId) {
+                const contractNode: OrgNode = {
+                    id: newContract.id, // Use contract ID for the node ID
+                    name: newContract.name,
+                    role: 'Contrato',
+                    avatar: newContract.backgroundImage,
+                    showInNeuralNet: false, // Contracts don't appear in the neural net
+                    children: [],
+                };
+                return { ...node, children: [...(node.children || []), contractNode] };
+            }
+            return node;
+        });
     }
       
     localStorage.setItem(CONTRACTS_STORAGE_KEY, JSON.stringify(updatedContracts));
     
+    // Save the potentially modified tree
+    saveTree(newTree);
+
     // Dispatch a storage event to notify other pages
     window.dispatchEvent(new StorageEvent('storage', { key: CONTRACTS_STORAGE_KEY }));
 
@@ -307,9 +342,9 @@ export default function OrganogramaPage() {
             onAddChild={handleAddChildNode}
             onRemove={handleRemoveNode}
             onMoveNode={handleMoveNode}
+            onOpenContractModal={handleOpenContractModal}
             onOpenTicketModal={handleOpenTicketModal}
             onToggleVisibility={handleToggleVisibility}
-            onOpenContractModal={handleOpenContractModal}
             privateTicketCount={privateTicketCounts.get(tree.id) || 0}
             isRoot={true}
           />

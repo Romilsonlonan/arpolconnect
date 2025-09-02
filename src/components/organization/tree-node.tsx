@@ -43,10 +43,14 @@ type TreeNodeProps = {
 
 function NodeAvatar({ node }: { node: OrgNode }) {
     const avatarUrl = getAvatar(node.id) || node.avatar;
+    const isContract = node.role === 'Contrato';
 
     return (
-        <Avatar className="w-16 h-16 border-2 border-primary">
-            <AvatarImage src={avatarUrl ?? undefined} data-ai-hint="person portrait" draggable="false"/>
+        <Avatar className={cn(
+            "w-16 h-16 border-2",
+            isContract ? "border-accent" : "border-primary",
+        )}>
+            <AvatarImage src={avatarUrl ?? undefined} alt={node.name} data-ai-hint="person portrait" draggable="false" className={cn(isContract && "object-cover")}/>
             <AvatarFallback>{node.name.split(' ').map(n => n[0]).join('').substring(0, 2)}</AvatarFallback>
         </Avatar>
     );
@@ -57,6 +61,7 @@ export function TreeNode({ node, onUpdate, onAddChild, onRemove, onMoveNode, onO
   const [editingNode, setEditingNode] = useState<OrgNode | null>(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [isExpanded, setIsExpanded] = useState(true);
+  const isContractNode = node.role === 'Contrato';
 
   const handleAdd = () => {
     setEditingNode(null);
@@ -64,8 +69,16 @@ export function TreeNode({ node, onUpdate, onAddChild, onRemove, onMoveNode, onO
   };
 
   const handleEdit = () => {
-    setEditingNode(node);
-    setEmployeeModalOpen(true);
+    if (isContractNode) {
+        // Logic to edit contract details would go here
+        // For now, we can re-use the contract modal logic if needed
+        // Or open a specific editor for contract nodes.
+        // Let's assume onOpenContractModal can handle this.
+        onOpenContractModal(); // This needs to be adapted to pass contract ID
+    } else {
+        setEditingNode(node);
+        setEmployeeModalOpen(true);
+    }
   };
   
   const handleSaveEmployee = (values: Omit<OrgNode, 'id' | 'children'>) => {
@@ -114,12 +127,12 @@ export function TreeNode({ node, onUpdate, onAddChild, onRemove, onMoveNode, onO
         onDragLeave={handleDragLeave}
         onDrop={handleDrop}
         className={cn(
-        "w-60 text-center shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105 relative group min-h-[260px]",
+        "w-60 text-center shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105 relative group min-h-[260px] flex flex-col",
         "bg-card",
         isDragOver && "ring-2 ring-primary ring-offset-2",
         !isRoot && "cursor-move"
         )}>
-        <CardContent className="p-4 flex flex-col items-center gap-2 relative h-full">
+        <CardContent className="p-4 flex flex-col items-center gap-2 relative h-full flex-1">
           <NodeAvatar node={node} />
           <div className="mt-2 flex-grow">
             <p className="font-bold text-lg font-headline">{node.name}</p>
@@ -127,14 +140,21 @@ export function TreeNode({ node, onUpdate, onAddChild, onRemove, onMoveNode, onO
           </div>
 
           <div className="space-y-2">
-            {node.contact && (
+            {node.role !== 'Contrato' && node.contact && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <Phone className="w-4 h-4" />
                   <span>{node.contact}</span>
               </div>
             )}
 
-            {node.contract && (
+            {node.role === 'Contrato' && (
+                <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Building className="w-4 h-4" />
+                    <span>Este é um nó de contrato</span>
+                </div>
+            )}
+
+            {node.contract && node.role !== 'Contrato' && (
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Briefcase className="w-4 h-4" />
                       <span>{node.contract}</span>
@@ -150,11 +170,11 @@ export function TreeNode({ node, onUpdate, onAddChild, onRemove, onMoveNode, onO
                         <Plus className="h-4 w-4" />
                     </Button>
                 </TooltipTrigger>
-                <TooltipContent><p>Adicionar</p></TooltipContent>
+                <TooltipContent><p>Adicionar Funcionário</p></TooltipContent>
              </Tooltip>
              <Tooltip>
                 <TooltipTrigger asChild>
-                    <Button variant="outline" size="icon" className="h-7 w-7 bg-white/80" onClick={handleEdit}>
+                    <Button variant="outline" size="icon" className="h-7 w-7 bg-white/80" onClick={handleEdit} disabled={isContractNode}>
                         <Pencil className="h-4 w-4" />
                     </Button>
                 </TooltipTrigger>
@@ -180,7 +200,7 @@ export function TreeNode({ node, onUpdate, onAddChild, onRemove, onMoveNode, onO
             </Tooltip>
              <Tooltip>
                 <TooltipTrigger asChild>
-                    <Button variant="outline" size="icon" className="h-7 w-7 bg-white/80" onClick={() => onOpenTicketModal(node)}>
+                    <Button variant="outline" size="icon" className="h-7 w-7 bg-white/80" onClick={() => onOpenTicketModal(node)} disabled={isContractNode}>
                         <MessageSquarePlus className="h-4 w-4" />
                     </Button>
                 </TooltipTrigger>
@@ -218,7 +238,7 @@ export function TreeNode({ node, onUpdate, onAddChild, onRemove, onMoveNode, onO
                 <AlertDialogHeader>
                   <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Esta ação não pode ser desfeita. Isso removerá permanentemente o funcionário e todos os seus subordinados.
+                    Esta ação não pode ser desfeita. Isso removerá permanentemente o nó e todos os seus subordinados.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <AlertDialogFooter>

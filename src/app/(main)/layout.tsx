@@ -16,6 +16,7 @@ import {
   BookUser,
   FileSignature,
   Presentation,
+  ClipboardList,
 } from 'lucide-react';
 
 import {
@@ -49,6 +50,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
 
     const navItems = [
       { href: '/dashboard', icon: <MessageSquare />, label: 'Painel de Tickets' },
+      { href: '/tickets', icon: <ClipboardList />, label: 'Tickets por Responsável' },
       { href: '/organograma', icon: <GitMerge />, label: 'Organograma' },
       { href: '/directory', icon: <BookUser />, label: 'Diretório' },
       { href: '/contracts', icon: <FileSignature />, label: 'Contratos' },

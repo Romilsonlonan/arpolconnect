@@ -18,6 +18,7 @@ import {
   Presentation,
   ClipboardList,
   Settings,
+  BrainCircuit,
 } from 'lucide-react';
 
 import {
@@ -97,6 +98,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
       { href: '/contracts', icon: <FileSignature />, label: 'Contratos' },
       { href: '/evaluation', icon: <FileText />, label: 'Avaliação' },
       { href: '/dds-info', icon: <Presentation />, label: 'DDS Info' },
+      { href: '/support', icon: <BrainCircuit />, label: 'Suporte IA' },
     ];
 
     return (

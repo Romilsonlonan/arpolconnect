@@ -109,56 +109,7 @@ export const employees: Employee[] = [
 
 
 const now = new Date();
-export const messages: Message[] = [
-  { 
-    id: 'msg1', 
-    contractName: 'Contrato Alpha', 
-    supervisor: 'Carlos Ferreira', 
-    contact: '(11) 98888-1111',
-    message: 'A unidade de ar condicionado central do Site A parou de funcionar. Despacho de mecânico sênior é necessário imediatamente.', 
-    urgency: 'Atenção',
-    status: 'Em andamento',
-    author: 'Diretor A', 
-    createdAt: new Date(now.getTime() - 12 * 60 * 60 * 1000).toISOString(),
-    visibility: 'publico',
-  },
-  { 
-    id: 'msg2', 
-    contractName: 'Contrato Beta', 
-    supervisor: 'Beatriz Costa',
-    contact: '(21) 97777-2222',
-    message: 'Favor revisar e aprovar o cronograma de manutenção preventiva do Q3 para todos os contratos.', 
-    urgency: 'Rotina',
-    status: 'Em andamento',
-    author: 'Coordenador B', 
-    createdAt: new Date(now.getTime() - 50 * 60 * 60 * 1000).toISOString(),
-    visibility: 'publico',
-  },
-  { 
-    id: 'msg3', 
-    contractName: 'Contrato Gamma', 
-    supervisor: 'Ricardo Almeida',
-    contact: '(31) 96666-3333',
-    message: 'Relatos de luzes piscando no Site C. Um eletricista precisa investigar a fiação.',
-    urgency: 'Crítico',
-    status: 'Em andamento',
-    author: 'Supervisor C', 
-    createdAt: new Date(now.getTime() - 80 * 60 * 60 * 1000).toISOString(),
-    visibility: 'publico',
-  },
-  { 
-    id: 'msg4', 
-    contractName: 'Contrato Delta', 
-    supervisor: 'Carlos Ferreira',
-    contact: '(11) 95555-4444',
-    message: 'O problema com o termostato no Contrato B foi resolvido e o cliente está satisfeito.', 
-    urgency: 'Rotina',
-    status: 'Finalizado',
-    author: 'Supervisor A', 
-    createdAt: new Date(now.getTime() - 100 * 60 * 60 * 1000).toISOString(),
-    visibility: 'publico',
-  },
-];
+export const messages: Message[] = [];
 
 export const contractList = [
     'Contrato A',

@@ -28,75 +28,39 @@ export function updateTree(tree: OrgNode, updateFn: (node: OrgNode) => OrgNode):
 
 
 export function flattenTreeToEmployees(root: OrgNode): Employee[] {
-    const employees: Employee[] = [];
+  const employees: Employee[] = [];
 
-    // This function will find all nodes that are not the root and are not direct children of the root.
-    // In our structure, this means they are employees under a supervisor/director.
-    function traverse(node: OrgNode, supervisorId?: string) {
-        // Only add nodes that have a supervisorId, meaning they are not the top-level directors/supervisors
-        if (supervisorId && node.id !== 'arpolar') {
-            employees.push({
-                id: node.id,
-                name: node.name,
-                // @ts-ignore
-                role: node.role,
-                // @ts-ignore
-                email: node.contact || `${node.name.toLowerCase().split(' ').join('.')}@arpolar.com`,
-                phone: node.contact || '',
-                supervisorId: supervisorId,
-                contract: node.contract || '',
-                avatar: node.avatar || ''
-            });
-        }
-        
-        if (node.children) {
-            // The new supervisorId for the next level is the current node's id
-            node.children.forEach(child => traverse(child, node.id));
-        }
+  function traverse(node: OrgNode, supervisorId?: string) {
+    // We consider any node that is not the root and has a supervisor as an employee.
+    // We also exclude 'Contrato' nodes from being listed as employees.
+    if (supervisorId && node.id !== 'arpolar' && node.role !== 'Contrato') {
+      employees.push({
+        id: node.id,
+        name: node.name,
+        // @ts-ignore
+        role: node.role,
+        email: node.contact || `${node.name.toLowerCase().replace(/\s/g, '.')}@arpolar.com`,
+        phone: node.contact || '',
+        supervisorId: supervisorId,
+        contract: node.contract || 'N/A',
+        avatar: node.avatar || '',
+      });
     }
 
-    // Start traversal from the children of the root, as they are the supervisors
-    if (root.children) {
-        root.children.forEach(supervisorNode => {
-           // We need to traverse both the supervisor node itself (as it might have children)
-           // and its children. The supervisor nodes themselves are not "employees" in this flattened list.
-           if(supervisorNode.children) {
-                supervisorNode.children.forEach(employeeNode => traverse(employeeNode, supervisorNode.id))
-           }
-        });
+    // Recursively traverse children, passing the current node's ID as the new supervisorId.
+    if (node.children) {
+      node.children.forEach(child => traverse(child, node.id));
     }
-    
-    // A separate traversal to get employees of supervisors
-    const supervisors: OrgNode[] = [];
-    updateTree(root, (node) => {
-        if (['Supervisor', 'Gerente', 'Coordenador', 'Diretor'].includes(node.role)) {
-            supervisors.push(node);
-        }
-        return node;
-    });
+  }
 
-    for (const supervisor of supervisors) {
-        if (supervisor.children) {
-            for (const employeeNode of supervisor.children) {
-                 if (!employees.some(e => e.id === employeeNode.id)) {
-                    employees.push({
-                        id: employeeNode.id,
-                        name: employeeNode.name,
-                        role: employeeNode.role,
-                        email: employeeNode.contact || `${employeeNode.name.toLowerCase().replace(/\s/g, '.')}@arpolar.com`,
-                        phone: employeeNode.contact || '',
-                        supervisorId: supervisor.id,
-                        contract: employeeNode.contract || '',
-                        avatar: employeeNode.avatar || ''
-                    });
-                }
-            }
-        }
-    }
-
-
-    return employees;
+  // Start traversal from the root node.
+  traverse(root);
+  
+  // The initial call to traverse with just `root` will handle all nodes recursively.
+  // We remove the root company node itself from the list if it gets added.
+  return employees.filter(emp => emp.id !== 'arpolar');
 }
+
 
 export function removeNodeFromTree(tree: OrgNode, nodeId: string): OrgNode {
   // If the root is the one to be removed, handle it (though unlikely in this app's context)

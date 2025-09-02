@@ -1,13 +1,13 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { initialOrgTree, type OrgNode, type Contract } from '@/lib/data';
 import { TreeNode } from '@/components/organization/tree-node';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { ZoomIn, ZoomOut, RotateCcw, Settings, Building } from 'lucide-react';
-import { updateTree } from '@/lib/tree-utils';
+import { updateTree, getAllNodes } from '@/lib/tree-utils';
 import { ContractSettingsModal } from '@/components/organization/contract-settings-modal';
 import { TicketModal } from '@/components/organization/ticket-modal';
 import type { Message } from '@/lib/data';
@@ -34,6 +34,8 @@ export default function OrganogramaPage() {
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
   const [ticketNode, setTicketNode] = useState<OrgNode | null>(null);
+  const [allNodes, setAllNodes] = useState<OrgNode[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
 
   const [contractSettings, setContractSettings] = useState<ContractSettings>({
     contractName: 'Contrato Principal',
@@ -44,32 +46,43 @@ export default function OrganogramaPage() {
   
   const [nodeContractSettings, setNodeContractSettings] = useState(null);
 
-  useEffect(() => {
-    setIsClient(true);
-    let treeToLoad = initialOrgTree;
-    try {
+  const loadData = () => {
+     try {
       const savedTree = localStorage.getItem(ORG_CHART_STORAGE_KEY);
       const savedSettings = localStorage.getItem(CONTRACT_SETTINGS_STORAGE_KEY);
+      const savedMessages = localStorage.getItem(DASHBOARD_MESSAGES_KEY);
       
-      if (savedTree) {
-        let parsedTree = JSON.parse(savedTree);
-        treeToLoad = parsedTree;
-      }
+      const treeToLoad = savedTree ? JSON.parse(savedTree) : initialOrgTree;
 
+      setTree(treeToLoad);
+      setAllNodes(getAllNodes(treeToLoad));
+      
       if (savedSettings) {
         setContractSettings(JSON.parse(savedSettings));
+      }
+      if (savedMessages) {
+        setMessages(JSON.parse(savedMessages));
       }
 
     } catch (error) {
       console.error("Failed to parse data from localStorage", error);
+      setTree(initialOrgTree);
     }
-    setTree(treeToLoad);
+  }
+
+  useEffect(() => {
+    setIsClient(true);
+    loadData();
+
+    window.addEventListener('storage', loadData);
+    return () => window.removeEventListener('storage', loadData);
   }, []);
 
   const saveTree = (updatedTree: OrgNode) => {
     try {
         localStorage.setItem(ORG_CHART_STORAGE_KEY, JSON.stringify(updatedTree));
         setTree(updatedTree);
+        setAllNodes(getAllNodes(updatedTree)); // Update all nodes list
     } catch (error) {
         console.error("Failed to save org chart to localStorage", error);
     }
@@ -141,7 +154,6 @@ export default function OrganogramaPage() {
       return node;
     });
 
-    // This was the missing piece: save the updated tree to localStorage
     saveTree(newTree);
   };
 
@@ -227,10 +239,21 @@ export default function OrganogramaPage() {
 
     const existingMessages: Message[] = JSON.parse(localStorage.getItem(DASHBOARD_MESSAGES_KEY) || '[]');
     localStorage.setItem(DASHBOARD_MESSAGES_KEY, JSON.stringify([newTicket, ...existingMessages]));
+    setMessages([newTicket, ...existingMessages]); // Update local state
     
     setIsTicketModalOpen(false);
     setTicketNode(null);
   };
+
+  const privateTicketCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    messages.forEach(msg => {
+      if (msg.visibility === 'privado' && msg.recipientId) {
+        counts.set(msg.recipientId, (counts.get(msg.recipientId) || 0) + 1);
+      }
+    });
+    return counts;
+  }, [messages]);
 
 
   if (!isClient || !tree) {
@@ -278,6 +301,7 @@ export default function OrganogramaPage() {
             onContractSettingsChange={handleSaveSettings}
             onOpenTicketModal={handleOpenTicketModal}
             onToggleVisibility={handleToggleVisibility}
+            privateTicketCount={privateTicketCounts.get(tree.id) || 0}
             contractSettings={contractSettings}
             isRoot={true}
           />
@@ -294,10 +318,8 @@ export default function OrganogramaPage() {
         onClose={() => setIsTicketModalOpen(false)}
         onSave={handleSaveTicket}
         node={ticketNode}
+        allNodes={allNodes}
       />
     </div>
   );
 }
-
-    
-    

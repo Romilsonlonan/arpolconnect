@@ -1,3 +1,4 @@
+
 export type Employee = {
   id: string;
   name: string;
@@ -27,6 +28,8 @@ export type Message = {
   status: 'Em andamento' | 'Finalizado';
   author: string;
   createdAt: string;
+  visibility: 'publico' | 'privado';
+  recipientId?: string;
 
   // Optional technical fields
   equipmentName?: string;
@@ -116,7 +119,8 @@ export const messages: Message[] = [
     urgency: 'Atenção',
     status: 'Em andamento',
     author: 'Diretor A', 
-    createdAt: new Date(now.getTime() - 12 * 60 * 60 * 1000).toISOString() 
+    createdAt: new Date(now.getTime() - 12 * 60 * 60 * 1000).toISOString(),
+    visibility: 'publico',
   },
   { 
     id: 'msg2', 
@@ -127,7 +131,8 @@ export const messages: Message[] = [
     urgency: 'Rotina',
     status: 'Em andamento',
     author: 'Coordenador B', 
-    createdAt: new Date(now.getTime() - 50 * 60 * 60 * 1000).toISOString()
+    createdAt: new Date(now.getTime() - 50 * 60 * 60 * 1000).toISOString(),
+    visibility: 'publico',
   },
   { 
     id: 'msg3', 
@@ -138,7 +143,8 @@ export const messages: Message[] = [
     urgency: 'Crítico',
     status: 'Em andamento',
     author: 'Supervisor C', 
-    createdAt: new Date(now.getTime() - 80 * 60 * 60 * 1000).toISOString()
+    createdAt: new Date(now.getTime() - 80 * 60 * 60 * 1000).toISOString(),
+    visibility: 'publico',
   },
   { 
     id: 'msg4', 
@@ -149,7 +155,8 @@ export const messages: Message[] = [
     urgency: 'Rotina',
     status: 'Finalizado',
     author: 'Supervisor A', 
-    createdAt: new Date(now.getTime() - 100 * 60 * 60 * 1000).toISOString()
+    createdAt: new Date(now.getTime() - 100 * 60 * 60 * 1000).toISOString(),
+    visibility: 'publico',
   },
 ];
 

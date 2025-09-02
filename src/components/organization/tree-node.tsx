@@ -7,7 +7,7 @@ import { getAvatar } from '@/lib/avatar-storage';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Pencil, Trash2, Phone, Briefcase, Building, MessageSquarePlus, Eye, EyeOff, ChevronDown, ChevronUp } from 'lucide-react';
+import { Plus, Pencil, Trash2, Phone, Briefcase, Building, MessageSquarePlus, Eye, EyeOff, ChevronDown, ChevronUp, Bell } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { EmployeeModal } from './employee-modal';
 import { ContractSettingsModal } from './contract-settings-modal';
@@ -38,6 +38,7 @@ type TreeNodeProps = {
   onContractSettingsChange: (settings: any) => void;
   onOpenTicketModal: (node: OrgNode) => void;
   onToggleVisibility: (nodeId: string) => void;
+  privateTicketCount: number;
   contractSettings: any;
   isRoot?: boolean;
 };
@@ -55,7 +56,7 @@ function NodeAvatar({ node }: { node: OrgNode }) {
     );
 }
 
-export function TreeNode({ node, onUpdate, onAddChild, onRemove, onMoveNode, onContractSettingsChange, onOpenTicketModal, onToggleVisibility, contractSettings, isRoot = false }: TreeNodeProps) {
+export function TreeNode({ node, onUpdate, onAddChild, onRemove, onMoveNode, onContractSettingsChange, onOpenTicketModal, onToggleVisibility, privateTicketCount, contractSettings, isRoot = false }: TreeNodeProps) {
   const [employeeModalOpen, setEmployeeModalOpen] = useState(false);
   const [contractModalOpen, setContractModalOpen] = useState(false);
   const [editingNode, setEditingNode] = useState<OrgNode | null>(null);
@@ -198,17 +199,32 @@ export function TreeNode({ node, onUpdate, onAddChild, onRemove, onMoveNode, onC
                 <TooltipContent><p>Criar Ticket</p></TooltipContent>
             </Tooltip>
           </div>
-          <div className="absolute top-2 left-2 flex flex-col gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+          <div className="absolute top-2 left-2 flex flex-col gap-1.5 opacity-100 z-10">
+             {privateTicketCount > 0 && (
+                 <Tooltip>
+                    <TooltipTrigger asChild>
+                        <div className="relative">
+                            <Button variant="destructive" size="icon" className="h-7 w-7">
+                                <Bell className="h-4 w-4" />
+                            </Button>
+                            <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-red-600 text-white text-xs">
+                                {privateTicketCount}
+                            </span>
+                        </div>
+                    </TooltipTrigger>
+                    <TooltipContent side="left"><p>Você tem {privateTicketCount} tickets privados</p></TooltipContent>
+                </Tooltip>
+             )}
              <AlertDialog>
               <Tooltip>
                 <TooltipTrigger asChild>
                     <AlertDialogTrigger asChild>
-                        <Button variant="destructive" size="icon" className="h-7 w-7">
+                        <Button variant="destructive" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity">
                             <Trash2 className="h-4 w-4" />
                         </Button>
                     </AlertDialogTrigger>
                 </TooltipTrigger>
-                <TooltipContent><p>Deletar</p></TooltipContent>
+                <TooltipContent side="left"><p>Deletar</p></TooltipContent>
               </Tooltip>
               <AlertDialogContent>
                 <AlertDialogHeader>
@@ -273,6 +289,7 @@ export function TreeNode({ node, onUpdate, onAddChild, onRemove, onMoveNode, onC
                   onContractSettingsChange={onContractSettingsChange}
                   onOpenTicketModal={onOpenTicketModal}
                   onToggleVisibility={onToggleVisibility}
+                  privateTicketCount={privateTicketCount}
                   contractSettings={contractSettings}
                 />
               </div>
@@ -284,5 +301,3 @@ export function TreeNode({ node, onUpdate, onAddChild, onRemove, onMoveNode, onC
     </TooltipProvider>
   );
 }
-
-    

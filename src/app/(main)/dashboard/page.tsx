@@ -128,8 +128,12 @@ export default function DashboardPage() {
     }
   }, [messages, isBrowser]);
 
+  const publicMessages = useMemo(() => {
+    return messages.filter(msg => msg.visibility !== 'privado');
+  }, [messages]);
+
   const ticketCounts = useMemo(() => {
-    return messages.reduce((acc, msg) => {
+    return publicMessages.reduce((acc, msg) => {
       if (msg.status === 'Finalizado') {
         acc.finalizado++;
       } else {
@@ -147,7 +151,7 @@ export default function DashboardPage() {
       }
       return acc;
     }, { rotina: 0, alerta: 0, critico: 0, finalizado: 0 });
-  }, [messages]);
+  }, [publicMessages]);
 
   const handleSelectSupervisor = (nodeId: string | null) => {
       if (nodeId === null) {
@@ -183,7 +187,7 @@ export default function DashboardPage() {
   const contractAlertLevels = useMemo(() => {
     const alertMap = new Map<string, 'critical' | 'warning' | 'none'>();
     supervisorContracts.forEach(contract => {
-        const contractMessages = messages.filter(msg => msg.contractName === contract.name && msg.status !== 'Finalizado');
+        const contractMessages = publicMessages.filter(msg => msg.contractName === contract.name && msg.status !== 'Finalizado');
         let level: 'critical' | 'warning' | 'none' = 'none';
 
         if (contractMessages.some(msg => msg.urgency === 'Crítico')) {
@@ -194,24 +198,37 @@ export default function DashboardPage() {
         alertMap.set(contract.id, level);
     });
     return alertMap;
-  }, [supervisorContracts, messages]);
+  }, [supervisorContracts, publicMessages]);
 
   const filteredMessages = useMemo(() => {
+    let displayMessages = messages;
+    
+    // If a supervisor is selected, show their private tickets as well
+    if (selectedSupervisor) {
+      displayMessages = messages.filter(msg => msg.visibility !== 'privado' || msg.recipientId === selectedSupervisor.id);
+    } else {
+      displayMessages = messages.filter(msg => msg.visibility !== 'privado');
+    }
+
     if (selectedContract) {
-      return messages.filter(msg => msg.contractName === selectedContract.name);
+      return displayMessages.filter(msg => msg.contractName === selectedContract.name);
     }
     if (selectedSupervisor) {
       const supervisorContractNames = contracts
         .filter(c => c.supervisorId === selectedSupervisor.id)
         .map(c => c.name);
-      return messages.filter(msg => supervisorContractNames.includes(msg.contractName));
+      
+      // Show all tickets for selected supervisor's contracts OR private tickets for them
+      return displayMessages.filter(msg => 
+          supervisorContractNames.includes(msg.contractName) || msg.recipientId === selectedSupervisor.id
+      );
     }
-    return messages;
+    return displayMessages;
   }, [selectedContract, selectedSupervisor, messages, contracts]);
 
   const pendingTicketsForModal = useMemo(() => {
     if (!viewingContractTickets) return [];
-    return messages.filter(msg => msg.contractName === viewingContractTickets.name && msg.status !== 'Finalizado');
+    return messages.filter(msg => msg.contractName === viewingContractTickets.name && msg.status !== 'Finalizado' && msg.visibility !== 'privado');
   }, [viewingContractTickets, messages]);
 
   const teamForModal = useMemo(() => {
@@ -336,7 +353,7 @@ export default function DashboardPage() {
               ? `Tickets para ${selectedContract.name}` 
               : selectedSupervisor 
               ? `Tickets de ${selectedSupervisor.name}`
-              : 'Painel de Tickets'
+              : 'Painel de Tickets Públicos'
             }
           </h1>
           {(selectedSupervisor || selectedContract) && (

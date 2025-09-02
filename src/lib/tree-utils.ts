@@ -117,3 +117,17 @@ export function removeNodeFromTree(tree: OrgNode, nodeId: string): OrgNode {
 
   return newTree;
 }
+
+export function getAllNodes(tree: OrgNode): OrgNode[] {
+  const nodes: OrgNode[] = [];
+
+  function traverse(node: OrgNode) {
+    nodes.push(node);
+    if (node.children) {
+      node.children.forEach(traverse);
+    }
+  }
+
+  traverse(tree);
+  return nodes;
+}

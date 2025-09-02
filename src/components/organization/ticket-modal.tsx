@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -24,17 +25,19 @@ import {
 import { ScrollArea } from '../ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
 import type { OrgNode, Message, Contract } from '@/lib/data';
+import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 
 type TicketModalProps = {
   isOpen: boolean;
   onClose: () => void;
   onSave: (values: Omit<Message, 'id' | 'createdAt' | 'author'>) => void;
   node: OrgNode | null;
+  allNodes: OrgNode[];
 };
 
 const CONTRACTS_STORAGE_KEY = 'arpolarContracts';
 
-export function TicketModal({ isOpen, onClose, onSave, node }: TicketModalProps) {
+export function TicketModal({ isOpen, onClose, onSave, node, allNodes }: TicketModalProps) {
   const { toast } = useToast();
 
   // Required fields
@@ -44,6 +47,9 @@ export function TicketModal({ isOpen, onClose, onSave, node }: TicketModalProps)
   const [message, setMessage] = useState('');
   const [urgency, setUrgency] = useState('Rotina');
   const [status, setStatus] = useState('Em andamento');
+  const [visibility, setVisibility] = useState<'publico' | 'privado'>('publico');
+  const [recipientId, setRecipientId] = useState('');
+
 
   // Optional fields
   const [equipmentName, setEquipmentName] = useState('');
@@ -70,6 +76,8 @@ export function TicketModal({ isOpen, onClose, onSave, node }: TicketModalProps)
         setMessage('');
         setUrgency('Rotina');
         setStatus('Em andamento');
+        setVisibility('publico');
+        setRecipientId('');
         setEquipmentName('');
         setEquipmentBrand('');
         setEquipmentModel('');
@@ -77,12 +85,28 @@ export function TicketModal({ isOpen, onClose, onSave, node }: TicketModalProps)
       }
     }
   }, [node, isOpen]);
+  
+  useEffect(() => {
+    // Reset recipient if visibility changes back to public
+    if (visibility === 'publico') {
+      setRecipientId('');
+    }
+  }, [visibility]);
 
   const handleSubmit = () => {
     if (!contractName || !supervisor || !contact || !message) {
       toast({
         title: "Campos Obrigatórios",
         description: "Por favor, preencha todos os campos obrigatórios.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (visibility === 'privado' && !recipientId) {
+       toast({
+        title: "Destinatário Obrigatório",
+        description: "Selecione um destinatário para o ticket privado.",
         variant: "destructive",
       });
       return;
@@ -95,6 +119,8 @@ export function TicketModal({ isOpen, onClose, onSave, node }: TicketModalProps)
       message,
       urgency,
       status,
+      visibility,
+      recipientId: visibility === 'privado' ? recipientId : undefined,
       equipmentName,
       equipmentBrand,
       equipmentModel,
@@ -103,7 +129,7 @@ export function TicketModal({ isOpen, onClose, onSave, node }: TicketModalProps)
     onClose();
     toast({
         title: "Ticket Criado!",
-        description: "O ticket foi criado e enviado para o painel.",
+        description: "O ticket foi criado e enviado.",
     });
   };
 
@@ -118,6 +144,33 @@ export function TicketModal({ isOpen, onClose, onSave, node }: TicketModalProps)
         </DialogHeader>
         <ScrollArea className="max-h-[70vh] -mx-6 px-6">
           <div className="grid gap-6 py-4">
+            <fieldset className="grid grid-cols-1 gap-4 p-4 border rounded-lg">
+              <legend className="-ml-1 px-1 text-sm font-medium">Visibilidade</legend>
+              <RadioGroup value={visibility} onValueChange={(value) => setVisibility(value as 'publico' | 'privado')} className="flex gap-4">
+                  <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="publico" id="r1" />
+                      <Label htmlFor="r1">Público (visível no painel geral)</Label>
+                  </div>
+                   <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="privado" id="r2" />
+                      <Label htmlFor="r2">Privado (direcionado a uma pessoa)</Label>
+                  </div>
+              </RadioGroup>
+              {visibility === 'privado' && (
+                 <div className="grid gap-2">
+                    <Label htmlFor="recipient">Destinatário <span className="text-red-500">*</span></Label>
+                    <Select onValueChange={setRecipientId} value={recipientId}>
+                        <SelectTrigger><SelectValue placeholder="Selecione o destinatário" /></SelectTrigger>
+                        <SelectContent>
+                        {allNodes.filter(n => n.id !== 'arpolar').map((n) => (
+                            <SelectItem key={n.id} value={n.id}>{n.name} ({n.role})</SelectItem>
+                        ))}
+                        </SelectContent>
+                    </Select>
+                </div>
+              )}
+            </fieldset>
+
             <fieldset className="grid grid-cols-1 gap-4 p-4 border rounded-lg">
               <legend className="-ml-1 px-1 text-sm font-medium">Informações do Ticket</legend>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

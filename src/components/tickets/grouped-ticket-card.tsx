@@ -24,6 +24,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from '@/components/ui/tooltip';
+import { differenceInHours } from 'date-fns';
 
 type StatusInfo = {
   label: string;
@@ -35,16 +36,31 @@ export function GroupedTicketCard({ ticket, onDelete }: { ticket: Message; onDel
     if (ticket.status === 'Finalizado') {
       return { label: 'Finalizado', colorClass: 'bg-status-resolved' };
     }
-    switch (ticket.urgency) {
+
+    let urgency = ticket.urgency;
+    let label = ticket.urgency;
+
+    if (ticket.urgency === 'Rotina') {
+        const hoursSinceCreation = differenceInHours(new Date(), new Date(ticket.createdAt));
+        if (hoursSinceCreation >= 72) {
+            urgency = 'Crítico';
+            label = 'Crítico (escalado)';
+        } else if (hoursSinceCreation >= 48) {
+            urgency = 'Atenção';
+            label = 'Atenção (escalado)';
+        }
+    }
+
+    switch (urgency) {
       case 'Crítico':
-        return { label: 'Crítico', colorClass: 'bg-status-critical' };
+        return { label, colorClass: 'bg-status-critical' };
       case 'Atenção':
-        return { label: 'Atenção', colorClass: 'bg-destructive' };
+        return { label, colorClass: 'bg-destructive' };
       case 'Rotina':
       default:
-        return { label: 'Rotina', colorClass: 'bg-status-new' };
+        return { label, colorClass: 'bg-status-new' };
     }
-  }, [ticket.status, ticket.urgency]);
+  }, [ticket.status, ticket.urgency, ticket.createdAt]);
 
   return (
     <Card className="flex flex-col transition-shadow duration-300 h-full shadow-md hover:shadow-lg relative group">

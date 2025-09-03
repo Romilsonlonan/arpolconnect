@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow, differenceInHours } from 'date-fns';
 import type { Message } from '@/lib/data';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -37,23 +37,39 @@ export function MessageCard({ message }: { message: Message }) {
 
   useEffect(() => {
     setIsClient(true);
-    setTimeAgo(formatDistanceToNow(new Date(message.createdAt), { addSuffix: true }));
+    const updateTimes = () => {
+        setTimeAgo(formatDistanceToNow(new Date(message.createdAt), { addSuffix: true }));
+    };
+    updateTimes();
+    const interval = setInterval(updateTimes, 60000); // Update every minute
+    return () => clearInterval(interval);
   }, [message.createdAt]);
 
   const statusInfo = useMemo((): StatusInfo => {
     if (message.status === 'Finalizado') {
       return { label: 'Finalizado', colorClass: 'bg-status-resolved', pulse: false };
     }
-    switch (message.urgency) {
+
+    let urgency = message.urgency;
+    if (message.urgency === 'Rotina') {
+        const hoursSinceCreation = differenceInHours(new Date(), new Date(message.createdAt));
+        if (hoursSinceCreation >= 72) {
+            urgency = 'Crítico';
+        } else if (hoursSinceCreation >= 48) {
+            urgency = 'Atenção';
+        }
+    }
+
+    switch (urgency) {
       case 'Crítico':
-        return { label: 'Crítico', colorClass: 'bg-status-critical text-white', pulse: true, shadowClass: 'animate-shadow-pulse-critical' };
+        return { label: 'Crítico (escalado)', colorClass: 'bg-status-critical text-white', pulse: true, shadowClass: 'animate-shadow-pulse-critical' };
       case 'Atenção':
-        return { label: 'Atenção', colorClass: 'bg-destructive', pulse: true, shadowClass: 'animate-shadow-pulse-warning' };
+        return { label: 'Atenção (escalado)', colorClass: 'bg-destructive', pulse: true, shadowClass: 'animate-shadow-pulse-warning' };
       case 'Rotina':
       default:
         return { label: 'Rotina', colorClass: 'bg-status-new', pulse: false };
     }
-  }, [message.status, message.urgency]);
+  }, [message.status, message.urgency, message.createdAt]);
 
   return (
     <Card className={cn(

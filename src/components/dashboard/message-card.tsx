@@ -31,45 +31,50 @@ type StatusInfo = {
   shadowClass?: string;
 };
 
+const initialStatusInfo = (message: Message): StatusInfo => {
+    if (message.status === 'Finalizado') {
+        return { label: 'Finalizado', colorClass: 'bg-status-resolved', pulse: false };
+    }
+    switch (message.urgency) {
+        case 'Crítico':
+            return { label: 'Crítico', colorClass: 'bg-status-critical text-white', pulse: true, shadowClass: 'animate-shadow-pulse-critical' };
+        case 'Atenção':
+            return { label: 'Atenção', colorClass: 'bg-destructive', pulse: true, shadowClass: 'animate-shadow-pulse-warning' };
+        default:
+            return { label: 'Rotina', colorClass: 'bg-status-new', pulse: false };
+    }
+};
+
 export function MessageCard({ message }: { message: Message }) {
   const [timeAgo, setTimeAgo] = useState('');
   const [isClient, setIsClient] = useState(false);
+  const [statusInfo, setStatusInfo] = useState<StatusInfo>(() => initialStatusInfo(message));
+
 
   useEffect(() => {
     setIsClient(true);
+    
     const updateTimes = () => {
         setTimeAgo(formatDistanceToNow(new Date(message.createdAt), { addSuffix: true }));
+
+        if (message.status !== 'Finalizado' && message.urgency === 'Rotina') {
+            const hoursSinceCreation = differenceInHours(new Date(), new Date(message.createdAt));
+            if (hoursSinceCreation >= 72) {
+                setStatusInfo({ label: 'Crítico (escalado)', colorClass: 'bg-status-critical text-white', pulse: true, shadowClass: 'animate-shadow-pulse-critical' });
+            } else if (hoursSinceCreation >= 48) {
+                setStatusInfo({ label: 'Atenção (escalado)', colorClass: 'bg-destructive', pulse: true, shadowClass: 'animate-shadow-pulse-warning' });
+            } else {
+                 setStatusInfo(initialStatusInfo(message));
+            }
+        }
     };
+    
     updateTimes();
     const interval = setInterval(updateTimes, 60000); // Update every minute
     return () => clearInterval(interval);
-  }, [message.createdAt]);
 
-  const statusInfo = useMemo((): StatusInfo => {
-    if (message.status === 'Finalizado') {
-      return { label: 'Finalizado', colorClass: 'bg-status-resolved', pulse: false };
-    }
+  }, [message]);
 
-    let urgency = message.urgency;
-    if (message.urgency === 'Rotina') {
-        const hoursSinceCreation = differenceInHours(new Date(), new Date(message.createdAt));
-        if (hoursSinceCreation >= 72) {
-            urgency = 'Crítico';
-        } else if (hoursSinceCreation >= 48) {
-            urgency = 'Atenção';
-        }
-    }
-
-    switch (urgency) {
-      case 'Crítico':
-        return { label: 'Crítico (escalado)', colorClass: 'bg-status-critical text-white', pulse: true, shadowClass: 'animate-shadow-pulse-critical' };
-      case 'Atenção':
-        return { label: 'Atenção (escalado)', colorClass: 'bg-destructive', pulse: true, shadowClass: 'animate-shadow-pulse-warning' };
-      case 'Rotina':
-      default:
-        return { label: 'Rotina', colorClass: 'bg-status-new', pulse: false };
-    }
-  }, [message.status, message.urgency, message.createdAt]);
 
   return (
     <Card className={cn(

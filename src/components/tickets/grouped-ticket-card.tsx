@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import type { Message } from '@/lib/data';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -31,36 +31,42 @@ type StatusInfo = {
   colorClass: string;
 };
 
-export function GroupedTicketCard({ ticket, onDelete }: { ticket: Message; onDelete: () => void; }) {
-  const statusInfo = useMemo((): StatusInfo => {
+const initialStatusInfo = (ticket: Message): StatusInfo => {
     if (ticket.status === 'Finalizado') {
-      return { label: 'Finalizado', colorClass: 'bg-status-resolved' };
+        return { label: 'Finalizado', colorClass: 'bg-status-resolved' };
     }
-
-    let urgency = ticket.urgency;
-    let label = ticket.urgency;
-
-    if (ticket.urgency === 'Rotina') {
-        const hoursSinceCreation = differenceInHours(new Date(), new Date(ticket.createdAt));
-        if (hoursSinceCreation >= 72) {
-            urgency = 'Crítico';
-            label = 'Crítico (escalado)';
-        } else if (hoursSinceCreation >= 48) {
-            urgency = 'Atenção';
-            label = 'Atenção (escalado)';
-        }
+    switch (ticket.urgency) {
+        case 'Crítico':
+            return { label: 'Crítico', colorClass: 'bg-status-critical' };
+        case 'Atenção':
+            return { label: 'Atenção', colorClass: 'bg-destructive' };
+        default:
+            return { label: 'Rotina', colorClass: 'bg-status-new' };
     }
+};
 
-    switch (urgency) {
-      case 'Crítico':
-        return { label, colorClass: 'bg-status-critical' };
-      case 'Atenção':
-        return { label, colorClass: 'bg-destructive' };
-      case 'Rotina':
-      default:
-        return { label, colorClass: 'bg-status-new' };
-    }
-  }, [ticket.status, ticket.urgency, ticket.createdAt]);
+export function GroupedTicketCard({ ticket, onDelete }: { ticket: Message; onDelete: () => void; }) {
+  const [statusInfo, setStatusInfo] = useState<StatusInfo>(() => initialStatusInfo(ticket));
+
+  useEffect(() => {
+    const updateStatus = () => {
+      if (ticket.status !== 'Finalizado' && ticket.urgency === 'Rotina') {
+          const hoursSinceCreation = differenceInHours(new Date(), new Date(ticket.createdAt));
+          if (hoursSinceCreation >= 72) {
+              setStatusInfo({ label: 'Crítico (escalado)', colorClass: 'bg-status-critical' });
+          } else if (hoursSinceCreation >= 48) {
+              setStatusInfo({ label: 'Atenção (escalado)', colorClass: 'bg-destructive' });
+          } else {
+              setStatusInfo(initialStatusInfo(ticket));
+          }
+      }
+    };
+
+    updateStatus();
+    const interval = setInterval(updateStatus, 60000);
+    return () => clearInterval(interval);
+  }, [ticket]);
+
 
   return (
     <Card className="flex flex-col transition-shadow duration-300 h-full shadow-md hover:shadow-lg relative group">

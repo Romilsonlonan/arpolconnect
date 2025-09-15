@@ -12,7 +12,7 @@ export default function LoginPage() {
   return (
     <div 
       className="flex items-center justify-center min-h-screen bg-cover bg-center"
-      style={{ backgroundImage: "url('https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=2070&auto=format&fit=crop')" }}
+      style={{ backgroundImage: "url('https://i.ibb.co/zVzbGGgD/fundoaqc.jpg')" }}
     >
       <Card className="mx-auto max-w-sm w-full bg-white/30 backdrop-blur-lg border border-white/50 shadow-lg">
         <CardHeader className="space-y-4">

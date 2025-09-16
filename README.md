@@ -1,8 +1,7 @@
 # Firebase Studio
 
+<!-- Este comentário garante que o Git veja uma nova alteração. -->
 <!-- Commit inicial -->
 This is a NextJS starter in Firebase Studio.
-
-To get started, take a look at src/app/page.tsx.
 
 Repositório GitHub: https://github.com/roarpolar/arpolconnect

@@ -1,4 +1,3 @@
-
 'use client';
 
 import Link from 'next/link';
@@ -12,7 +11,7 @@ export default function LoginPage() {
   return (
     <div 
       className="flex items-center justify-center min-h-screen bg-cover bg-center"
-      style={{ backgroundImage: "url('https://i.ibb.co/zVzbGGgD/fundoaqc.jpg')" }}
+      style={{ backgroundImage: "url('https://i.ibb.co/Z1pWCjK4/fundo-login-arpolconnect.jpg')" }}
     >
       <Card className="mx-auto max-w-sm w-full bg-white/30 backdrop-blur-lg border border-white/50 shadow-lg">
         <CardHeader className="space-y-4">

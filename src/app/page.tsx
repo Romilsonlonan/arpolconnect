@@ -8,6 +8,21 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { KeyRound, ShieldCheck } from 'lucide-react';
+import { useState } from 'react';
+import { useToast } from '@/hooks/use-toast';
+import { useRouter } from 'next/navigation';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from '@/components/ui/alert-dialog';
 
 const userRoles = [
     'Diretor', 
@@ -23,12 +38,70 @@ const userRoles = [
     'Supervisor de Qualidade'
 ];
 
+const ADMIN_EMAIL = "romilson@arpolar.com.br";
+const ADMIN_PASS = "senha1234";
+
+
 export default function LoginPage() {
+  const { toast } = useToast();
+  const router = useRouter();
+  const [adminEmail, setAdminEmail] = useState('');
+  const [adminPassword, setAdminPassword] = useState('');
+
+  const handleAdminLogin = () => {
+    if (adminEmail === ADMIN_EMAIL && adminPassword === ADMIN_PASS) {
+      toast({
+        title: "Login de Administrador Bem-sucedido!",
+        description: "Redirecionando para o painel de administração.",
+      });
+      router.push('/admin');
+    } else {
+      toast({
+        title: "Credenciais Inválidas",
+        description: "O e-mail ou a senha de administrador estão incorretos.",
+        variant: "destructive",
+      });
+    }
+  };
+
   return (
     <div 
       className="flex items-center justify-center min-h-screen bg-cover bg-center p-4"
-      style={{ backgroundImage: "url('https://i.ibb.co/Z1pWCjK4/fundo-login-arpolconnect.jpg')" }}
+      style={{ backgroundImage: "url('https://i.ibb.co/zVzbGGgD/fundoaqc.jpg')" }}
     >
+      <AlertDialog>
+        <AlertDialogTrigger asChild>
+            <Button variant="ghost" size="icon" className="absolute top-4 right-4 text-white bg-black/20 hover:bg-black/50 hover:text-white">
+                <KeyRound className="h-6 w-6" />
+            </Button>
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+            <AlertDialogHeader>
+                <AlertDialogTitle className="flex items-center gap-2">
+                    <ShieldCheck />
+                    Acesso Restrito ao Administrador
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                    Por favor, insira as credenciais de administrador para continuar.
+                </AlertDialogDescription>
+            </AlertDialogHeader>
+            <div className="grid gap-4 py-4">
+                <div className="grid gap-2">
+                    <Label htmlFor="admin-email">E-mail</Label>
+                    <Input id="admin-email" type="email" placeholder="admin@arpolar.com.br" value={adminEmail} onChange={(e) => setAdminEmail(e.target.value)} />
+                </div>
+                <div className="grid gap-2">
+                    <Label htmlFor="admin-password">Senha</Label>
+                    <Input id="admin-password" type="password" value={adminPassword} onChange={(e) => setAdminPassword(e.target.value)} />
+                </div>
+            </div>
+            <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction onClick={handleAdminLogin}>Entrar</AlertDialogAction>
+            </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <Card className="mx-auto max-w-sm w-full bg-white/30 backdrop-blur-lg border border-white/50 shadow-lg">
         <CardHeader className="space-y-4">
           <div className="flex justify-center text-primary">
@@ -51,7 +124,7 @@ export default function LoginPage() {
               <Label htmlFor="password" className="text-slate-800">Senha</Label>
               <Input id="password" type="password" required className="bg-white/50 border-white/60" />
             </div>
-            <div className="grid gap-2">
+             <div className="grid gap-2">
               <Label htmlFor="confirm-password" className="text-slate-800">Confirmar Senha</Label>
               <Input id="confirm-password" type="password" required className="bg-white/50 border-white/60" />
             </div>

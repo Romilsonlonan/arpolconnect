@@ -19,6 +19,7 @@ import {
   ClipboardList,
   Settings,
   BrainCircuit,
+  ShieldCheck,
 } from 'lucide-react';
 
 import {
@@ -99,6 +100,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
       { href: '/evaluation', icon: <FileText />, label: 'Avaliação' },
       { href: '/dds-info', icon: <Presentation />, label: 'DDS Info' },
       { href: '/support', icon: <BrainCircuit />, label: 'Suporte IA' },
+      { href: '/admin', icon: <ShieldCheck />, label: 'Admin' },
     ];
 
     return (

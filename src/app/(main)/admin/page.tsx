@@ -570,7 +570,7 @@ export default function AdminPage() {
                     key={contract.id} 
                     className={cn(
                         'transition-colors',
-                        contract.status === 'Inativo' ? 'bg-muted/50 text-muted-foreground' : 'cursor-pointer hover:bg-accent/50',
+                        contract.status === 'Inativo' ? 'bg-muted/50 text-muted-foreground' : 'cursor-pointer hover:bg-yellow-100',
                         selectedContractForInfo?.id === contract.id && 'bg-accent'
                     )} 
                     onClick={() => setSelectedContractForInfo(contract)}
@@ -670,4 +670,5 @@ export default function AdminPage() {
       )}
     </div>
   );
-}
+
+    

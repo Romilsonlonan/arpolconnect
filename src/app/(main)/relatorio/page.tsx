@@ -32,7 +32,6 @@ const initialCovers: ReportCover[] = [
         title: 'Relatório Arpolar 2025',
         subtitle: 'agosto',
         imageUrl: 'https://i.ibb.co/1nCg9m3/report-cover-example.png',
-        characterUrl: 'https://i.ibb.co/yBNt1b1/char.png'
     }
 ];
 

@@ -40,7 +40,7 @@ import {
 import { getAvatar, saveAvatar } from '@/lib/avatar-storage';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
-import { differenceInDays, isValid, format } from 'date-fns';
+import { differenceInDays, isValid, format, startOfDay } from 'date-fns';
 import { Label } from '@/components/ui/label';
 import { removeNodeFromTree } from '@/lib/tree-utils';
 
@@ -61,7 +61,7 @@ function DocStatusCard({ contract }: { contract: Contract }) {
             };
         }
 
-        // Adjust for timezone issues by appending T00:00:00
+        // Adjust for timezone issues by appending T00:00:00 and using startOfDay
         const startDate = new Date(`${contract.docStartDate}T00:00:00`);
         const expiryDate = new Date(`${contract.docEndDate}T00:00:00`);
         
@@ -69,7 +69,7 @@ function DocStatusCard({ contract }: { contract: Contract }) {
              return { daysRemaining: null, statusColor: 'bg-gray-500', statusText: 'Datas inválidas' };
         }
 
-        const daysRemaining = differenceInDays(expiryDate, new Date());
+        const daysRemaining = differenceInDays(startOfDay(expiryDate), startOfDay(new Date()));
 
         if (daysRemaining < 0) {
             return { daysRemaining, statusColor: 'bg-black', statusText: 'Vencida' };

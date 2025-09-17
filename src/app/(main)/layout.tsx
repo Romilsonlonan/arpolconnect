@@ -20,6 +20,7 @@ import {
   Settings,
   BrainCircuit,
   ShieldCheck,
+  BarChart2,
 } from 'lucide-react';
 
 import {
@@ -95,6 +96,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
       { href: '/dashboard', icon: <MessageSquare />, label: 'Painel de Tickets' },
       { href: '/tickets', icon: <ClipboardList />, label: 'Tickets por Responsável' },
       { href: '/organograma', icon: <GitMerge />, label: 'Organograma' },
+      { href: '/relatorio', icon: <BarChart2 />, label: 'Relatório' },
       { href: '/evaluation', icon: <FileText />, label: 'Avaliação' },
       { href: '/dds-info', icon: <Presentation />, label: 'DDS Info' },
       { href: '/support', icon: <BrainCircuit />, label: 'Suporte IA' },

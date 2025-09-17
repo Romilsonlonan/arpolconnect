@@ -40,7 +40,7 @@ import {
 import { getAvatar, saveAvatar } from '@/lib/avatar-storage';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
-import { differenceInDays, isValid, format, startOfDay } from 'date-fns';
+import { differenceInDays, isValid, parseISO, format, startOfDay } from 'date-fns';
 import { Label } from '@/components/ui/label';
 import { removeNodeFromTree } from '@/lib/tree-utils';
 
@@ -61,14 +61,15 @@ function DocStatusCard({ contract }: { contract: Contract }) {
             };
         }
 
-        // Adjust for timezone issues by appending T00:00:00 and using startOfDay
-        const startDate = new Date(`${contract.docStartDate}T00:00:00`);
-        const expiryDate = new Date(`${contract.docEndDate}T00:00:00`);
+        // Use parseISO to correctly handle YYYY-MM-DD strings
+        const startDate = parseISO(contract.docStartDate);
+        const expiryDate = parseISO(contract.docEndDate);
         
         if (!isValid(startDate) || !isValid(expiryDate)) {
              return { daysRemaining: null, statusColor: 'bg-gray-500', statusText: 'Datas inválidas' };
         }
-
+        
+        // Use startOfDay to compare just the dates, ignoring time
         const daysRemaining = differenceInDays(startOfDay(expiryDate), startOfDay(new Date()));
 
         if (daysRemaining < 0) {
@@ -85,8 +86,8 @@ function DocStatusCard({ contract }: { contract: Contract }) {
     };
 
     const { daysRemaining, statusColor, statusText } = getStatus();
-    const startDate = contract.docStartDate ? new Date(`${contract.docStartDate}T00:00:00`) : null;
-    const expiryDate = contract.docEndDate ? new Date(`${contract.docEndDate}T00:00:00`) : null;
+    const startDate = contract.docStartDate ? parseISO(contract.docStartDate) : null;
+    const expiryDate = contract.docEndDate ? parseISO(contract.docEndDate) : null;
 
 
     return (

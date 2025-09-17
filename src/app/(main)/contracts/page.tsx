@@ -18,6 +18,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
+  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { removeNodeFromTree } from '@/lib/tree-utils';
 import { ContractDocsModal } from '@/components/contracts/contract-docs-modal';
@@ -122,17 +123,16 @@ export default function ContractsPage() {
         setCurrentUser(user || null);
 
         let visibleContracts: Contract[] = [];
-        if (user && (user.role === 'Administrador' || user.permissions.canViewAllContracts)) {
-            // Admin or user with global view permission sees all contracts
+        if (user && user.role === 'Administrador') {
+            // Admin sees all contracts, bypassing other permission checks.
+            visibleContracts = allContracts;
+        } else if (user && user.permissions.canViewAllContracts) {
+            // User with global view permission sees all contracts
             visibleContracts = allContracts;
         } else if (user) {
             // User with specific permissions
             const allowedIds = new Set(user.permissions.allowedContractIds);
             visibleContracts = allContracts.filter(c => allowedIds.has(c.id));
-        } else {
-             // Fallback for when no specific user is identified: show all contracts for simplicity.
-             // This ensures newly created contracts are visible without a full login system.
-            visibleContracts = allContracts;
         }
         
         setContracts(visibleContracts);
@@ -321,3 +321,5 @@ export default function ContractsPage() {
     </div>
   );
 }
+
+    

@@ -5,7 +5,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { PlusCircle, User, MapPin, Pencil, Trash2 } from 'lucide-react';
-import { type OrgNode, type Contract, initialOrgTree } from '@/lib/data';
+import { type OrgNode, type Contract, initialOrgTree, type User as AppUser } from '@/lib/data';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { ContractModal } from '@/components/contracts/contract-modal';
@@ -25,6 +25,8 @@ import { removeNodeFromTree } from '@/lib/tree-utils';
 
 const CONTRACTS_STORAGE_KEY = 'arpolarContracts';
 const ORG_CHART_STORAGE_KEY = 'orgChartTree';
+const USERS_STORAGE_KEY = 'arpolarUsers';
+const CURRENT_USER_EMAIL = 'romilson@arpolar.com.br'; // This should be dynamic in a real app
 
 function ContractCard({ contract, onEdit, onDelete }: { contract: Contract; onEdit: () => void; onDelete: () => void; }) {
   return (
@@ -124,14 +126,29 @@ export default function ContractsPage() {
       try {
         const savedContracts = localStorage.getItem(CONTRACTS_STORAGE_KEY);
         const orgTree = JSON.parse(localStorage.getItem(ORG_CHART_STORAGE_KEY) || JSON.stringify(initialOrgTree));
-        const supervisorNodes = findSupervisorsInTree(orgTree);
-        const visibleSupervisorIds = new Set(supervisorNodes.map(s => s.id));
-        
-        const allContracts = savedContracts ? JSON.parse(savedContracts) : [];
-        const visibleContracts = allContracts.filter((c: Contract) => visibleSupervisorIds.has(c.supervisorId));
+        const savedUsers = localStorage.getItem(USERS_STORAGE_KEY);
 
+        const allContracts: Contract[] = savedContracts ? JSON.parse(savedContracts) : [];
+        const allUsers: AppUser[] = savedUsers ? JSON.parse(savedUsers) : [];
+
+        // Assuming a logged-in user. In a real app, this would come from an auth context.
+        const currentUser = allUsers.find(u => u.email === CURRENT_USER_EMAIL) || allUsers.find(u => u.role === 'Administrador');
+
+        let visibleContracts: Contract[] = [];
+        if (currentUser) {
+            if (currentUser.permissions.canViewAllContracts) {
+                visibleContracts = allContracts;
+            } else {
+                const allowedIds = new Set(currentUser.permissions.allowedContractIds);
+                visibleContracts = allContracts.filter(c => allowedIds.has(c.id));
+            }
+        } else {
+             // Fallback for when no user is found, show no contracts.
+             console.warn("Current user not found. Displaying no contracts.");
+        }
+        
         setContracts(visibleContracts);
-        setSupervisors(supervisorNodes);
+        setSupervisors(findSupervisorsInTree(orgTree));
 
       } catch (error) {
         console.error("Failed to load data from localStorage", error);
@@ -251,7 +268,7 @@ export default function ContractsPage() {
       {contracts.length === 0 ? (
         <div className="flex flex-col items-center justify-center flex-1 py-12 text-center bg-gray-100/50 rounded-lg">
             <p className="text-lg font-semibold text-muted-foreground">Nenhum contrato encontrado.</p>
-            <p className="mt-2 text-sm text-muted-foreground">Adicione um novo contrato ou verifique a visibilidade dos supervisores no organograma.</p>
+            <p className="mt-2 text-sm text-muted-foreground">Verifique suas permissões ou adicione um novo contrato.</p>
         </div>
       ) : (
          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

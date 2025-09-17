@@ -99,10 +99,14 @@ export type User = {
 
 export type ReportCover = {
     id: string;
+    type: 'cover' | 'motivational';
     title: string;
     subtitle: string;
     imageUrl: string;
-    characterUrl?: string; // Optional character image
+    // Motivational fields
+    quote?: string;
+    quoteAuthor?: string;
+    characterImageUrl?: string;
 };
 
 export const initialUsers: User[] = [

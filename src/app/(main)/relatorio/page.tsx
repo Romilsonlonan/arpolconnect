@@ -29,9 +29,20 @@ const REPORTS_STORAGE_KEY = 'arpolarReports';
 const initialCovers: ReportCover[] = [
     {
         id: 'cover-initial-1',
+        type: 'cover',
         title: 'Relatório Arpolar 2025',
         subtitle: 'agosto',
         imageUrl: 'https://i.ibb.co/1nCg9m3/report-cover-example.png',
+    },
+    {
+        id: 'cover-initial-2',
+        type: 'motivational',
+        title: 'Motivacional',
+        subtitle: '',
+        imageUrl: 'https://images.unsplash.com/photo-1506784983877-45594efa4c85?q=80&w=2069&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
+        quote: 'Seja um padrão de qualidade. Algumas pessoas não estão acostumadas a um ambiente onde a excelência é esperada.',
+        quoteAuthor: 'Steve Jobs',
+        characterImageUrl: 'https://i.ibb.co/yYvyfB9/steve-jobs.png',
     }
 ];
 
@@ -133,7 +144,7 @@ export default function ReportPage() {
                 {isAdmin && (
                     <Button onClick={() => handleOpenModal(null)}>
                         <PlusCircle className="mr-2" />
-                        Adicionar Nova Capa
+                        Adicionar Nova Página
                     </Button>
                 )}
             </div>
@@ -144,16 +155,41 @@ export default function ReportPage() {
                         <CarouselContent>
                             {covers.map((cover) => (
                                 <CarouselItem key={cover.id}>
-                                    <div className="relative w-full aspect-[16/9] bg-gray-200">
+                                    <div className="relative w-full aspect-[16/9] bg-gray-800">
                                         <Image
                                             src={cover.imageUrl}
                                             alt={cover.title}
                                             fill
-                                            className="object-cover"
+                                            className="object-cover opacity-30"
                                             priority
                                         />
-                                        <div className="absolute inset-0 bg-black/10 flex flex-col items-center justify-center text-white p-8">
-                                            {/* Content can be placed here if needed over the image */}
+                                        <div className="absolute inset-0 flex flex-col items-center justify-center text-white p-8">
+                                            {cover.type === 'cover' ? (
+                                                <div className="text-center">
+                                                    <h2 className="text-5xl font-bold font-headline">{cover.title}</h2>
+                                                    <p className="text-2xl mt-2">{cover.subtitle}</p>
+                                                </div>
+                                            ) : (
+                                                <Card className="bg-slate-200/90 text-slate-800 max-w-4xl w-full shadow-2xl rounded-2xl">
+                                                    <CardContent className="p-8 md:p-12 text-center">
+                                                        <blockquote className="text-2xl md:text-3xl font-semibold italic">
+                                                            "{cover.quote}"
+                                                        </blockquote>
+                                                        <p className="text-xl md:text-2xl font-medium mt-6">- {cover.quoteAuthor}</p>
+                                                        {cover.characterImageUrl && (
+                                                            <div className="mt-8 flex justify-center">
+                                                                <Image 
+                                                                    src={cover.characterImageUrl}
+                                                                    alt={cover.quoteAuthor || 'Personagem'}
+                                                                    width={120}
+                                                                    height={120}
+                                                                    className="rounded-full object-cover w-24 h-24 md:w-32 md:h-32"
+                                                                />
+                                                            </div>
+                                                        )}
+                                                    </CardContent>
+                                                </Card>
+                                            )}
                                         </div>
                                          {isAdmin && (
                                             <div className="absolute top-4 right-4 flex gap-2 z-10">
@@ -170,7 +206,7 @@ export default function ReportPage() {
                                                         <AlertDialogHeader>
                                                         <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
                                                         <AlertDialogDescription>
-                                                            Esta ação não pode ser desfeita. A capa será removida permanentemente.
+                                                            Esta ação não pode ser desfeita. A página será removida permanentemente.
                                                         </AlertDialogDescription>
                                                         </AlertDialogHeader>
                                                         <AlertDialogFooter>

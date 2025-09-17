@@ -375,7 +375,7 @@ export default function AdminPage() {
                             <Pencil className="mr-2 h-4 w-4" /> Editar
                         </DropdownMenuItem>
                         {user.status === 'Ativo' ? (
-                            <DropdownMenuItem onClick={() => handleToggleUserStatus(user.id, user.status)} className="text-destructive">
+                            <DropdownMenuItem onClick={() => handleToggleUserStatus(user.id, user.status)} className="text-orange-600">
                                 <Trash2 className="mr-2 h-4 w-4" /> Desativar
                             </DropdownMenuItem>
                         ) : (
@@ -437,8 +437,8 @@ export default function AdminPage() {
                           <Pencil className="mr-2 h-4 w-4"/> Editar
                         </DropdownMenuItem>
                         {contract.status === 'Ativo' ? (
-                            <DropdownMenuItem onClick={() => handleToggleContractStatus(contract.id, contract.status)}>
-                                <Trash2 className="mr-2 h-4 w-4 text-orange-500" /> Desativar
+                            <DropdownMenuItem onClick={() => handleToggleContractStatus(contract.id, contract.status)} className="text-orange-600">
+                                <Trash2 className="mr-2 h-4 w-4" /> Desativar
                             </DropdownMenuItem>
                         ) : (
                              <DropdownMenuItem onClick={() => handleToggleContractStatus(contract.id, contract.status)}>
@@ -508,5 +508,7 @@ export default function AdminPage() {
     </div>
   );
 }
+
+    
 
     

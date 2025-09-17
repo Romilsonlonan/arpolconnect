@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { initialOrgTree, type OrgNode, type Contract } from '@/lib/data';
+import { initialOrgTree, type OrgNode, type Contract, type User as AppUser } from '@/lib/data';
 import { TreeNode } from '@/components/organization/tree-node';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
@@ -17,6 +17,7 @@ import { useToast } from '@/hooks/use-toast';
 const ORG_CHART_STORAGE_KEY = 'orgChartTree';
 const DASHBOARD_MESSAGES_KEY = 'dashboardMessages';
 const CONTRACTS_STORAGE_KEY = 'arpolarContracts';
+const USERS_STORAGE_KEY = 'arpolarUsers';
 
 
 export default function OrganogramaPage() {
@@ -25,12 +26,12 @@ export default function OrganogramaPage() {
   const [isClient, setIsClient] = useState(false);
   const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
   const [ticketNode, setTicketNode] = useState<OrgNode | null>(null);
-  const [allNodes, setAllNodes] = useState<OrgNode[]>([]);
+  const [allUsers, setAllUsers] = useState<AppUser[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
 
   // State for Contract Modal
   const [isContractModalOpen, setIsContractModalOpen] = useState(false);
-  const [supervisors, setSupervisors] = useState<OrgNode[]>([]);
+  const [supervisors, setSupervisors] = useState<AppUser[]>([]);
   const [editingContract, setEditingContract] = useState<Contract | null>(null);
 
   const { toast } = useToast();
@@ -39,22 +40,19 @@ export default function OrganogramaPage() {
      try {
       const savedTree = localStorage.getItem(ORG_CHART_STORAGE_KEY);
       const savedMessages = localStorage.getItem(DASHBOARD_MESSAGES_KEY);
+      const savedUsers = localStorage.getItem(USERS_STORAGE_KEY);
+      
+      const allUsers: AppUser[] = savedUsers ? JSON.parse(savedUsers) : [];
+      setAllUsers(allUsers);
       
       const treeToLoad = savedTree ? JSON.parse(savedTree) : initialOrgTree;
 
-      // Find all supervisors from the tree to populate the select dropdown
-      const supervisorNodes: OrgNode[] = [];
-      updateTree(treeToLoad, (node) => {
-        if (['Supervisor', 'Gerente', 'Coordenador', 'Diretor', 'Supervisor de Qualidade'].includes(node.role)) {
-            supervisorNodes.push(node);
-        }
-        return node;
-      });
-      setSupervisors(supervisorNodes);
+      // Filter for supervisors from the general user list
+      const supervisorUsers = allUsers.filter(u => u.role === 'Supervisor' || u.role === 'Administrador');
+      setSupervisors(supervisorUsers);
 
 
       setTree(treeToLoad);
-      setAllNodes(getAllNodes(treeToLoad));
       
       if (savedMessages) {
         setMessages(JSON.parse(savedMessages));
@@ -78,7 +76,6 @@ export default function OrganogramaPage() {
     try {
         localStorage.setItem(ORG_CHART_STORAGE_KEY, JSON.stringify(updatedTree));
         setTree(updatedTree);
-        setAllNodes(getAllNodes(updatedTree)); // Update all nodes list
     } catch (error) {
         console.error("Failed to save org chart to localStorage", error);
     }
@@ -362,7 +359,7 @@ export default function OrganogramaPage() {
         onClose={() => setIsTicketModalOpen(false)}
         onSave={handleSaveTicket}
         node={ticketNode}
-        allNodes={allNodes}
+        allUsers={allUsers}
       />
     </div>
   );

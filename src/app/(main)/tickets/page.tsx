@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { type Message, type OrgNode, initialOrgTree } from '@/lib/data';
+import { type Message, type OrgNode, initialOrgTree, type User as AppUser } from '@/lib/data';
 import { getAllNodes } from '@/lib/tree-utils';
 import { GroupedTicketCard } from '@/components/tickets/grouped-ticket-card';
 import { TicketModal } from '@/components/organization/ticket-modal';
@@ -25,6 +25,7 @@ import { getAvatar } from '@/lib/avatar-storage';
 
 const DASHBOARD_MESSAGES_KEY = 'dashboardMessages';
 const ORG_CHART_STORAGE_KEY = 'orgChartTree';
+const USERS_STORAGE_KEY = 'arpolarUsers';
 
 type GroupedTickets = {
   author: string;
@@ -38,6 +39,7 @@ type GroupedTickets = {
 export default function TicketsPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [allNodes, setAllNodes] = useState<OrgNode[]>([]);
+  const [allUsers, setAllUsers] = useState<AppUser[]>([]);
   const [isClient, setIsClient] = useState(false);
   const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
   const { toast } = useToast();
@@ -50,6 +52,10 @@ export default function TicketsPage() {
       const savedTree = localStorage.getItem(ORG_CHART_STORAGE_KEY);
       const treeToLoad = savedTree ? JSON.parse(savedTree) : initialOrgTree;
       setAllNodes(getAllNodes(treeToLoad));
+      
+      const savedUsers = localStorage.getItem(USERS_STORAGE_KEY);
+      setAllUsers(savedUsers ? JSON.parse(savedUsers) : []);
+
     } catch (error) {
       console.error('Failed to load data from localStorage', error);
     }
@@ -97,17 +103,17 @@ export default function TicketsPage() {
 
   const groupedTickets = useMemo(() => {
     const groups: { [key: string]: GroupedTickets } = {};
-    const nodeMap = new Map(allNodes.map(node => [node.name, node]));
+    const userMap = new Map(allUsers.map(user => [user.name, user]));
 
     messages.forEach(message => {
       const author = message.author;
       if (!groups[author]) {
-        const authorNode = nodeMap.get(author);
+        const authorUser = userMap.get(author);
         groups[author] = {
           author: author,
-          authorDetails: authorNode ? {
-            avatar: getAvatar(authorNode.id) || authorNode.avatar,
-            role: authorNode.role,
+          authorDetails: authorUser ? {
+            avatar: getAvatar(authorUser.id) || '',
+            role: authorUser.role,
           } : undefined,
           tickets: [],
         };
@@ -116,7 +122,7 @@ export default function TicketsPage() {
     });
 
     return Object.values(groups).sort((a, b) => b.tickets.length - a.tickets.length);
-  }, [messages, allNodes]);
+  }, [messages, allUsers]);
 
   if (!isClient) return null;
 
@@ -174,7 +180,7 @@ export default function TicketsPage() {
         onClose={() => setIsTicketModalOpen(false)}
         onSave={handleSaveTicket}
         node={null} // Pass null as we are creating a generic ticket
-        allNodes={allNodes}
+        allUsers={allUsers}
       />
     </div>
   );

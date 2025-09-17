@@ -100,25 +100,9 @@ function ContractCard({ contract, onEdit, onDelete, onOpenDocs }: { contract: Co
   );
 }
 
-function findSupervisorsInTree(node: OrgNode): OrgNode[] {
-    const supervisors: OrgNode[] = [];
-    function traverse(currentNode: OrgNode) {
-        if (currentNode.role === 'Supervisor' && currentNode.showInNeuralNet !== false) {
-            supervisors.push(currentNode);
-        }
-        if (currentNode.children) {
-            for (const child of currentNode.children) {
-                traverse(child);
-            }
-        }
-    }
-    traverse(node);
-    return supervisors;
-}
-
 export default function ContractsPage() {
   const [contracts, setContracts] = useState<Contract[]>([]);
-  const [supervisors, setSupervisors] = useState<OrgNode[]>([]);
+  const [supervisors, setSupervisors] = useState<AppUser[]>([]);
   const [isClient, setIsClient] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingContract, setEditingContract] = useState<Contract | null>(null);
@@ -129,7 +113,6 @@ export default function ContractsPage() {
   const loadData = () => {
       try {
         const savedContracts = localStorage.getItem(CONTRACTS_STORAGE_KEY);
-        const orgTree = JSON.parse(localStorage.getItem(ORG_CHART_STORAGE_KEY) || JSON.stringify(initialOrgTree));
         const savedUsers = localStorage.getItem(USERS_STORAGE_KEY);
 
         const allContracts: Contract[] = savedContracts ? JSON.parse(savedContracts) : [];
@@ -149,7 +132,10 @@ export default function ContractsPage() {
         }
         
         setContracts(visibleContracts);
-        setSupervisors(findSupervisorsInTree(orgTree));
+        
+        // Filter for supervisors from the general user list
+        const supervisorUsers = allUsers.filter(u => u.role === 'Supervisor' || u.role === 'Administrador');
+        setSupervisors(supervisorUsers);
 
       } catch (error) {
         console.error("Failed to load data from localStorage", error);

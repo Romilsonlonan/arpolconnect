@@ -24,7 +24,7 @@ import {
 } from '@/components/ui/select';
 import { ScrollArea } from '../ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
-import type { OrgNode, Message, Contract } from '@/lib/data';
+import type { OrgNode, Message, Contract, User as AppUser } from '@/lib/data';
 import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 
 type TicketModalProps = {
@@ -32,12 +32,12 @@ type TicketModalProps = {
   onClose: () => void;
   onSave: (values: Omit<Message, 'id' | 'createdAt' | 'author'>) => void;
   node: OrgNode | null;
-  allNodes: OrgNode[];
+  allUsers: AppUser[];
 };
 
 const CONTRACTS_STORAGE_KEY = 'arpolarContracts';
 
-export function TicketModal({ isOpen, onClose, onSave, node, allNodes }: TicketModalProps) {
+export function TicketModal({ isOpen, onClose, onSave, node, allUsers }: TicketModalProps) {
   const { toast } = useToast();
 
   // Required fields
@@ -162,7 +162,7 @@ export function TicketModal({ isOpen, onClose, onSave, node, allNodes }: TicketM
                     <Select onValueChange={setRecipientId} value={recipientId}>
                         <SelectTrigger><SelectValue placeholder="Selecione o destinatário" /></SelectTrigger>
                         <SelectContent>
-                        {allNodes.filter(n => n.id !== 'arpolar').map((n) => (
+                        {allUsers.map((n) => (
                             <SelectItem key={n.id} value={n.id}>{n.name} ({n.role})</SelectItem>
                         ))}
                         </SelectContent>
@@ -187,11 +187,11 @@ export function TicketModal({ isOpen, onClose, onSave, node, allNodes }: TicketM
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="supervisor">Supervisor Responsável <span className="text-red-500">*</span></Label>
-                  <Input id="supervisor" value={supervisor} onChange={(e) => setSupervisor(e.target.value)} disabled />
+                  <Input id="supervisor" value={supervisor} onChange={(e) => setSupervisor(e.target.value)} disabled={!!node} />
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="contact">Contato <span className="text-red-500">*</span></Label>
-                  <Input id="contact" value={contact} onChange={(e) => setContact(e.target.value)} disabled/>
+                  <Input id="contact" value={contact} onChange={(e) => setContact(e.target.value)} disabled={!!node}/>
                 </div>
                 <div className="grid gap-2">
                     <Label htmlFor="urgency">Urgência <span className="text-red-500">*</span></Label>

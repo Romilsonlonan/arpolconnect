@@ -16,7 +16,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import type { Contract, OrgNode } from '@/lib/data';
+import type { Contract, User as AppUser } from '@/lib/data';
 import Image from 'next/image';
 import { Upload } from 'lucide-react';
 import { ScrollArea } from '../ui/scroll-area';
@@ -24,7 +24,7 @@ import { ScrollArea } from '../ui/scroll-area';
 type ContractModalProps = {
   isOpen: boolean;
   onClose: () => void;
-  supervisors: OrgNode[];
+  supervisors: AppUser[];
   onSave: (data: Omit<Contract, 'id'>, id?: string) => void;
   editingContract: Contract | null;
 };

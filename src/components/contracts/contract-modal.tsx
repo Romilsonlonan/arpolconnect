@@ -29,14 +29,25 @@ type ContractModalProps = {
   editingContract: Contract | null;
 };
 
+const documentTypes = [
+    "PGR Arpolar",
+    "ART de manutenção do sistema de ar condicionado",
+    "Orientação e Recomendação de Trabalho",
+    "Grau de Prioridade",
+    "Plano de Atendimento Técnico",
+    "PPRA Geral",
+    "HD 20 - FISPQ",
+];
+
 export function ContractModal({ isOpen, onClose, supervisors, onSave, editingContract }: ContractModalProps) {
     const [name, setName] = useState('');
     const [supervisorId, setSupervisorId] = useState('');
     const [address, setAddress] = useState('');
     const [region, setRegion] = useState('');
     const [backgroundImage, setBackgroundImage] = useState('');
-    const [artNumber, setArtNumber] = useState('');
-    const [artStartDate, setArtStartDate] = useState('');
+    const [documentType, setDocumentType] = useState('');
+    const [docStartDate, setDocStartDate] = useState('');
+    const [docEndDate, setDocEndDate] = useState('');
     const [status, setStatus] = useState<Contract['status']>('Ativo');
 
     const fileInputRef = useRef<HTMLInputElement>(null);
@@ -50,8 +61,9 @@ export function ContractModal({ isOpen, onClose, supervisors, onSave, editingCon
                 setAddress(editingContract.address);
                 setRegion(editingContract.region);
                 setBackgroundImage(editingContract.backgroundImage);
-                setArtNumber(editingContract.artNumber || '');
-                setArtStartDate(editingContract.artStartDate || '');
+                setDocumentType(editingContract.documentType || '');
+                setDocStartDate(editingContract.docStartDate || '');
+                setDocEndDate(editingContract.docEndDate || '');
                 setStatus(editingContract.status);
             } else {
                 // Reset form for new contract
@@ -60,8 +72,9 @@ export function ContractModal({ isOpen, onClose, supervisors, onSave, editingCon
                 setAddress('');
                 setRegion('');
                 setBackgroundImage('');
-                setArtNumber('');
-                setArtStartDate('');
+                setDocumentType('');
+                setDocStartDate('');
+                setDocEndDate('');
                 setStatus('Ativo');
             }
         }
@@ -135,7 +148,16 @@ export function ContractModal({ isOpen, onClose, supervisors, onSave, editingCon
         if (!name || !supervisorId || !address || !region) {
             toast({
                 title: "Campos Obrigatórios",
-                description: "Por favor, preencha todos os campos obrigatórios.",
+                description: "Por favor, preencha nome, supervisor, endereço e região.",
+                variant: "destructive",
+            });
+            return;
+        }
+
+        if (documentType === 'ART de manutenção do sistema de ar condicionado' && (!docStartDate || !docEndDate)) {
+             toast({
+                title: "Datas Obrigatórias para ART",
+                description: "As datas de início e fim do documento são obrigatórias para o tipo ART.",
                 variant: "destructive",
             });
             return;
@@ -158,8 +180,9 @@ export function ContractModal({ isOpen, onClose, supervisors, onSave, editingCon
             address,
             region,
             backgroundImage: backgroundImage || 'https://picsum.photos/seed/default/600/400',
-            artNumber,
-            artStartDate,
+            documentType,
+            docStartDate,
+            docEndDate,
         }, editingContract?.id);
     }
 
@@ -195,16 +218,28 @@ export function ContractModal({ isOpen, onClose, supervisors, onSave, editingCon
                             <Label htmlFor="region">Região</Label>
                             <Input id="region" value={region} onChange={e => setRegion(e.target.value)} />
                         </div>
+                        
+                        <div className="grid gap-2">
+                            <Label htmlFor="documentType">Tipo de Documento</Label>
+                            <Select onValueChange={setDocumentType} value={documentType}>
+                                <SelectTrigger id="documentType"><SelectValue placeholder="Selecione um tipo de documento" /></SelectTrigger>
+                                <SelectContent>
+                                    {documentTypes.map(type => <SelectItem key={type} value={type}>{type}</SelectItem>)}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div className="grid gap-2">
-                                <Label htmlFor="artNumber">Número da ART</Label>
-                                <Input id="artNumber" value={artNumber} onChange={e => setArtNumber(e.target.value)} />
+                                <Label htmlFor="docStartDate">Início doc</Label>
+                                <Input id="docStartDate" type="date" value={docStartDate} onChange={e => setDocStartDate(e.target.value)} />
                             </div>
                             <div className="grid gap-2">
-                                <Label htmlFor="artStartDate">Início da ART</Label>
-                                <Input id="artStartDate" type="date" value={artStartDate} onChange={e => setArtStartDate(e.target.value)} />
+                                <Label htmlFor="docEndDate">Fim Doc</Label>
+                                <Input id="docEndDate" type="date" value={docEndDate} onChange={e => setDocEndDate(e.target.value)} />
                             </div>
                         </div>
+
                         {editingContract && (
                              <div className="grid gap-2">
                                 <Label htmlFor="status">Status do Contrato</Label>
@@ -247,3 +282,5 @@ export function ContractModal({ isOpen, onClose, supervisors, onSave, editingCon
         </Dialog>
     )
 }
+
+    

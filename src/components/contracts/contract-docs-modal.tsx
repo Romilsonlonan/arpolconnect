@@ -17,21 +17,28 @@ import { PlusCircle, Paperclip, Trash2, FileText, Download, CalendarDays, AlertT
 import type { Contract, ContractDocument, User } from '@/lib/data';
 import { UploadModal } from '@/components/contracts/upload-modal';
 import { cn } from '@/lib/utils';
-import { differenceInDays, addYears, format } from 'date-fns';
+import { differenceInDays, addYears, format, isValid } from 'date-fns';
 
-// --- Componente do Cartão de Status da ART ---
-function ArtStatusCard({ contract }: { contract: Contract }) {
+// --- Componente do Cartão de Status do Documento ---
+function DocStatusCard({ contract }: { contract: Contract }) {
+    const isArt = contract.documentType === 'ART de manutenção do sistema de ar condicionado';
+
     const getStatus = () => {
-        if (!contract.artStartDate) {
+        if (!isArt || !contract.docStartDate || !contract.docEndDate) {
             return {
                 daysRemaining: null,
                 statusColor: 'bg-gray-500',
-                statusText: 'Data de início não definida',
+                statusText: isArt ? 'Datas da ART não definidas' : 'Não é uma ART',
             };
         }
 
-        const startDate = new Date(contract.artStartDate);
-        const expiryDate = addYears(startDate, 1);
+        const startDate = new Date(contract.docStartDate);
+        const expiryDate = new Date(contract.docEndDate);
+        
+        if (!isValid(startDate) || !isValid(expiryDate)) {
+             return { daysRemaining: null, statusColor: 'bg-gray-500', statusText: 'Datas inválidas' };
+        }
+
         const daysRemaining = differenceInDays(expiryDate, new Date());
 
         if (daysRemaining < 0) {
@@ -51,15 +58,16 @@ function ArtStatusCard({ contract }: { contract: Contract }) {
     };
 
     const { daysRemaining, statusColor, statusText } = getStatus();
-    const startDate = contract.artStartDate ? new Date(contract.artStartDate) : null;
-    const expiryDate = startDate ? addYears(startDate, 1) : null;
+    const startDate = contract.docStartDate ? new Date(contract.docStartDate) : null;
+    const expiryDate = contract.docEndDate ? new Date(contract.docEndDate) : null;
+
 
     return (
         <Card className={cn("text-white w-full max-w-md mx-auto shadow-lg", statusColor)}>
             <CardHeader>
                 <CardTitle className="flex items-center gap-3">
                     <AlertTriangle/>
-                    Status da ART
+                    Status do Documento Principal
                 </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -68,28 +76,33 @@ function ArtStatusCard({ contract }: { contract: Contract }) {
                     <p className="font-bold text-lg">{contract.name}</p>
                 </div>
                  <div>
-                    <p className="text-sm opacity-80">Número da ART</p>
-                    <p className="font-semibold">{contract.artNumber || 'Não informada'}</p>
+                    <p className="text-sm opacity-80">Tipo de Documento</p>
+                    <p className="font-semibold">{contract.documentType || 'Não informado'}</p>
                 </div>
                 <div className="flex justify-between">
                     <div>
                         <p className="text-sm opacity-80">Data de Início</p>
-                        <p className="font-semibold">{startDate ? format(startDate, 'dd/MM/yyyy') : 'N/A'}</p>
+                        <p className="font-semibold">{startDate && isValid(startDate) ? format(startDate, 'dd/MM/yyyy') : 'N/A'}</p>
                     </div>
                      <div>
-                        <p className="text-sm opacity-80">Data de Vencimento</p>
-                        <p className="font-semibold">{expiryDate ? format(expiryDate, 'dd/MM/yyyy') : 'N/A'}</p>
+                        <p className="text-sm opacity-80">Data de Fim</p>
+                        <p className="font-semibold">{expiryDate && isValid(expiryDate) ? format(expiryDate, 'dd/MM/yyyy') : 'N/A'}</p>
                     </div>
                 </div>
-                {daysRemaining !== null && (
+                {isArt && daysRemaining !== null && (
                     <div className="text-center bg-black/20 p-3 rounded-lg">
-                        <p className="text-sm opacity-80">Status</p>
+                        <p className="text-sm opacity-80">Status da ART</p>
                         <p className="text-2xl font-bold">
                             {daysRemaining >= 0 ? `${daysRemaining} dias restantes` : `Vencida há ${Math.abs(daysRemaining)} dias`}
                         </p>
                         <p className="text-sm font-medium">{statusText}</p>
                     </div>
                 )}
+                 {!isArt && (
+                     <div className="text-center bg-black/20 p-3 rounded-lg">
+                        <p className="font-semibold">Este documento não tem controle de vencimento.</p>
+                    </div>
+                 )}
             </CardContent>
         </Card>
     );
@@ -132,20 +145,20 @@ export function ContractDocsModal({ isOpen, onClose, contract, onSaveDocument, o
           <DialogHeader>
             <DialogTitle>Painel do Contrato: {contract.name}</DialogTitle>
             <DialogDescription>
-              Gerencie documentos, ART e outras informações relacionadas a este contrato.
+              Gerencie documentos, datas e outras informações relacionadas a este contrato.
             </DialogDescription>
           </DialogHeader>
           <Tabs defaultValue="data" className="flex-1 flex flex-col overflow-hidden">
             <TabsList>
               <TabsTrigger value="data">Dados Gerais</TabsTrigger>
-              <TabsTrigger value="documents">Documentos</TabsTrigger>
+              <TabsTrigger value="documents">Documentos Anexados</TabsTrigger>
               <TabsTrigger value="revisions" disabled>Revisões</TabsTrigger>
               <TabsTrigger value="trainings" disabled>Treinamentos</TabsTrigger>
             </TabsList>
 
              <TabsContent value="data" className="flex-1 overflow-auto p-4">
                 <div className="flex items-center justify-center h-full">
-                   <ArtStatusCard contract={contract} />
+                   <DocStatusCard contract={contract} />
                 </div>
             </TabsContent>
 
@@ -207,3 +220,5 @@ export function ContractDocsModal({ isOpen, onClose, contract, onSaveDocument, o
     </>
   );
 }
+
+    

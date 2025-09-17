@@ -71,8 +71,9 @@ export type Contract = {
     backgroundImage: string;
     status: 'Ativo' | 'Inativo';
     documents?: ContractDocument[];
-    artNumber?: string;
-    artStartDate?: string;
+    documentType?: string;
+    docStartDate?: string;
+    docEndDate?: string;
 }
 
 export type RefrigerationQuestion = {
@@ -146,3 +147,6 @@ export const refrigerationQuestions: RefrigerationQuestion[] = [
     { id: 'q20', question: 'O que indica a presença de óleo nas conexões da tubulação?', options: ['Operação normal', 'Excesso de óleo no sistema', 'Um vazamento de refrigerante', 'Filtro secador saturado'], correctAnswer: 'Um vazamento de refrigerante', image: 'https://picsum.photos/800/400?random=20', imageHint: 'oil leak pipe' },
 ];
 
+
+
+    

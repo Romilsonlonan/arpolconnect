@@ -51,14 +51,13 @@ const ORG_CHART_STORAGE_KEY = 'orgChartTree';
 
 // --- Componente do Cartão de Status do Documento ---
 function DocStatusCard({ contract }: { contract: Contract }) {
-    const isArt = contract.documentType === 'ART de manutenção do sistema de ar condicionado';
 
     const getStatus = () => {
-        if (!isArt || !contract.docStartDate || !contract.docEndDate) {
+        if (!contract.docStartDate || !contract.docEndDate) {
             return {
                 daysRemaining: null,
                 statusColor: 'bg-gray-500',
-                statusText: isArt ? 'Datas da ART não definidas' : 'Não é uma ART',
+                statusText: 'Datas do documento não definidas',
             };
         }
 
@@ -82,7 +81,7 @@ function DocStatusCard({ contract }: { contract: Contract }) {
         }
         return {
             daysRemaining,
-            statusColor: 'bg-green-600',
+            statusColor: 'bg-sky-600',
             statusText: 'Em dia',
         };
     };
@@ -119,16 +118,16 @@ function DocStatusCard({ contract }: { contract: Contract }) {
                         <p className="font-semibold">{expiryDate && isValid(expiryDate) ? format(expiryDate, 'dd/MM/yyyy') : 'N/A'}</p>
                     </div>
                 </div>
-                {isArt && daysRemaining !== null && (
+                {daysRemaining !== null && (
                     <div className="text-center bg-black/20 p-3 rounded-lg">
-                        <p className="text-sm opacity-80">Status da ART</p>
+                        <p className="text-sm opacity-80">Status</p>
                         <p className="text-2xl font-bold">
                             {daysRemaining >= 0 ? `${daysRemaining} dias restantes` : `Vencida há ${Math.abs(daysRemaining)} dias`}
                         </p>
                         <p className="text-sm font-medium">{statusText}</p>
                     </div>
                 )}
-                 {!isArt && (
+                 {daysRemaining === null && (
                      <div className="text-center bg-black/20 p-3 rounded-lg">
                         <p className="font-semibold">Este documento não tem controle de vencimento.</p>
                     </div>

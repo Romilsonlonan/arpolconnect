@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -11,101 +11,11 @@ import {
 } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { PlusCircle, Paperclip, Trash2, FileText, Download, UploadCloud } from 'lucide-react';
+import { PlusCircle, Paperclip, Trash2, FileText, Download, Pencil } from 'lucide-react';
 import type { Contract, ContractDocument, User } from '@/lib/data';
-import { useToast } from '@/hooks/use-toast';
-
-// --- Sub-componente: Modal de Upload ---
-function UploadModal({ 
-    isOpen, 
-    onClose, 
-    onSave 
-}: { 
-    isOpen: boolean; 
-    onClose: () => void; 
-    onSave: (doc: Omit<ContractDocument, 'id' | 'uploadedAt'>) => void;
-}) {
-    const [name, setName] = useState('');
-    const [description, setDescription] = useState('');
-    const [file, setFile] = useState<File | null>(null);
-    const fileInputRef = useRef<HTMLInputElement>(null);
-    const { toast } = useToast();
-
-    const handleSave = async () => {
-        if (!name || !file) {
-            toast({ title: "Campos obrigatórios", description: "O nome e o arquivo são necessários.", variant: "destructive" });
-            return;
-        }
-
-        const fileToUrl = (file: File): Promise<string> => {
-            return new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = () => resolve(reader.result as string);
-                reader.onerror = error => reject(error);
-            });
-        };
-
-        try {
-            const fileUrl = await fileToUrl(file);
-            onSave({
-                name,
-                description,
-                fileUrl,
-                fileName: file.name,
-                fileType: file.type,
-            });
-            onClose(); // Close the modal on success
-        } catch (error) {
-            toast({ title: "Erro no Upload", description: "Não foi possível processar o arquivo.", variant: "destructive" });
-        }
-    };
-    
-    const triggerFileUnput = () => fileInputRef.current?.click();
-
-    return (
-        <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Adicionar Novo Documento</DialogTitle>
-                    <DialogDescription>Preencha os detalhes e anexe o arquivo.</DialogDescription>
-                </DialogHeader>
-                <div className="grid gap-4 py-4">
-                    <div className="grid gap-2">
-                        <Label htmlFor="doc-name">Nome do Documento</Label>
-                        <Input id="doc-name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Ex: Proposta Técnica Final"/>
-                    </div>
-                    <div className="grid gap-2">
-                        <Label htmlFor="doc-description">Descrição</Label>
-                        <Textarea id="doc-description" value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Breve descrição do conteúdo do documento..."/>
-                    </div>
-                    <div className="grid gap-2">
-                         <Label>Anexo</Label>
-                         <Input 
-                            type="file" 
-                            className="hidden" 
-                            ref={fileInputRef} 
-                            onChange={(e) => setFile(e.target.files ? e.target.files[0] : null)}
-                        />
-                         <Button variant="outline" onClick={triggerFileUnput}>
-                            <UploadCloud className="mr-2" />
-                            {file ? `Arquivo: ${file.name}` : 'Escolher Arquivo'}
-                         </Button>
-                    </div>
-                </div>
-                <div className="flex justify-end gap-2">
-                    <Button variant="secondary" onClick={onClose}>Cancelar</Button>
-                    <Button onClick={handleSave}>Salvar Documento</Button>
-                </div>
-            </DialogContent>
-        </Dialog>
-    );
-}
-
+import { UploadModal } from '@/components/contracts/upload-modal';
+import { RevisionModal } from '@/components/contracts/revision-modal';
 
 // --- Componente Principal: Modal de Documentos do Contrato ---
 type ContractDocsModalProps = {
@@ -113,17 +23,25 @@ type ContractDocsModalProps = {
   onClose: () => void;
   contract: Contract;
   onSaveDocument: (contractId: string, document: Omit<ContractDocument, 'id' | 'uploadedAt'>) => void;
+  onUpdateDocument: (contractId: string, documentId: string, documentData: Partial<Omit<ContractDocument, 'id'>>) => void;
   onDeleteDocument: (contractId: string, documentId: string) => void;
   currentUser: User | null;
 };
 
-export function ContractDocsModal({ isOpen, onClose, contract, onSaveDocument, onDeleteDocument, currentUser }: ContractDocsModalProps) {
+export function ContractDocsModal({ isOpen, onClose, contract, onSaveDocument, onUpdateDocument, onDeleteDocument, currentUser }: ContractDocsModalProps) {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [revisioningDoc, setRevisioningDoc] = useState<ContractDocument | null>(null);
+
   const isSupervisor = currentUser?.role === 'Supervisor' || currentUser?.role === 'Administrador';
 
   const handleSave = (document: Omit<ContractDocument, 'id' | 'uploadedAt'>) => {
     onSaveDocument(contract.id, document);
-    setIsUploadModalOpen(false); // Garante que o modal de upload feche
+    setIsUploadModalOpen(false);
+  };
+  
+  const handleUpdate = (docId: string, data: Partial<Omit<ContractDocument, 'id'>>) => {
+    onUpdateDocument(contract.id, docId, data);
+    setRevisioningDoc(null);
   };
 
   const openFile = (fileUrl: string, fileType: string) => {
@@ -145,14 +63,14 @@ export function ContractDocsModal({ isOpen, onClose, contract, onSaveDocument, o
               Gerencie documentos e outras informações relacionadas a este contrato.
             </DialogDescription>
           </DialogHeader>
-          <Tabs defaultValue="documents" className="flex-1 flex flex-col overflow-hidden">
+          <Tabs defaultValue="revisions" className="flex-1 flex flex-col overflow-hidden">
             <TabsList>
-              <TabsTrigger value="documents">Documentos</TabsTrigger>
+              <TabsTrigger value="revisions">Revisões e Anexos</TabsTrigger>
               <TabsTrigger value="relationships" disabled>Relacionamentos</TabsTrigger>
               <TabsTrigger value="systems" disabled>Sistemas</TabsTrigger>
-              <TabsTrigger value="revisions" disabled>Revisões</TabsTrigger>
+              <TabsTrigger value="trainings" disabled>Treinamentos</TabsTrigger>
             </TabsList>
-            <TabsContent value="documents" className="flex-1 overflow-auto p-1">
+            <TabsContent value="revisions" className="flex-1 overflow-auto p-1">
               <div className="flex justify-between items-center mb-4 p-4">
                 <h3 className="text-lg font-semibold">Documentos Anexados</h3>
                 {isSupervisor && (
@@ -172,7 +90,11 @@ export function ContractDocsModal({ isOpen, onClose, contract, onSaveDocument, o
                           <p className="font-semibold">{doc.name}</p>
                           <p className="text-sm text-muted-foreground">{doc.description}</p>
                           <p className="text-xs text-muted-foreground">
-                            {doc.fileName} - {new Date(doc.uploadedAt).toLocaleDateString()}
+                            {doc.fileName} - 
+                            {doc.revisedAt 
+                                ? ` Revisado em: ${new Date(doc.revisedAt).toLocaleDateString()}`
+                                : ` Criado em: ${new Date(doc.uploadedAt).toLocaleDateString()}`
+                            }
                           </p>
                         </div>
                       </div>
@@ -181,9 +103,14 @@ export function ContractDocsModal({ isOpen, onClose, contract, onSaveDocument, o
                             <Download className="h-4 w-4" />
                         </Button>
                         {isSupervisor && (
+                           <>
+                             <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setRevisioningDoc(doc)}>
+                                <Pencil className="h-4 w-4" />
+                            </Button>
                             <Button variant="destructive" size="icon" className="h-8 w-8" onClick={() => onDeleteDocument(contract.id, doc.id)}>
                                 <Trash2 className="h-4 w-4" />
                             </Button>
+                           </>
                         )}
                       </div>
                     </div>
@@ -200,13 +127,22 @@ export function ContractDocsModal({ isOpen, onClose, contract, onSaveDocument, o
         </DialogContent>
       </Dialog>
 
-      {/* Renderiza o modal de upload separadamente */}
       {isSupervisor && (
-          <UploadModal 
-            isOpen={isUploadModalOpen}
-            onClose={() => setIsUploadModalOpen(false)}
-            onSave={handleSave}
-          />
+        <>
+            <UploadModal 
+                isOpen={isUploadModalOpen}
+                onClose={() => setIsUploadModalOpen(false)}
+                onSave={handleSave}
+            />
+            {revisioningDoc && (
+                <RevisionModal
+                    isOpen={!!revisioningDoc}
+                    onClose={() => setRevisioningDoc(null)}
+                    onSave={handleUpdate}
+                    document={revisioningDoc}
+                />
+            )}
+        </>
       )}
     </>
   );

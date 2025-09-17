@@ -122,18 +122,16 @@ export default function ContractsPage() {
         setCurrentUser(user || null);
 
         let visibleContracts: Contract[] = [];
-        if (user) {
-            // Simplified logic: If the user is an admin, show all contracts.
-            // Otherwise, apply permission-based filtering.
-            if (user.role === 'Administrador' || user.permissions.canViewAllContracts) {
-                visibleContracts = allContracts;
-            } else {
-                const allowedIds = new Set(user.permissions.allowedContractIds);
-                visibleContracts = allContracts.filter(c => allowedIds.has(c.id));
-            }
+        if (user && (user.role === 'Administrador' || user.permissions.canViewAllContracts)) {
+            // Admin or user with global view permission sees all contracts
+            visibleContracts = allContracts;
+        } else if (user) {
+            // User with specific permissions
+            const allowedIds = new Set(user.permissions.allowedContractIds);
+            visibleContracts = allContracts.filter(c => allowedIds.has(c.id));
         } else {
-            // Fallback for when no specific user is identified: show all contracts.
-            // This ensures contracts are visible after creation.
+             // Fallback for when no specific user is identified: show all contracts for simplicity.
+             // This ensures newly created contracts are visible without a full login system.
             visibleContracts = allContracts;
         }
         
@@ -286,7 +284,7 @@ export default function ContractsPage() {
       {contracts.length === 0 ? (
         <div className="flex flex-col items-center justify-center flex-1 py-12 text-center bg-gray-100/50 rounded-lg">
             <p className="text-lg font-semibold text-muted-foreground">Nenhum contrato encontrado.</p>
-            <p className="mt-2 text-sm text-muted-foreground">Adicione um novo contrato para começar.</p>
+            <p className="mt-2 text-sm text-muted-foreground">Verifique suas permissões ou adicione um novo contrato.</p>
         </div>
       ) : (
          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

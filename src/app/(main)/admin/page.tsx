@@ -26,11 +26,35 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { getAvatar, removeAvatar, saveAvatar } from '@/lib/avatar-storage';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+
 
 const USERS_STORAGE_KEY = 'arpolarUsers';
 const CONTRACTS_STORAGE_KEY = 'arpolarContracts';
+
+function UserAvatar({ user }: { user: User }) {
+    const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+
+    useEffect(() => {
+        const updateAvatar = () => {
+            const url = getAvatar(user.id);
+            setAvatarUrl(url);
+        };
+        updateAvatar();
+        window.addEventListener('storage', updateAvatar);
+        return () => window.removeEventListener('storage', updateAvatar);
+    }, [user.id]);
+
+    return (
+        <Avatar className="h-9 w-9">
+            <AvatarImage src={avatarUrl ?? undefined} alt={user.name} />
+            <AvatarFallback>{user.name.slice(0, 2).toUpperCase()}</AvatarFallback>
+        </Avatar>
+    );
+}
+
 
 export default function AdminPage() {
   const [users, setUsers] = useState<User[]>([]);
@@ -47,7 +71,7 @@ export default function AdminPage() {
       
       setUsers(savedUsers ? JSON.parse(savedUsers) : []);
       setContracts(savedContracts ? JSON.parse(savedContracts) : []);
-    } catch (error) {
+    } catch (error) => {
       console.error("Failed to load data from localStorage", error);
       toast({ title: "Erro ao carregar dados", variant: "destructive" });
     }
@@ -70,7 +94,7 @@ export default function AdminPage() {
     setIsModalOpen(true);
   };
 
-  const handleSaveUser = (userData: Omit<User, 'id'>, id?: string) => {
+  const handleSaveUser = (userData: Omit<User, 'id'>, id?: string, avatarDataUrl?: string) => {
     let currentUsers: User[] = [];
     try {
       currentUsers = JSON.parse(localStorage.getItem(USERS_STORAGE_KEY) || '[]');
@@ -82,24 +106,39 @@ export default function AdminPage() {
     let updatedUsers: User[];
     let toastTitle = '';
     let toastDescription = '';
+    let userId = id;
 
-    if (id) {
-      updatedUsers = currentUsers.map(u => u.id === id ? { ...u, ...userData, id } : u);
+    if (userId) { // Editing user
+      updatedUsers = currentUsers.map(u => u.id === userId ? { ...u, ...userData, id: userId } : u);
       toastTitle = "Usuário Atualizado!";
       toastDescription = `As informações de "${userData.name}" foram atualizadas.`;
-    } else {
+    } else { // Adding new user
       const newUser: User = {
         ...userData,
         id: `user-${Date.now()}`
       };
+      userId = newUser.id;
       updatedUsers = [...currentUsers, newUser];
       toastTitle = "Usuário Adicionado!";
       toastDescription = `O usuário "${newUser.name}" foi criado com sucesso.`;
     }
 
+    if (avatarDataUrl && avatarDataUrl.startsWith('data:image') && userId) {
+        try {
+            saveAvatar(userId, avatarDataUrl);
+        } catch(e) {
+             toast({
+                title: "Erro ao salvar imagem",
+                description: "A imagem é muito grande. Tente uma menor.",
+                variant: 'destructive',
+            });
+        }
+    }
+
+
     localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(updatedUsers));
     
-    // Dispatch storage event to notify other components if needed
+    // Dispatch storage event to notify other components
     window.dispatchEvent(new StorageEvent('storage', { key: USERS_STORAGE_KEY }));
 
     loadData();
@@ -114,6 +153,7 @@ export default function AdminPage() {
 
     const updatedUsers = users.filter(u => u.id !== userId);
     localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(updatedUsers));
+    removeAvatar(userId); // Also remove avatar
     
     loadData();
     toast({ title: "Usuário Removido", description: `${userToDelete.name} foi removido do sistema.` });
@@ -143,6 +183,7 @@ export default function AdminPage() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead className="w-[80px]">Foto</TableHead>
                 <TableHead>Nome</TableHead>
                 <TableHead>Função</TableHead>
                 <TableHead>Status</TableHead>
@@ -153,6 +194,9 @@ export default function AdminPage() {
             <TableBody>
               {users.map((user) => (
                 <TableRow key={user.id}>
+                  <TableCell>
+                      <UserAvatar user={user}/>
+                  </TableCell>
                   <TableCell className="font-medium">{user.name}</TableCell>
                   <TableCell>
                      <Badge variant={user.role === 'Administrador' ? 'destructive' : 'secondary'}>{user.role}</Badge>
@@ -176,7 +220,7 @@ export default function AdminPage() {
                         <DropdownMenuItem onClick={() => handleOpenEditModal(user)}>Editar Permissões</DropdownMenuItem>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                             <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">Desativar</DropdownMenuItem>
+                             <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">Deletar</DropdownMenuItem>
                           </AlertDialogTrigger>
                           <AlertDialogContent>
                             <AlertDialogHeader>

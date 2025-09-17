@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -27,27 +27,33 @@ import type { User, Contract } from '@/lib/data';
 import { Switch } from '@/components/ui/switch';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Separator } from '@/components/ui/separator';
+import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
+import { Upload } from 'lucide-react';
+import { getAvatar } from '@/lib/avatar-storage';
 
 type UserModalProps = {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (data: Omit<User, 'id'>, id?: string) => void;
+  onSave: (data: Omit<User, 'id'>, id?: string, avatarDataUrl?: string) => void;
   editingUser: User | null;
   contracts: Contract[];
 };
 
 const userRoles: User['role'][] = ['Administrador', 'Supervisor', 'Mecânico', 'Visualizador'];
+const PLACEHOLDER_AVATAR = 'https://placehold.co/100x100';
 
 export function UserModal({ isOpen, onClose, onSave, editingUser, contracts }: UserModalProps) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<User['role']>('Visualizador');
   const [status, setStatus] = useState<User['status']>('Ativo');
+  const [avatar, setAvatar] = useState(PLACEHOLDER_AVATAR);
   
   // Permissions state
   const [canViewAllContracts, setCanViewAllContracts] = useState(false);
   const [allowedContractIds, setAllowedContractIds] = useState<string[]>([]);
   
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -57,6 +63,10 @@ export function UserModal({ isOpen, onClose, onSave, editingUser, contracts }: U
         setEmail(editingUser.email);
         setRole(editingUser.role);
         setStatus(editingUser.status);
+        
+        const storedAvatar = getAvatar(editingUser.id);
+        setAvatar(storedAvatar || PLACEHOLDER_AVATAR);
+
         setCanViewAllContracts(editingUser.permissions.canViewAllContracts);
         setAllowedContractIds(editingUser.permissions.allowedContractIds);
       } else {
@@ -65,11 +75,64 @@ export function UserModal({ isOpen, onClose, onSave, editingUser, contracts }: U
         setEmail('');
         setRole('Visualizador');
         setStatus('Ativo');
+        setAvatar(PLACEHOLDER_AVATAR);
         setCanViewAllContracts(false);
         setAllowedContractIds([]);
       }
     }
   }, [editingUser, isOpen]);
+
+    const resizeImage = (file: File, maxWidth: number, maxHeight: number, quality: number): Promise<string> => {
+        return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = (event) => {
+                const img = document.createElement('img');
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let { width, height } = img;
+                    if (width > height) {
+                        if (width > maxWidth) {
+                            height = Math.round((height * maxWidth) / width);
+                            width = maxWidth;
+                        }
+                    } else {
+                        if (height > maxHeight) {
+                            width = Math.round((width * maxHeight) / height);
+                            height = maxHeight;
+                        }
+                    }
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    if (!ctx) return reject(new Error('Could not get canvas context'));
+                    ctx.drawImage(img, 0, 0, width, height);
+                    resolve(canvas.toDataURL('image/jpeg', quality));
+                };
+                img.onerror = (error) => reject(error);
+                img.src = event.target?.result as string;
+            };
+            reader.onerror = (error) => reject(error);
+            reader.readAsDataURL(file);
+        });
+    };
+
+    const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (file) {
+             if (file.size > 5 * 1024 * 1024) { // 5MB limit
+                toast({ title: "Arquivo muito grande", description: "Por favor, selecione uma imagem menor que 5MB.", variant: "destructive"});
+                return;
+            }
+            try {
+                const resizedDataUrl = await resizeImage(file, 256, 256, 0.9);
+                setAvatar(resizedDataUrl);
+            } catch (error) {
+                console.error("Error resizing image:", error);
+                toast({ title: "Erro ao processar imagem", description: "Houve um problema ao redimensionar a imagem.", variant: "destructive"});
+            }
+        }
+    };
+
 
   const handleSave = () => {
     if (!name || !email || !role) {
@@ -85,13 +148,6 @@ export function UserModal({ isOpen, onClose, onSave, editingUser, contracts }: U
         canViewAllContracts,
         allowedContractIds: canViewAllContracts ? [] : allowedContractIds
     };
-    
-    let toastMessage = 'Permissões salvas. ';
-    if (permissions.canViewAllContracts) {
-        toastMessage += 'O usuário tem acesso a todos os contratos.';
-    } else {
-        toastMessage += `O usuário tem acesso a ${permissions.allowedContractIds.length} contrato(s) específico(s).`;
-    }
 
     onSave({
         name,
@@ -99,12 +155,7 @@ export function UserModal({ isOpen, onClose, onSave, editingUser, contracts }: U
         role,
         status,
         permissions,
-    }, editingUser?.id);
-    
-    toast({
-        title: editingUser ? "Usuário Atualizado" : "Usuário Criado",
-        description: toastMessage
-    });
+    }, editingUser?.id, avatar);
   };
 
   const handleContractPermissionChange = (contractId: string, checked: boolean) => {
@@ -124,6 +175,25 @@ export function UserModal({ isOpen, onClose, onSave, editingUser, contracts }: U
         </DialogHeader>
         <ScrollArea className="max-h-[70vh] -mx-6">
           <div className="grid gap-6 py-4 px-6">
+            <div className="grid gap-2 items-center justify-center text-center">
+                <Avatar className="w-24 h-24 mx-auto border-2 border-primary">
+                    <AvatarImage src={avatar} data-ai-hint="person portrait" />
+                    <AvatarFallback>{name.charAt(0)}</AvatarFallback>
+                </Avatar>
+                <Input 
+                    id="avatar-upload"
+                    type="file"
+                    accept="image/jpeg, image/png, image/webp"
+                    className="hidden"
+                    ref={fileInputRef}
+                    onChange={handleAvatarChange}
+                />
+                 <Button variant="outline" onClick={() => fileInputRef.current?.click()}>
+                    <Upload className="mr-2" />
+                    Carregar Imagem
+                </Button>
+            </div>
+
             <fieldset className="grid grid-cols-1 gap-4 p-4 border rounded-lg">
                 <legend className="-ml-1 px-1 text-sm font-medium">Informações do Usuário</legend>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -202,4 +272,3 @@ export function UserModal({ isOpen, onClose, onSave, editingUser, contracts }: U
     </Dialog>
   );
 }
-

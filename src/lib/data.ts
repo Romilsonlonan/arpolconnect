@@ -97,6 +97,14 @@ export type User = {
   };
 };
 
+export type ReportCover = {
+    id: string;
+    title: string;
+    subtitle: string;
+    imageUrl: string;
+    characterUrl?: string; // Optional character image
+};
+
 export const initialUsers: User[] = [
     {
         id: 'admin-1',

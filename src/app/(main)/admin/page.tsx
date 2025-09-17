@@ -108,11 +108,13 @@ export default function AdminPage() {
   const handleOpenAddUserModal = () => {
     setEditingUser(null);
     setIsUserModalOpen(true);
+    setIsContractModalOpen(false); // Close other modal
   };
 
   const handleOpenEditUserModal = (user: User) => {
     setEditingUser(user);
     setIsUserModalOpen(true);
+    setIsContractModalOpen(false); // Close other modal
   };
 
   const handleSaveUser = (userData: Omit<User, 'id'>, id?: string, avatarDataUrl?: string) => {
@@ -185,11 +187,13 @@ export default function AdminPage() {
   const handleOpenAddContractModal = () => {
     setEditingContract(null);
     setIsContractModalOpen(true);
+    setIsUserModalOpen(false); // Close other modal
   }
 
   const handleOpenEditContractModal = (contract: Contract) => {
     setEditingContract(contract);
     setIsContractModalOpen(true);
+    setIsUserModalOpen(false); // Close other modal
   }
   
   const handleOpenDocsModal = (contract: Contract) => {
@@ -317,11 +321,11 @@ export default function AdminPage() {
             <p className="text-muted-foreground">Gerencie usuários, contratos e configurações do sistema.</p>
         </div>
         <div className="flex gap-2">
-            <Button onClick={handleOpenAddUserModal}>
+            <Button onClick={handleOpenAddUserModal} variant={isUserModalOpen ? 'secondary' : 'default'}>
                 <PlusCircle className="mr-2" />
                 Adicionar Usuário
             </Button>
-            <Button onClick={handleOpenAddContractModal} variant="secondary">
+            <Button onClick={handleOpenAddContractModal} variant={isContractModalOpen ? 'secondary' : 'default'}>
                 <PlusCircle className="mr-2" />
                 Adicionar Contrato
             </Button>

@@ -38,8 +38,8 @@ const userRoles = [
     'Supervisor de Qualidade'
 ];
 
-const ADMIN_EMAIL = "romilson@arpolar.com.br";
-const ADMIN_PASS = "senha1234";
+const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL;
+const ADMIN_PASS = process.env.NEXT_PUBLIC_ADMIN_PASSWORD;
 
 
 export default function LoginPage() {

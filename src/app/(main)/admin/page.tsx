@@ -61,8 +61,9 @@ function DocStatusCard({ contract }: { contract: Contract }) {
             };
         }
 
-        const startDate = new Date(contract.docStartDate);
-        const expiryDate = new Date(contract.docEndDate);
+        // Adjust for timezone issues by appending T00:00:00
+        const startDate = new Date(`${contract.docStartDate}T00:00:00`);
+        const expiryDate = new Date(`${contract.docEndDate}T00:00:00`);
         
         if (!isValid(startDate) || !isValid(expiryDate)) {
              return { daysRemaining: null, statusColor: 'bg-gray-500', statusText: 'Datas inválidas' };
@@ -84,8 +85,8 @@ function DocStatusCard({ contract }: { contract: Contract }) {
     };
 
     const { daysRemaining, statusColor, statusText } = getStatus();
-    const startDate = contract.docStartDate ? new Date(contract.docStartDate) : null;
-    const expiryDate = contract.docEndDate ? new Date(contract.docEndDate) : null;
+    const startDate = contract.docStartDate ? new Date(`${contract.docStartDate}T00:00:00`) : null;
+    const expiryDate = contract.docEndDate ? new Date(`${contract.docEndDate}T00:00:00`) : null;
 
 
     return (
@@ -115,7 +116,7 @@ function DocStatusCard({ contract }: { contract: Contract }) {
                         <p className="font-semibold">{expiryDate && isValid(expiryDate) ? format(expiryDate, 'dd/MM/yyyy') : 'N/A'}</p>
                     </div>
                 </div>
-                {daysRemaining !== null && (
+                {daysRemaining !== null ? (
                     <div className="text-center bg-black/20 p-3 rounded-lg">
                         <p className="text-sm opacity-80">Status</p>
                         <p className="text-2xl font-bold">
@@ -123,8 +124,7 @@ function DocStatusCard({ contract }: { contract: Contract }) {
                         </p>
                         <p className="text-sm font-medium">{statusText}</p>
                     </div>
-                )}
-                 {daysRemaining === null && (
+                ) : (
                      <div className="text-center bg-black/20 p-3 rounded-lg">
                         <p className="font-semibold">Este documento não tem controle de vencimento.</p>
                     </div>
@@ -417,7 +417,7 @@ export default function AdminPage() {
   }, [users]);
   
   const filteredContracts = useMemo(() => {
-    if (!selectedSupervisorId) {
+    if (!selectedSupervisorId || selectedSupervisorId === 'all') {
         return contracts;
     }
     return contracts.filter(c => c.supervisorId === selectedSupervisorId);
@@ -532,7 +532,7 @@ export default function AdminPage() {
                                 </SelectContent>
                             </Select>
                         </div>
-                        {selectedSupervisorId && (
+                        {selectedSupervisorId && selectedSupervisorId !== 'all' && (
                             <Button variant="ghost" size="icon" onClick={() => setSelectedSupervisorId(null)} className="mt-6">
                                 <FilterX className="h-5 w-5" />
                             </Button>
@@ -589,18 +589,18 @@ export default function AdminPage() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => handleOpenDocsModal(contract)}>
+                        <DropdownMenuItem onClick={(e) => {e.stopPropagation(); handleOpenDocsModal(contract);}}>
                           <FolderOpen className="mr-2 h-4 w-4"/> Documentos
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleOpenEditContractModal(contract)}>
+                        <DropdownMenuItem onClick={(e) => {e.stopPropagation(); handleOpenEditContractModal(contract);}}>
                           <Pencil className="mr-2 h-4 w-4"/> Editar
                         </DropdownMenuItem>
                         {contract.status === 'Ativo' ? (
-                            <DropdownMenuItem onClick={() => handleToggleContractStatus(contract.id, contract.status)} className="text-orange-600">
+                            <DropdownMenuItem onClick={(e) => {e.stopPropagation(); handleToggleContractStatus(contract.id, contract.status);}} className="text-orange-600">
                                 <Trash2 className="mr-2 h-4 w-4" /> Desativar
                             </DropdownMenuItem>
                         ) : (
-                             <DropdownMenuItem onClick={() => handleToggleContractStatus(contract.id, contract.status)}>
+                             <DropdownMenuItem onClick={(e) => {e.stopPropagation(); handleToggleContractStatus(contract.id, contract.status);}}>
                                 <History className="mr-2 h-4 w-4" /> Reativar
                             </DropdownMenuItem>
                         )}
@@ -613,7 +613,7 @@ export default function AdminPage() {
                                <Trash2 className="mr-2 h-4 w-4" /> Deletar
                               </DropdownMenuItem>
                           </AlertDialogTrigger>
-                          <AlertDialogContent>
+                          <AlertDialogContent onClick={(e) => e.stopPropagation()}>
                               <AlertDialogHeader>
                               <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
                               <AlertDialogDescription>

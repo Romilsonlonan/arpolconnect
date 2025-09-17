@@ -119,14 +119,14 @@ export default function ContractsPage() {
         const allContracts: Contract[] = savedContracts ? JSON.parse(savedContracts) : [];
         const allUsers: AppUser[] = savedUsers ? JSON.parse(savedUsers) : initialUsers;
         
-        const user = allUsers.find(u => u.email === CURRENT_USER_EMAIL) || allUsers.find(u => u.role === 'Administrador');
+        const user = allUsers.find(u => u.role === 'Administrador');
         setCurrentUser(user || null);
 
         let visibleContracts: Contract[] = [];
         if (user && user.role === 'Administrador') {
             // Admin sees all contracts, bypassing other permission checks.
             visibleContracts = allContracts;
-        } else if (user && user.permissions.canViewAllContracts) {
+        } else if (user?.permissions.canViewAllContracts) {
             // User with global view permission sees all contracts
             visibleContracts = allContracts;
         } else if (user) {

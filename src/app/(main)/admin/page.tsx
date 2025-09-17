@@ -247,6 +247,29 @@ export default function AdminPage() {
     });
   };
 
+  const handleDeleteContract = (contractId: string) => {
+    const contractToDelete = contracts.find(c => c.id === contractId);
+    if (!contractToDelete) return;
+
+    const updatedContracts = contracts.filter(c => c.id !== contractId);
+    localStorage.setItem(CONTRACTS_STORAGE_KEY, JSON.stringify(updatedContracts));
+    
+    // Also remove any employees associated with this contract
+    const allUsers: User[] = JSON.parse(localStorage.getItem(USERS_STORAGE_KEY) || '[]');
+    const updatedUsers = allUsers.filter(u => !u.permissions.allowedContractIds.includes(contractId)); // This is a weak link, contract name is better
+    localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(updatedUsers));
+    
+    window.dispatchEvent(new StorageEvent('storage', { key: CONTRACTS_STORAGE_KEY }));
+    window.dispatchEvent(new StorageEvent('storage', { key: USERS_STORAGE_KEY }));
+    window.dispatchEvent(new StorageEvent('storage', { key: ORG_CHART_STORAGE_KEY }));
+
+    toast({ 
+      title: "Contrato Deletado",
+      description: `O contrato "${contractToDelete.name}" foi removido permanentemente.`,
+      variant: 'destructive',
+    });
+  };
+
   
   // --- Document Management ---
   const handleSaveDocument = (contractId: string, document: Omit<ContractDocument, 'id' | 'uploadedAt'>) => {
@@ -414,14 +437,38 @@ export default function AdminPage() {
                           <Pencil className="mr-2 h-4 w-4"/> Editar
                         </DropdownMenuItem>
                         {contract.status === 'Ativo' ? (
-                            <DropdownMenuItem onClick={() => handleToggleContractStatus(contract.id, contract.status)} className="text-destructive">
-                                <Trash2 className="mr-2 h-4 w-4" /> Desativar
+                            <DropdownMenuItem onClick={() => handleToggleContractStatus(contract.id, contract.status)}>
+                                <Trash2 className="mr-2 h-4 w-4 text-orange-500" /> Desativar
                             </DropdownMenuItem>
                         ) : (
                              <DropdownMenuItem onClick={() => handleToggleContractStatus(contract.id, contract.status)}>
                                 <History className="mr-2 h-4 w-4" /> Reativar
                             </DropdownMenuItem>
                         )}
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                             <DropdownMenuItem
+                                onSelect={(e) => e.preventDefault()}
+                                className="text-destructive"
+                              >
+                               <Trash2 className="mr-2 h-4 w-4" /> Deletar
+                              </DropdownMenuItem>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                              <AlertDialogHeader>
+                              <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                  Esta ação não pode ser desfeita. Isso removerá permanentemente o contrato e pode afetar usuários associados.
+                              </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDeleteContract(contract.id)}>
+                                  Deletar Permanentemente
+                              </AlertDialogAction>
+                              </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
@@ -461,3 +508,5 @@ export default function AdminPage() {
     </div>
   );
 }
+
+    

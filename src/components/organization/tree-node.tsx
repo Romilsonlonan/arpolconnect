@@ -7,7 +7,7 @@ import { getAvatar } from '@/lib/avatar-storage';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Phone, Briefcase, Building, MessageSquarePlus, ChevronDown, ChevronUp, Bell, Mail } from 'lucide-react';
+import { Phone, Briefcase, Building, MessageSquarePlus, ChevronDown, ChevronUp, Bell, Mail, Eye, EyeOff } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   Tooltip,
@@ -52,7 +52,9 @@ function NodeAvatar({ node }: { node: OrgNode }) {
 export function TreeNode({ node, onUpdate, onAddChild, onRemove, onMoveNode, onOpenTicketModal, onToggleVisibility, privateTicketCount, isRoot = false }: TreeNodeProps) {
   const [isExpanded, setIsExpanded] = useState(true);
   const isContractNode = node.role === 'Contrato';
+  const isSupervisorNode = node.role === 'Supervisor' || node.role === 'Supervisor de Qualidade' || node.role === 'Administrador';
   const formattedPhone = node.contact?.replace(/\D/g, '');
+  const isVisibleInNeuralNet = node.showInNeuralNet !== false; // Default to true if undefined
 
   return (
     <TooltipProvider>
@@ -118,6 +120,16 @@ export function TreeNode({ node, onUpdate, onAddChild, onRemove, onMoveNode, onO
                     <TooltipContent><p>Enviar WhatsApp</p></TooltipContent>
                 </Tooltip>
                 </>
+            )}
+             {isSupervisorNode && !isRoot && (
+                 <Tooltip>
+                    <TooltipTrigger asChild>
+                        <Button variant="outline" size="icon" className="h-7 w-7 bg-white/80" onClick={() => onToggleVisibility(node.id)}>
+                            {isVisibleInNeuralNet ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
+                        </Button>
+                    </TooltipTrigger>
+                    <TooltipContent><p>{isVisibleInNeuralNet ? 'Ocultar da Rede' : 'Mostrar na Rede'}</p></TooltipContent>
+                </Tooltip>
             )}
           </div>
 

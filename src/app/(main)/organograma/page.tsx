@@ -7,8 +7,10 @@ import { TreeNode } from '@/components/organization/tree-node';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
-import { buildTreeFromUsersAndContracts } from '@/lib/tree-utils';
+import { buildTreeFromUsersAndContracts, updateTree } from '@/lib/tree-utils';
 import { TicketModal } from '@/components/organization/ticket-modal';
+import { useToast } from '@/hooks/use-toast';
+
 
 const ORG_CHART_STORAGE_KEY = 'orgChartTree';
 const DASHBOARD_MESSAGES_KEY = 'dashboardMessages';
@@ -25,6 +27,7 @@ export default function OrganogramaPage() {
   const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
   const [ticketNode, setTicketNode] = useState<OrgNode | null>(null);
   const [allUsers, setAllUsers] = useState<AppUser[]>([]);
+  const { toast } = useToast();
   
   const loadData = () => {
      try {
@@ -32,6 +35,7 @@ export default function OrganogramaPage() {
       const savedUsers = localStorage.getItem(USERS_STORAGE_KEY);
       const savedContracts = localStorage.getItem(CONTRACTS_STORAGE_KEY);
       const savedMessages = localStorage.getItem(DASHBOARD_MESSAGES_KEY);
+      const savedTree = localStorage.getItem(ORG_CHART_STORAGE_KEY);
 
       const users: AppUser[] = savedUsers ? JSON.parse(savedUsers) : [];
       const contracts: Contract[] = savedContracts ? JSON.parse(savedContracts) : [];
@@ -41,8 +45,14 @@ export default function OrganogramaPage() {
         setMessages(JSON.parse(savedMessages));
       }
       
-      const generatedTree = buildTreeFromUsersAndContracts(users, contracts);
-      setTree(generatedTree);
+      let finalTree;
+      if (savedTree) {
+        finalTree = JSON.parse(savedTree);
+      } else {
+        finalTree = buildTreeFromUsersAndContracts(users, contracts);
+        localStorage.setItem(ORG_CHART_STORAGE_KEY, JSON.stringify(finalTree));
+      }
+      setTree(finalTree);
 
     } catch (error) {
       console.error("Failed to parse data from localStorage", error);
@@ -57,6 +67,27 @@ export default function OrganogramaPage() {
     window.addEventListener('storage', loadData);
     return () => window.removeEventListener('storage', loadData);
   }, []);
+
+  const handleToggleVisibility = (nodeId: string) => {
+    if (!tree) return;
+    
+    const newTree = updateTree(tree, (node) => {
+      if (node.id === nodeId) {
+        const isVisible = !(node.showInNeuralNet !== false); // Default to true if undefined
+        node.showInNeuralNet = !isVisible;
+         toast({
+            title: `Visibilidade Alterada`,
+            description: `${node.name} ${!isVisible ? 'agora será exibido' : 'não será mais exibido'} na Rede de Supervisores.`,
+        });
+      }
+      return node;
+    });
+
+    setTree(newTree);
+    localStorage.setItem(ORG_CHART_STORAGE_KEY, JSON.stringify(newTree));
+    window.dispatchEvent(new StorageEvent('storage', { key: ORG_CHART_STORAGE_KEY }));
+  };
+
 
   // Placeholder functions, as direct editing from organograma is disabled
   const handlePlaceholder = () => {};
@@ -136,7 +167,7 @@ export default function OrganogramaPage() {
             onRemove={handlePlaceholder}
             onMoveNode={handlePlaceholder}
             onOpenTicketModal={handleOpenTicketModal}
-            onToggleVisibility={handlePlaceholder}
+            onToggleVisibility={handleToggleVisibility}
             privateTicketCount={privateTicketCounts.get(tree.id) || 0}
             isRoot={true}
           />

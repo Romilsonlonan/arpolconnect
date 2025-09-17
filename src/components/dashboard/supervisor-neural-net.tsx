@@ -21,7 +21,7 @@ const AVATAR_STORAGE_PREFIX = 'avatar_';
 
 function getVisibleNodes(tree: OrgNode): OrgNode[] {
     const visibleNodes: OrgNode[] = [];
-    const rolesToShow = ['Supervisor', 'Supervisor de Qualidade'];
+    const rolesToShow = ['Supervisor', 'Supervisor de Qualidade', 'Administrador'];
 
     function findVisible(node: OrgNode) {
         // Check if the node's role is one of the roles to be shown and if it's not hidden

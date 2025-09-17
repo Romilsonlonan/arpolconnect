@@ -423,6 +423,13 @@ export default function AdminPage() {
     return contracts.filter(c => c.supervisorId === selectedSupervisorId);
   }, [contracts, selectedSupervisorId]);
 
+  useEffect(() => {
+    // If the currently displayed contract is not in the new filtered list, clear it.
+    if (selectedContractForInfo && !filteredContracts.find(c => c.id === selectedContractForInfo.id)) {
+        setSelectedContractForInfo(null);
+    }
+  }, [filteredContracts, selectedContractForInfo]);
+
   if (!isClient) return null;
 
   return (

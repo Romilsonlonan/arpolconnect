@@ -41,6 +41,7 @@ import { getAvatar } from '@/lib/avatar-storage';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { differenceInDays, isValid, format } from 'date-fns';
+import { Label } from '@/components/ui/label';
 
 const USERS_STORAGE_KEY = 'arpolarUsers';
 const CONTRACTS_STORAGE_KEY = 'arpolarContracts';

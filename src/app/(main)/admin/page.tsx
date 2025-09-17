@@ -37,11 +37,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { getAvatar } from '@/lib/avatar-storage';
+import { getAvatar, saveAvatar } from '@/lib/avatar-storage';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from '@/lib/utils';
 import { differenceInDays, isValid, format } from 'date-fns';
 import { Label } from '@/components/ui/label';
+import { removeNodeFromTree } from '@/lib/tree-utils';
 
 const USERS_STORAGE_KEY = 'arpolarUsers';
 const CONTRACTS_STORAGE_KEY = 'arpolarContracts';
@@ -565,10 +566,15 @@ export default function AdminPage() {
             </TableHeader>
             <TableBody>
               {filteredContracts.map((contract) => (
-                <TableRow key={contract.id} className={cn(
-                    contract.status === 'Inativo' ? 'bg-muted/50 text-muted-foreground' : 'cursor-pointer',
-                    selectedContractForInfo?.id === contract.id && 'bg-accent'
-                )} onClick={() => setSelectedContractForInfo(contract)}>
+                <TableRow 
+                    key={contract.id} 
+                    className={cn(
+                        'transition-colors',
+                        contract.status === 'Inativo' ? 'bg-muted/50 text-muted-foreground' : 'cursor-pointer hover:bg-accent/50',
+                        selectedContractForInfo?.id === contract.id && 'bg-accent'
+                    )} 
+                    onClick={() => setSelectedContractForInfo(contract)}
+                >
                   <TableCell className="font-medium">{contract.name}</TableCell>
                   <TableCell>{contract.supervisorName}</TableCell>
                    <TableCell>
@@ -665,5 +671,3 @@ export default function AdminPage() {
     </div>
   );
 }
-
-    

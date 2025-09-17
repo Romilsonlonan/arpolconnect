@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { MoreHorizontal, PlusCircle, Trash2, Pencil, FolderOpen } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Trash2, Pencil, FolderOpen, History, UserCheck } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -165,16 +165,20 @@ export default function AdminPage() {
     setEditingUser(null);
   };
 
-  const handleDeleteUser = (userId: string) => {
-    const userToDelete = users.find(u => u.id === userId);
-    if (!userToDelete) return;
+  const handleToggleUserStatus = (userId: string, currentStatus: 'Ativo' | 'Inativo') => {
+    const userToUpdate = users.find(u => u.id === userId);
+    if (!userToUpdate) return;
 
-    const updatedUsers = users.filter(u => u.id !== userId);
-    localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(updatedUsers));
-    removeAvatar(userId);
+    const newStatus = currentStatus === 'Ativo' ? 'Inativo' : 'Ativo';
+    const updatedUsers = users.map(u => u.id === userId ? { ...u, status: newStatus } : u);
     
+    localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(updatedUsers));
     window.dispatchEvent(new StorageEvent('storage', { key: USERS_STORAGE_KEY }));
-    toast({ title: "Usuário Removido", description: `${userToDelete.name} foi removido do sistema.` });
+    
+    toast({ 
+        title: `Usuário ${newStatus === 'Ativo' ? 'Reativado' : 'Desativado'}`, 
+        description: `O status de ${userToUpdate.name} foi alterado para ${newStatus}.` 
+    });
   };
   
   // --- Contract Management ---
@@ -211,7 +215,8 @@ export default function AdminPage() {
         const newContract: Contract = {
             ...contractData,
             id: `contract-${Date.now()}`,
-            documents: []
+            documents: [],
+            status: 'Ativo' // Default status for new contracts
         };
         updatedContracts = [...currentContracts, newContract];
         toastTitle = "Contrato Adicionado!";
@@ -224,26 +229,24 @@ export default function AdminPage() {
     setIsContractModalOpen(false);
     setEditingContract(null);
   };
+  
+  const handleToggleContractStatus = (contractId: string, currentStatus: 'Ativo' | 'Inativo') => {
+    const contractToUpdate = contracts.find(c => c.id === contractId);
+    if (!contractToUpdate) return;
 
-  const handleDeleteContract = (contractId: string) => {
-    const contractToDelete = contracts.find(c => c.id === contractId);
-    if (!contractToDelete) return;
+    const newStatus = currentStatus === 'Ativo' ? 'Inativo' : 'Ativo';
+    const updatedContracts = contracts.map(c => c.id === contractId ? { ...c, status: newStatus } : c);
 
-    const updatedContracts = contracts.filter(c => c.id !== contractId);
     localStorage.setItem(CONTRACTS_STORAGE_KEY, JSON.stringify(updatedContracts));
-
-    // Also remove from org chart if it exists there
-    const savedTree = localStorage.getItem(ORG_CHART_STORAGE_KEY);
-    if (savedTree) {
-      let orgTree = JSON.parse(savedTree);
-      const newTree = removeNodeFromTree(orgTree, contractId);
-      localStorage.setItem(ORG_CHART_STORAGE_KEY, JSON.stringify(newTree));
-      window.dispatchEvent(new StorageEvent('storage', { key: ORG_CHART_STORAGE_KEY }));
-    }
-
     window.dispatchEvent(new StorageEvent('storage', { key: CONTRACTS_STORAGE_KEY }));
-    toast({ title: 'Contrato Deletado', description: `O contrato "${contractToDelete.name}" foi removido.` });
+    window.dispatchEvent(new StorageEvent('storage', { key: ORG_CHART_STORAGE_KEY })); // Update org chart as well
+
+    toast({ 
+      title: `Contrato ${newStatus === 'Ativo' ? 'Reativado' : 'Desativado'}`,
+      description: `O status do contrato "${contractToUpdate.name}" foi alterado.`
+    });
   };
+
   
   // --- Document Management ---
   const handleSaveDocument = (contractId: string, document: Omit<ContractDocument, 'id' | 'uploadedAt'>) => {
@@ -321,7 +324,7 @@ export default function AdminPage() {
             </TableHeader>
             <TableBody>
               {users.map((user) => (
-                <TableRow key={user.id}>
+                <TableRow key={user.id} className={user.status === 'Inativo' ? 'bg-muted/50 text-muted-foreground' : ''}>
                   <TableCell>
                       <UserAvatar user={user}/>
                   </TableCell>
@@ -345,22 +348,18 @@ export default function AdminPage() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => handleOpenEditUserModal(user)}>Editar</DropdownMenuItem>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                             <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">Deletar</DropdownMenuItem>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
-                              <AlertDialogDescription>Esta ação removerá o usuário permanentemente. Deseja continuar?</AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDeleteUser(user.id)}>Deletar</AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
+                        <DropdownMenuItem onClick={() => handleOpenEditUserModal(user)}>
+                            <Pencil className="mr-2 h-4 w-4" /> Editar
+                        </DropdownMenuItem>
+                        {user.status === 'Ativo' ? (
+                            <DropdownMenuItem onClick={() => handleToggleUserStatus(user.id, user.status)} className="text-destructive">
+                                <Trash2 className="mr-2 h-4 w-4" /> Desativar
+                            </DropdownMenuItem>
+                        ) : (
+                            <DropdownMenuItem onClick={() => handleToggleUserStatus(user.id, user.status)}>
+                                <History className="mr-2 h-4 w-4" /> Reativar
+                            </DropdownMenuItem>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
@@ -382,15 +381,21 @@ export default function AdminPage() {
               <TableRow>
                 <TableHead>Nome do Contrato</TableHead>
                 <TableHead>Supervisor</TableHead>
+                <TableHead>Status</TableHead>
                 <TableHead>Região</TableHead>
                 <TableHead><span className="sr-only">Ações</span></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {contracts.map((contract) => (
-                <TableRow key={contract.id}>
+                <TableRow key={contract.id} className={contract.status === 'Inativo' ? 'bg-muted/50 text-muted-foreground' : ''}>
                   <TableCell className="font-medium">{contract.name}</TableCell>
                   <TableCell>{contract.supervisorName}</TableCell>
+                   <TableCell>
+                    <Badge variant={contract.status === 'Ativo' ? 'default' : 'outline'} className={contract.status === 'Ativo' ? 'bg-green-500 text-white' : ''}>
+                        {contract.status}
+                    </Badge>
+                  </TableCell>
                   <TableCell>{contract.region}</TableCell>
                   <TableCell>
                      <DropdownMenu>
@@ -408,23 +413,15 @@ export default function AdminPage() {
                         <DropdownMenuItem onClick={() => handleOpenEditContractModal(contract)}>
                           <Pencil className="mr-2 h-4 w-4"/> Editar
                         </DropdownMenuItem>
-                        <AlertDialog>
-                          <AlertDialogTrigger asChild>
-                             <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">
-                              <Trash2 className="mr-2 h-4 w-4"/> Deletar
-                             </DropdownMenuItem>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
-                              <AlertDialogDescription>Esta ação removerá o contrato permanentemente. Deseja continuar?</AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDeleteContract(contract.id)}>Deletar</AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
+                        {contract.status === 'Ativo' ? (
+                            <DropdownMenuItem onClick={() => handleToggleContractStatus(contract.id, contract.status)} className="text-destructive">
+                                <Trash2 className="mr-2 h-4 w-4" /> Desativar
+                            </DropdownMenuItem>
+                        ) : (
+                             <DropdownMenuItem onClick={() => handleToggleContractStatus(contract.id, contract.status)}>
+                                <History className="mr-2 h-4 w-4" /> Reativar
+                            </DropdownMenuItem>
+                        )}
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
@@ -447,7 +444,7 @@ export default function AdminPage() {
         isOpen={isContractModalOpen}
         onClose={() => setIsContractModalOpen(false)}
         onSave={handleSaveContract}
-        supervisors={users.filter(u => u.role === 'Supervisor' || u.role === 'Administrador')}
+        supervisors={users.filter(u => u.status === 'Ativo' && (u.role === 'Supervisor' || u.role === 'Administrador'))}
         editingContract={editingContract}
       />
       

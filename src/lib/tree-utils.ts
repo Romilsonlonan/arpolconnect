@@ -102,7 +102,8 @@ export function buildTreeFromUsersAndContracts(users: User[], contracts: Contrac
   childrenMap.set(root.id, []);
 
   // Process users
-  users.forEach(user => {
+  const activeUsers = users.filter(u => u.status === 'Ativo');
+  activeUsers.forEach(user => {
     const userNode: OrgNode = {
       id: user.id,
       name: user.name,
@@ -115,7 +116,7 @@ export function buildTreeFromUsersAndContracts(users: User[], contracts: Contrac
     nodeMap.set(user.id, userNode);
     // This logic is simplified; real app would need a supervisor field in User model
     // For now, let's assume all non-admins report to the root admin
-    const supervisorId = user.role !== 'Administrador' ? users.find(u=>u.role === 'Administrador')?.id || root.id : root.id;
+    const supervisorId = user.role !== 'Administrador' ? activeUsers.find(u=>u.role === 'Administrador')?.id || root.id : root.id;
     if (!childrenMap.has(supervisorId)) {
         childrenMap.set(supervisorId, []);
     }
@@ -123,7 +124,8 @@ export function buildTreeFromUsersAndContracts(users: User[], contracts: Contrac
   });
 
   // Process contracts
-  contracts.forEach(contract => {
+  const activeContracts = contracts.filter(c => c.status === 'Ativo');
+  activeContracts.forEach(contract => {
     const contractNode: OrgNode = {
         id: contract.id,
         name: contract.name,
@@ -132,10 +134,16 @@ export function buildTreeFromUsersAndContracts(users: User[], contracts: Contrac
         showInNeuralNet: false,
         children: [],
     };
-    if (!childrenMap.has(contract.supervisorId)) {
-        childrenMap.set(contract.supervisorId, []);
+    if (childrenMap.has(contract.supervisorId)) {
+      childrenMap.get(contract.supervisorId)!.push(contractNode);
+    } else {
+      // If supervisor is inactive, maybe attach to admin?
+      const admin = activeUsers.find(u => u.role === 'Administrador');
+      if (admin) {
+        if (!childrenMap.has(admin.id)) childrenMap.set(admin.id, []);
+        childrenMap.get(admin.id)!.push(contractNode);
+      }
     }
-    childrenMap.get(contract.supervisorId)!.push(contractNode);
   });
   
   // Build the tree structure from the root down

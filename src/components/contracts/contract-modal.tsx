@@ -25,7 +25,7 @@ type ContractModalProps = {
   isOpen: boolean;
   onClose: () => void;
   supervisors: AppUser[];
-  onSave: (data: Omit<Contract, 'id'|'documents'>, id?: string) => void;
+  onSave: (data: Omit<Contract, 'id'|'documents' | 'status'>, id?: string) => void;
   editingContract: Contract | null;
 };
 
@@ -37,6 +37,8 @@ export function ContractModal({ isOpen, onClose, supervisors, onSave, editingCon
     const [backgroundImage, setBackgroundImage] = useState('');
     const [artNumber, setArtNumber] = useState('');
     const [artStartDate, setArtStartDate] = useState('');
+    const [status, setStatus] = useState<Contract['status']>('Ativo');
+
     const fileInputRef = useRef<HTMLInputElement>(null);
     const { toast } = useToast();
 
@@ -50,6 +52,7 @@ export function ContractModal({ isOpen, onClose, supervisors, onSave, editingCon
                 setBackgroundImage(editingContract.backgroundImage);
                 setArtNumber(editingContract.artNumber || '');
                 setArtStartDate(editingContract.artStartDate || '');
+                setStatus(editingContract.status);
             } else {
                 // Reset form for new contract
                 setName('');
@@ -59,6 +62,7 @@ export function ContractModal({ isOpen, onClose, supervisors, onSave, editingCon
                 setBackgroundImage('');
                 setArtNumber('');
                 setArtStartDate('');
+                setStatus('Ativo');
             }
         }
     }, [editingContract, isOpen]);
@@ -201,6 +205,18 @@ export function ContractModal({ isOpen, onClose, supervisors, onSave, editingCon
                                 <Input id="artStartDate" type="date" value={artStartDate} onChange={e => setArtStartDate(e.target.value)} />
                             </div>
                         </div>
+                        {editingContract && (
+                             <div className="grid gap-2">
+                                <Label htmlFor="status">Status do Contrato</Label>
+                                <Select onValueChange={(v) => setStatus(v as Contract['status'])} value={status}>
+                                    <SelectTrigger><SelectValue /></SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="Ativo">Ativo</SelectItem>
+                                        <SelectItem value="Inativo">Inativo</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        )}
                         <div className="grid gap-2">
                             <Label>Imagem de Fundo</Label>
                             {backgroundImage && (

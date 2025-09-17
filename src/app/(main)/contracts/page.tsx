@@ -1,13 +1,12 @@
 
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { PlusCircle, User, MapPin, Pencil, Trash2 } from 'lucide-react';
-import { type OrgNode, type Contract, initialOrgTree, type User as AppUser } from '@/lib/data';
+import { PlusCircle, User, MapPin, Pencil, Trash2, FolderOpen } from 'lucide-react';
+import { type OrgNode, type Contract, initialOrgTree, type User as AppUser, type ContractDocument } from '@/lib/data';
 import Image from 'next/image';
-import { cn } from '@/lib/utils';
 import { ContractModal } from '@/components/contracts/contract-modal';
 import { useToast } from '@/hooks/use-toast';
 import {
@@ -19,16 +18,17 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { removeNodeFromTree } from '@/lib/tree-utils';
+import { ContractDocsModal } from '@/components/contracts/contract-docs-modal';
+
 
 const CONTRACTS_STORAGE_KEY = 'arpolarContracts';
 const ORG_CHART_STORAGE_KEY = 'orgChartTree';
 const USERS_STORAGE_KEY = 'arpolarUsers';
 const CURRENT_USER_EMAIL = 'romilson@arpolar.com.br'; // This should be dynamic in a real app
 
-function ContractCard({ contract, onEdit, onDelete }: { contract: Contract; onEdit: () => void; onDelete: () => void; }) {
+function ContractCard({ contract, onEdit, onDelete, onOpenDocs }: { contract: Contract; onEdit: () => void; onDelete: () => void; onOpenDocs: () => void; }) {
   return (
     <Card 
       className="group flex flex-col justify-between text-white overflow-hidden shadow-lg relative min-h-[250px] bg-cover bg-center transition-all duration-300"
@@ -41,10 +41,15 @@ function ContractCard({ contract, onEdit, onDelete }: { contract: Contract; onEd
           variant="ghost" 
           size="icon" 
           className="h-8 w-8 text-white bg-black/20 hover:bg-black/50"
-          onClick={(e) => {
-            e.stopPropagation();
-            onEdit();
-          }}
+          onClick={(e) => { e.stopPropagation(); onOpenDocs(); }}
+        >
+          <FolderOpen className="h-4 w-4" />
+        </Button>
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="h-8 w-8 text-white bg-black/20 hover:bg-black/50"
+          onClick={(e) => { e.stopPropagation(); onEdit(); }}
         >
           <Pencil className="h-4 w-4" />
         </Button>
@@ -76,12 +81,12 @@ function ContractCard({ contract, onEdit, onDelete }: { contract: Contract; onEd
         </AlertDialog>
       </div>
 
-      <CardHeader>
+      <CardHeader onClick={onOpenDocs} className="cursor-pointer">
         <CardTitle className="text-xl font-bold font-headline z-10">{contract.name}</CardTitle>
         <CardDescription className="text-white/80 z-10">{contract.address}</CardDescription>
       </CardHeader>
-      <CardContent className="flex-grow"></CardContent>
-      <CardFooter className="flex flex-col items-start gap-2 text-sm z-10">
+      <CardContent className="flex-grow cursor-pointer" onClick={onOpenDocs}></CardContent>
+      <CardFooter className="flex flex-col items-start gap-2 text-sm z-10 cursor-pointer" onClick={onOpenDocs}>
          <div className="flex items-center gap-2">
             <User className="w-4 h-4"/>
             <span>{contract.supervisorName}</span>
@@ -97,19 +102,16 @@ function ContractCard({ contract, onEdit, onDelete }: { contract: Contract; onEd
 
 function findSupervisorsInTree(node: OrgNode): OrgNode[] {
     const supervisors: OrgNode[] = [];
-
     function traverse(currentNode: OrgNode) {
         if (currentNode.role === 'Supervisor' && currentNode.showInNeuralNet !== false) {
             supervisors.push(currentNode);
         }
-        
         if (currentNode.children) {
             for (const child of currentNode.children) {
                 traverse(child);
             }
         }
     }
-    
     traverse(node);
     return supervisors;
 }
@@ -120,6 +122,8 @@ export default function ContractsPage() {
   const [isClient, setIsClient] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingContract, setEditingContract] = useState<Contract | null>(null);
+  const [docsModalContract, setDocsModalContract] = useState<Contract | null>(null);
+  const [currentUser, setCurrentUser] = useState<AppUser | null>(null);
   const { toast } = useToast();
 
   const loadData = () => {
@@ -130,21 +134,18 @@ export default function ContractsPage() {
 
         const allContracts: Contract[] = savedContracts ? JSON.parse(savedContracts) : [];
         const allUsers: AppUser[] = savedUsers ? JSON.parse(savedUsers) : [];
-
-        // Assuming a logged-in user. In a real app, this would come from an auth context.
-        const currentUser = allUsers.find(u => u.email === CURRENT_USER_EMAIL) || allUsers.find(u => u.role === 'Administrador');
+        
+        const user = allUsers.find(u => u.email === CURRENT_USER_EMAIL) || allUsers.find(u => u.role === 'Administrador');
+        setCurrentUser(user || null);
 
         let visibleContracts: Contract[] = [];
-        if (currentUser) {
-            if (currentUser.permissions.canViewAllContracts) {
+        if (user) {
+            if (user.permissions.canViewAllContracts) {
                 visibleContracts = allContracts;
             } else {
-                const allowedIds = new Set(currentUser.permissions.allowedContractIds);
+                const allowedIds = new Set(user.permissions.allowedContractIds);
                 visibleContracts = allContracts.filter(c => allowedIds.has(c.id));
             }
-        } else {
-             // Fallback for when no user is found, show no contracts.
-             console.warn("Current user not found. Displaying no contracts.");
         }
         
         setContracts(visibleContracts);
@@ -171,6 +172,10 @@ export default function ContractsPage() {
     setEditingContract(contract);
     setIsModalOpen(true);
   }
+  
+  const handleOpenDocsModal = (contract: Contract) => {
+    setDocsModalContract(contract);
+  }
 
   const handleSaveContract = (contractData: Omit<Contract, 'id'>, id?: string) => {
     let currentContracts: Contract[] = [];
@@ -184,15 +189,22 @@ export default function ContractsPage() {
     let updatedContracts: Contract[];
     let toastTitle = '';
     let toastDescription = '';
-
+    
     if (id) {
-        updatedContracts = currentContracts.map(c => c.id === id ? { ...c, ...contractData, id } : c);
+        updatedContracts = currentContracts.map(c => {
+          if (c.id === id) {
+            // Preserve existing documents when editing
+            return { ...c, ...contractData, id, documents: c.documents || [] };
+          }
+          return c;
+        });
         toastTitle = "Contrato Atualizado!";
         toastDescription = `O contrato "${contractData.name}" foi atualizado com sucesso.`;
     } else {
         const newContract: Contract = {
             ...contractData,
-            id: `contract-${Date.now()}`
+            id: `contract-${Date.now()}`,
+            documents: [] // Initialize with empty documents array
         };
         updatedContracts = [...currentContracts, newContract];
         toastTitle = "Contrato Adicionado!";
@@ -200,55 +212,66 @@ export default function ContractsPage() {
     }
       
     localStorage.setItem(CONTRACTS_STORAGE_KEY, JSON.stringify(updatedContracts));
+    window.dispatchEvent(new StorageEvent('storage', { key: CONTRACTS_STORAGE_KEY }));
     
-    loadData();
-
-    toast({
-        title: toastTitle,
-        description: toastDescription
-    });
-
+    toast({ title: toastTitle, description: toastDescription });
     setIsModalOpen(false);
     setEditingContract(null);
   };
   
   const handleDeleteContract = (contractId: string) => {
-    try {
-        const contractToDelete = contracts.find(c => c.id === contractId);
-        if (!contractToDelete) return;
+    const contractToDelete = contracts.find(c => c.id === contractId);
+    if (!contractToDelete) return;
 
-        // Remove from contracts list
-        const currentContracts: Contract[] = JSON.parse(localStorage.getItem(CONTRACTS_STORAGE_KEY) || '[]');
-        const updatedContracts = currentContracts.filter(c => c.id !== contractId);
-        localStorage.setItem(CONTRACTS_STORAGE_KEY, JSON.stringify(updatedContracts));
+    const updatedContracts = contracts.filter(c => c.id !== contractId);
+    localStorage.setItem(CONTRACTS_STORAGE_KEY, JSON.stringify(updatedContracts));
 
-        // Remove from org chart
-        const savedTree = localStorage.getItem(ORG_CHART_STORAGE_KEY);
-        let orgTree = savedTree ? JSON.parse(savedTree) : initialOrgTree;
-        const newTree = removeNodeFromTree(orgTree, contractId);
-        localStorage.setItem(ORG_CHART_STORAGE_KEY, JSON.stringify(newTree));
+    const savedTree = localStorage.getItem(ORG_CHART_STORAGE_KEY);
+    let orgTree = savedTree ? JSON.parse(savedTree) : initialOrgTree;
+    const newTree = removeNodeFromTree(orgTree, contractId);
+    localStorage.setItem(ORG_CHART_STORAGE_KEY, JSON.stringify(newTree));
 
-        // Dispatch storage event to notify other components like organograma
-        window.dispatchEvent(new StorageEvent('storage', { key: CONTRACTS_STORAGE_KEY }));
-        window.dispatchEvent(new StorageEvent('storage', { key: ORG_CHART_STORAGE_KEY }));
+    window.dispatchEvent(new StorageEvent('storage', { key: CONTRACTS_STORAGE_KEY }));
+    window.dispatchEvent(new StorageEvent('storage', { key: ORG_CHART_STORAGE_KEY }));
 
-        toast({
-            title: 'Contrato Deletado',
-            description: `O contrato "${contractToDelete.name}" foi removido com sucesso.`
-        });
-        
-        loadData();
-
-    } catch (error) {
-        console.error('Failed to delete contract:', error);
-        toast({
-            title: 'Erro ao Deletar',
-            description: 'Não foi possível remover o contrato.',
-            variant: 'destructive'
-        });
-    }
+    toast({ title: 'Contrato Deletado', description: `O contrato "${contractToDelete.name}" foi removido.` });
   };
+  
+  const handleSaveDocument = (contractId: string, document: Omit<ContractDocument, 'id' | 'uploadedAt'>) => {
+    const newDocument: ContractDocument = {
+        ...document,
+        id: `doc-${Date.now()}`,
+        uploadedAt: new Date().toISOString()
+    };
+    
+    const updatedContracts = contracts.map(c => {
+        if (c.id === contractId) {
+            const updatedDocs = [...(c.documents || []), newDocument];
+            return { ...c, documents: updatedDocs };
+        }
+        return c;
+    });
 
+    localStorage.setItem(CONTRACTS_STORAGE_KEY, JSON.stringify(updatedContracts));
+    window.dispatchEvent(new StorageEvent('storage', { key: CONTRACTS_STORAGE_KEY }));
+
+    toast({ title: "Documento Salvo!", description: `"${document.name}" foi adicionado ao contrato.` });
+  };
+  
+  const handleDeleteDocument = (contractId: string, documentId: string) => {
+     const updatedContracts = contracts.map(c => {
+        if (c.id === contractId) {
+            const updatedDocs = (c.documents || []).filter(doc => doc.id !== documentId);
+            return { ...c, documents: updatedDocs };
+        }
+        return c;
+    });
+
+    localStorage.setItem(CONTRACTS_STORAGE_KEY, JSON.stringify(updatedContracts));
+    window.dispatchEvent(new StorageEvent('storage', { key: CONTRACTS_STORAGE_KEY }));
+
+    toast({ title: "Documento Removido", variant: "destructive" });
+  }
 
   if (!isClient) return null;
 
@@ -278,6 +301,7 @@ export default function ContractsPage() {
                   contract={contract} 
                   onEdit={() => handleOpenEditModal(contract)}
                   onDelete={() => handleDeleteContract(contract.id)}
+                  onOpenDocs={() => handleOpenDocsModal(contract)}
                 />
             ))}
         </div>
@@ -290,6 +314,17 @@ export default function ContractsPage() {
         supervisors={supervisors}
         editingContract={editingContract}
       />
+      
+      {docsModalContract && (
+        <ContractDocsModal 
+            isOpen={!!docsModalContract}
+            onClose={() => setDocsModalContract(null)}
+            contract={docsModalContract}
+            onSaveDocument={handleSaveDocument}
+            onDeleteDocument={handleDeleteDocument}
+            currentUser={currentUser}
+        />
+      )}
     </div>
   );
 }

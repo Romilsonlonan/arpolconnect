@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -71,7 +70,7 @@ export default function AdminPage() {
       
       setUsers(savedUsers ? JSON.parse(savedUsers) : []);
       setContracts(savedContracts ? JSON.parse(savedContracts) : []);
-    } catch (error) => {
+    } catch (error) {
       console.error("Failed to load data from localStorage", error);
       toast({ title: "Erro ao carregar dados", variant: "destructive" });
     }
@@ -253,4 +252,3 @@ export default function AdminPage() {
     </div>
   );
 }
-

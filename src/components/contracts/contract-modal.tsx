@@ -25,7 +25,7 @@ type ContractModalProps = {
   isOpen: boolean;
   onClose: () => void;
   supervisors: AppUser[];
-  onSave: (data: Omit<Contract, 'id'|'documents' | 'status'>, id?: string) => void;
+  onSave: (data: Omit<Contract, 'id'|'documents'>, id?: string) => void;
   editingContract: Contract | null;
 };
 
@@ -183,6 +183,7 @@ export function ContractModal({ isOpen, onClose, supervisors, onSave, editingCon
             documentType,
             docStartDate,
             docEndDate,
+            status
         }, editingContract?.id);
     }
 

@@ -300,7 +300,7 @@ export default function AdminPage() {
     setDocsModalContract(contract);
   }
 
-  const handleSaveContract = (contractData: Omit<Contract, 'id'|'documents'>, id?: string) => {
+  const handleSaveContract = (contractData: Omit<Contract, 'id' | 'documents'>, id?: string) => {
     let currentContracts: Contract[] = [];
     try {
        currentContracts = JSON.parse(localStorage.getItem(CONTRACTS_STORAGE_KEY) || '[]');
@@ -313,14 +313,14 @@ export default function AdminPage() {
     let toastTitle = '';
     
     if (id) {
-        updatedContracts = currentContracts.map(c => c.id === id ? { ...c, ...contractData, id } : c);
+        updatedContracts = currentContracts.map(c => c.id === id ? { ...c, ...contractData, id, documents: c.documents || [] } : c);
         toastTitle = "Contrato Atualizado!";
     } else {
         const newContract: Contract = {
             ...contractData,
             id: `contract-${Date.now()}`,
             documents: [],
-            status: 'Ativo' // Default status for new contracts
+            status: contractData.status || 'Ativo'
         };
         updatedContracts = [...currentContracts, newContract];
         toastTitle = "Contrato Adicionado!";

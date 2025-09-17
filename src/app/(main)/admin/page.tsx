@@ -74,10 +74,7 @@ function DocStatusCard({ contract }: { contract: Contract }) {
             return { daysRemaining, statusColor: 'bg-black', statusText: 'Vencida' };
         }
         if (daysRemaining <= 7) {
-            return { daysRemaining, statusColor: 'bg-red-600', statusText: 'Vencimento crítico' };
-        }
-        if (daysRemaining <= 30) {
-            return { daysRemaining, statusColor: 'bg-yellow-500', statusText: 'Atenção ao vencimento' };
+            return { daysRemaining, statusColor: 'bg-destructive', statusText: 'Vencimento crítico' };
         }
         return {
             daysRemaining,
@@ -153,7 +150,7 @@ function UserAvatar({ user }: { user: User }) {
     return (
         <Avatar className="h-9 w-9">
             <AvatarImage src={avatarUrl ?? undefined} alt={user.name} />
-            <AvatarFallback>{user.name.slice(0, 2).toUpperCase()}></AvatarFallback>
+            <AvatarFallback>{user.name.slice(0, 2).toUpperCase()}</AvatarFallback>
         </Avatar>
     );
 }
@@ -670,5 +667,3 @@ export default function AdminPage() {
     </div>
   );
 }
-
-    

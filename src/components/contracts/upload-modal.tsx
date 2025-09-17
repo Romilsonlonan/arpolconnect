@@ -68,12 +68,15 @@ export function UploadModal({ isOpen, onClose, onSave }: UploadModalProps) {
             setName('');
             setDescription('');
             setFile(null);
+            onClose();
+        } else {
+            // This part is tricky because the parent controls isOpen.
+            // A better pattern is to let the parent handle the close logic completely.
         }
-        onClose();
     };
 
     return (
-        <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+        <Dialog open={isOpen} onOpenChange={(open) => { if(!open) handleOpenChange(false)}}>
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>Adicionar Novo Documento</DialogTitle>

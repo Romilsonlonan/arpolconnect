@@ -257,26 +257,6 @@ export default function ContractsPage() {
 
     toast({ title: "Documento Salvo!", description: `"${document.name}" foi adicionado ao contrato.` });
   };
-  
-  const handleUpdateDocument = (contractId: string, documentId: string, documentData: Partial<Omit<ContractDocument, 'id'>>) => {
-    const updatedContracts = contracts.map(c => {
-      if (c.id === contractId) {
-        const updatedDocs = (c.documents || []).map(doc => {
-          if (doc.id === documentId) {
-            return { ...doc, ...documentData, revisedAt: new Date().toISOString() };
-          }
-          return doc;
-        });
-        return { ...c, documents: updatedDocs };
-      }
-      return c;
-    });
-
-    localStorage.setItem(CONTRACTS_STORAGE_KEY, JSON.stringify(updatedContracts));
-    window.dispatchEvent(new StorageEvent('storage', { key: CONTRACTS_STORAGE_KEY }));
-    
-    toast({ title: "Documento Revisado!", description: `O documento foi atualizado com sucesso.` });
-  };
 
   const handleDeleteDocument = (contractId: string, documentId: string) => {
      const updatedContracts = contracts.map(c => {
@@ -341,7 +321,6 @@ export default function ContractsPage() {
             onClose={() => setDocsModalContract(null)}
             contract={docsModalContract}
             onSaveDocument={handleSaveDocument}
-            onUpdateDocument={handleUpdateDocument}
             onDeleteDocument={handleDeleteDocument}
             currentUser={currentUser}
         />

@@ -12,10 +12,9 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { PlusCircle, Paperclip, Trash2, FileText, Download, Pencil } from 'lucide-react';
+import { PlusCircle, Paperclip, Trash2, FileText, Download } from 'lucide-react';
 import type { Contract, ContractDocument, User } from '@/lib/data';
 import { UploadModal } from '@/components/contracts/upload-modal';
-import { RevisionModal } from '@/components/contracts/revision-modal';
 
 // --- Componente Principal: Modal de Documentos do Contrato ---
 type ContractDocsModalProps = {
@@ -23,25 +22,18 @@ type ContractDocsModalProps = {
   onClose: () => void;
   contract: Contract;
   onSaveDocument: (contractId: string, document: Omit<ContractDocument, 'id' | 'uploadedAt'>) => void;
-  onUpdateDocument: (contractId: string, documentId: string, documentData: Partial<Omit<ContractDocument, 'id'>>) => void;
   onDeleteDocument: (contractId: string, documentId: string) => void;
   currentUser: User | null;
 };
 
-export function ContractDocsModal({ isOpen, onClose, contract, onSaveDocument, onUpdateDocument, onDeleteDocument, currentUser }: ContractDocsModalProps) {
+export function ContractDocsModal({ isOpen, onClose, contract, onSaveDocument, onDeleteDocument, currentUser }: ContractDocsModalProps) {
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
-  const [revisioningDoc, setRevisioningDoc] = useState<ContractDocument | null>(null);
-
+  
   const isSupervisor = currentUser?.role === 'Supervisor' || currentUser?.role === 'Administrador';
 
   const handleSave = (document: Omit<ContractDocument, 'id' | 'uploadedAt'>) => {
     onSaveDocument(contract.id, document);
     setIsUploadModalOpen(false);
-  };
-  
-  const handleUpdate = (docId: string, data: Partial<Omit<ContractDocument, 'id'>>) => {
-    onUpdateDocument(contract.id, docId, data);
-    setRevisioningDoc(null);
   };
 
   const openFile = (fileUrl: string, fileType: string) => {
@@ -63,14 +55,16 @@ export function ContractDocsModal({ isOpen, onClose, contract, onSaveDocument, o
               Gerencie documentos e outras informações relacionadas a este contrato.
             </DialogDescription>
           </DialogHeader>
-          <Tabs defaultValue="revisions" className="flex-1 flex flex-col overflow-hidden">
+          <Tabs defaultValue="documents" className="flex-1 flex flex-col overflow-hidden">
             <TabsList>
-              <TabsTrigger value="revisions">Revisões e Anexos</TabsTrigger>
+              <TabsTrigger value="documents">Documentos</TabsTrigger>
+              <TabsTrigger value="data" disabled>Dados Gerais</TabsTrigger>
               <TabsTrigger value="relationships" disabled>Relacionamentos</TabsTrigger>
               <TabsTrigger value="systems" disabled>Sistemas</TabsTrigger>
+              <TabsTrigger value="revisions" disabled>Revisões</TabsTrigger>
               <TabsTrigger value="trainings" disabled>Treinamentos</TabsTrigger>
             </TabsList>
-            <TabsContent value="revisions" className="flex-1 overflow-auto p-1">
+            <TabsContent value="documents" className="flex-1 overflow-auto p-1">
               <div className="flex justify-between items-center mb-4 p-4">
                 <h3 className="text-lg font-semibold">Documentos Anexados</h3>
                 {isSupervisor && (
@@ -90,11 +84,7 @@ export function ContractDocsModal({ isOpen, onClose, contract, onSaveDocument, o
                           <p className="font-semibold">{doc.name}</p>
                           <p className="text-sm text-muted-foreground">{doc.description}</p>
                           <p className="text-xs text-muted-foreground">
-                            {doc.fileName} - 
-                            {doc.revisedAt 
-                                ? ` Revisado em: ${new Date(doc.revisedAt).toLocaleDateString()}`
-                                : ` Criado em: ${new Date(doc.uploadedAt).toLocaleDateString()}`
-                            }
+                            {doc.fileName} - Criado em: {new Date(doc.uploadedAt).toLocaleDateString()}
                           </p>
                         </div>
                       </div>
@@ -103,14 +93,9 @@ export function ContractDocsModal({ isOpen, onClose, contract, onSaveDocument, o
                             <Download className="h-4 w-4" />
                         </Button>
                         {isSupervisor && (
-                           <>
-                             <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => setRevisioningDoc(doc)}>
-                                <Pencil className="h-4 w-4" />
-                            </Button>
                             <Button variant="destructive" size="icon" className="h-8 w-8" onClick={() => onDeleteDocument(contract.id, doc.id)}>
                                 <Trash2 className="h-4 w-4" />
                             </Button>
-                           </>
                         )}
                       </div>
                     </div>
@@ -128,21 +113,11 @@ export function ContractDocsModal({ isOpen, onClose, contract, onSaveDocument, o
       </Dialog>
 
       {isSupervisor && (
-        <>
-            <UploadModal 
-                isOpen={isUploadModalOpen}
-                onClose={() => setIsUploadModalOpen(false)}
-                onSave={handleSave}
-            />
-            {revisioningDoc && (
-                <RevisionModal
-                    isOpen={!!revisioningDoc}
-                    onClose={() => setRevisioningDoc(null)}
-                    onSave={handleUpdate}
-                    document={revisioningDoc}
-                />
-            )}
-        </>
+        <UploadModal 
+            isOpen={isUploadModalOpen}
+            onClose={() => setIsUploadModalOpen(false)}
+            onSave={handleSave}
+        />
       )}
     </>
   );

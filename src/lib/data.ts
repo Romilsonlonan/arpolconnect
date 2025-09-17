@@ -1,5 +1,4 @@
 
-
 export type Employee = {
   id: string;
   name: string;
@@ -119,47 +118,9 @@ export const initialOrgTree: OrgNode = {
   children: []
 };
 
-export const supervisors: Supervisor[] = [
-  { id: 'sup1', name: 'Carlos Ferreira', email: 'carlos.f@arpolar.com', avatar: 'https://placehold.co/100x100', region: 'Região A' },
-  { id: 'sup2', name: 'Beatriz Costa', email: 'beatriz.c@arpolar.com', avatar: 'https://placehold.co/100x100', region: 'Região A' },
-  { id: 'sup3', name: 'Ricardo Almeida', email: 'ricardo.a@arpolar.com', avatar: 'https://placehold.co/100x100', region: 'Região B' },
-  { id: 'sup4', name: 'Mariana Gonçalves', email: 'mariana.g@arpolar.com', avatar: 'https://placehold.co/100x100', region: 'Região C' },
-  { id: 'sup5', name: 'Lucas Ribeiro', email: 'lucas.r@arpolar.com', avatar: 'https://placehold.co/100x100', region: 'Região C' },
-  { id: 'sup6', name: 'Júlia Castro', email: 'julia.c@arpolar.com', avatar: 'https://placehold.co/100x100', region: 'Região D' },
-  { id: 'sup7', name: 'Felipe Santos', email: 'felipe.s@arpolar.com', avatar: 'https://placehold.co/100x100', region: 'Região D' },
-  { id: 'sup8', name: 'Letícia Martins', email: 'leticia.m@arpolar.com', avatar: 'https://placehold.co/100x100', region: 'Região E' },
-  { id: 'sup9', name: 'Guilherme Nogueira', email: 'guilherme.n@arpolar.com', avatar: 'https://placehold.co/100x100', region: 'Região E' },
-  { id: 'sup10', name: 'Isabela Fernandes', email: 'isabela.f@arpolar.com', avatar: 'https://placehold.co/100x100', region: 'Região F' },
-  { id: 'sup11', name: 'Rafael Azevedo', email: 'rafael.a@arpolar.com', avatar: 'https://placehold.co/100x100', region: 'Região F' },
-];
-
-export const employees: Employee[] = [
-  { id: 'emp1', name: 'João Silva', role: 'Mechanic', email: 'joao.silva@contractor.com', phone: '(11) 98765-4321', supervisorId: 'sup1', contract: 'Contract A', avatar: 'https://placehold.co/100x100' },
-  { id: 'emp2', name: 'Maria Oliveira', role: 'Electrician', email: 'maria.o@contractor.com', phone: '(11) 98765-4322', supervisorId: 'sup1', contract: 'Contract A', avatar: 'https://placehold.co/100x100' },
-  { id: 'emp3', name: 'Pedro Santos', role: 'Assistant', email: 'pedro.s@contractor.com', phone: '(11) 98765-4323', supervisorId: 'sup2', contract: 'Contract B', avatar: 'https://placehold.co/100x100' },
-  { id: 'emp4', name: 'Ana Souza', role: 'Artificer', email: 'ana.s@contractor.com', phone: '(11) 98765-4324', supervisorId: 'sup3', contract: 'Contract C', avatar: 'https://placehold.co/100x100' },
-  { id: 'emp5', name: 'Lucas Pereira', role: 'Mechanic', email: 'lucas.p@contractor.com', phone: '(11) 98765-4325', supervisorId: 'sup4', contract: 'Contract D', avatar: 'https://placehold.co/100x100' },
-  { id: 'emp6', name: 'Juliana Lima', role: 'Half-Official', email: 'juliana.l@contractor.com', phone: '(11) 98765-4326', supervisorId: 'sup5', contract: 'Contract E', avatar: 'https://placehold.co/100x100' },
-  { id: 'emp7', name: 'Bruno Alves', role: 'Mechanic', email: 'bruno.a@contractor.com', phone: '(11) 98765-4327', supervisorId: 'sup6', contract: 'Contract F', avatar: 'https://placehold.co/100x100' },
-  { id: 'emp8', name: 'Carla Dias', role: 'Electrician', email: 'carla.d@contractor.com', phone: '(11) 98765-4328', supervisorId: 'sup7', contract: 'Contract G', avatar: 'https://placehold.co/100x100' },
-  { id: 'emp9', name: 'Diego Rocha', role: 'Assistant', email: 'diego.r@contractor.com', phone: '(11) 98765-4329', supervisorId: 'sup8', contract: 'Contract H', avatar: 'https://placehold.co/100x100' },
-  { id: 'emp10', name: 'Eduarda Cunha', role: 'Artificer', email: 'eduarda.c@contractor.com', phone: '(11) 98765-4330', supervisorId: 'sup9', contract: 'Contract I', avatar: 'https://placehold.co/100x100' },
-  { id: 'emp11', name: 'Fernanda Barbosa', role: 'Mechanic', email: 'fernanda.b@contractor.com', phone: '(11) 98765-4331', supervisorId: 'sup10', contract: 'Contract J', avatar: 'https://placehold.co/100x100' },
-  { id: 'emp12', name: 'Gustavo Gomes', role: 'Half-Official', email: 'gustavo.g@contractor.com', phone: '(11) 98765-4332', supervisorId: 'sup11', contract: 'Contract K', avatar: 'https://placehold.co/100x100' },
-];
-
 
 const now = new Date();
 export const messages: Message[] = [];
-
-export const contractList = [
-    'Contrato A',
-    'Contrato B',
-    'Contrato C',
-    'Contrato D',
-    'Contrato E',
-    'Contrato F'
-];
 
 export const refrigerationQuestions: RefrigerationQuestion[] = [
     { id: 'q1', question: 'Qual é a função principal do compressor em um ciclo de refrigeração?', options: ['Evaporar o refrigerante', 'Condensar o refrigerante', 'Comprimir o vapor do refrigerante', 'Expandir o refrigerante líquido'], correctAnswer: 'Comprimir o vapor do refrigerante', image: 'https://picsum.photos/800/400?random=1', imageHint: 'refrigeration compressor' },
@@ -183,9 +144,3 @@ export const refrigerationQuestions: RefrigerationQuestion[] = [
     { id: 'q19', question: 'Um ventilador do condensador que não funciona pode causar:', options: ['Baixa pressão de descarga', 'Alta pressão de descarga e superaquecimento do compressor', 'Congelamento da linha de sucção', 'Operação normal do sistema'], correctAnswer: 'Alta pressão de descarga e superaquecimento do compressor', image: 'https://picsum.photos/800/400?random=19', imageHint: 'fan motor' },
     { id: 'q20', question: 'O que indica a presença de óleo nas conexões da tubulação?', options: ['Operação normal', 'Excesso de óleo no sistema', 'Um vazamento de refrigerante', 'Filtro secador saturado'], correctAnswer: 'Um vazamento de refrigerante', image: 'https://picsum.photos/800/400?random=20', imageHint: 'oil leak pipe' },
 ];
-
-
-
-
-
-

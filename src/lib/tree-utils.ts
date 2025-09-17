@@ -1,5 +1,5 @@
 
-import type { OrgNode, Employee } from './data';
+import type { OrgNode, Employee, User, Contract } from './data';
 
 export function findNode(tree: OrgNode, nodeId: string): OrgNode | null {
   if (tree.id === nodeId) {
@@ -31,7 +31,6 @@ export function flattenTreeToEmployees(root: OrgNode): Employee[] {
   const employees: Employee[] = [];
 
   function traverse(node: OrgNode, supervisorId?: string) {
-    // This is a valid employee if it's not a contract and has a supervisor
     if (supervisorId && node.role !== 'Contrato' && node.id !== 'arpolar') {
        employees.push({
         id: node.id,
@@ -46,14 +45,11 @@ export function flattenTreeToEmployees(root: OrgNode): Employee[] {
       });
     }
 
-    // Recursively traverse children, passing the current node's ID as the supervisorId for them.
     if (node.children) {
       node.children.forEach(child => traverse(child, node.id));
     }
   }
 
-  // Start the traversal from the root's children.
-  // The root itself (Arpolar) is not an employee.
   root.children?.forEach(child => traverse(child, root.id));
   
   return employees;
@@ -61,19 +57,14 @@ export function flattenTreeToEmployees(root: OrgNode): Employee[] {
 
 
 export function removeNodeFromTree(tree: OrgNode, nodeId: string): OrgNode {
-  // If the root is the one to be removed, handle it (though unlikely in this app's context)
   if (tree.id === nodeId) {
-    // Cannot remove the root, perhaps return an empty structure or throw error
-    // For now, we'll assume root is not removable this way.
     return tree;
   }
   
   const newTree = { ...tree };
 
   if (newTree.children) {
-    // Filter out the node to be removed from the direct children
     newTree.children = newTree.children.filter(child => child.id !== nodeId);
-    // Recursively call on the remaining children
     newTree.children = newTree.children.map(child => removeNodeFromTree(child, nodeId));
   }
 
@@ -92,4 +83,77 @@ export function getAllNodes(tree: OrgNode): OrgNode[] {
 
   traverse(tree);
   return nodes;
+}
+
+export function buildTreeFromUsersAndContracts(users: User[], contracts: Contract[]): OrgNode {
+  const root: OrgNode = {
+    id: 'arpolar',
+    name: 'Arpolar',
+    role: 'Empresa',
+    avatar: 'https://i.ibb.co/zVzbGGgD/fundoaqc.jpg',
+    showInNeuralNet: false,
+    children: [],
+  };
+
+  const nodeMap: Map<string, OrgNode> = new Map();
+  const childrenMap: Map<string, (OrgNode | Contract)[]> = new Map();
+
+  // Initialize maps
+  childrenMap.set(root.id, []);
+
+  // Process users
+  users.forEach(user => {
+    const userNode: OrgNode = {
+      id: user.id,
+      name: user.name,
+      role: user.role,
+      contact: user.email,
+      avatar: '', // Will be handled by getAvatar
+      showInNeuralNet: user.role === 'Supervisor' || user.role === 'Administrador',
+      children: []
+    };
+    nodeMap.set(user.id, userNode);
+    // This logic is simplified; real app would need a supervisor field in User model
+    // For now, let's assume all non-admins report to the root admin
+    const supervisorId = user.role !== 'Administrador' ? users.find(u=>u.role === 'Administrador')?.id || root.id : root.id;
+    if (!childrenMap.has(supervisorId)) {
+        childrenMap.set(supervisorId, []);
+    }
+    childrenMap.get(supervisorId)!.push(userNode);
+  });
+
+  // Process contracts
+  contracts.forEach(contract => {
+    const contractNode: OrgNode = {
+        id: contract.id,
+        name: contract.name,
+        role: 'Contrato',
+        avatar: contract.backgroundImage,
+        showInNeuralNet: false,
+        children: [],
+    };
+    if (!childrenMap.has(contract.supervisorId)) {
+        childrenMap.set(contract.supervisorId, []);
+    }
+    childrenMap.get(contract.supervisorId)!.push(contractNode);
+  });
+  
+  // Build the tree structure from the root down
+  const queue: OrgNode[] = [root];
+  while(queue.length > 0) {
+      const currentNode = queue.shift();
+      if (currentNode) {
+          const children = childrenMap.get(currentNode.id);
+          if (children) {
+            // @ts-ignore
+            currentNode.children = children.map(child => {
+                const childNode = nodeMap.get(child.id) || child;
+                queue.push(childNode as OrgNode);
+                return childNode;
+            });
+          }
+      }
+  }
+
+  return root;
 }

@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { MoreHorizontal, PlusCircle } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Trash2, Pencil, FolderOpen } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,9 +14,11 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import type { User, Contract } from '@/lib/data';
+import type { User, Contract, ContractDocument } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 import { UserModal } from '@/components/admin/user-modal';
+import { ContractModal } from '@/components/contracts/contract-modal';
+import { ContractDocsModal } from '@/components/contracts/contract-docs-modal';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -30,10 +32,12 @@ import {
 } from '@/components/ui/alert-dialog';
 import { getAvatar, removeAvatar, saveAvatar } from '@/lib/avatar-storage';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-
+import { removeNodeFromTree } from '@/lib/tree-utils';
 
 const USERS_STORAGE_KEY = 'arpolarUsers';
 const CONTRACTS_STORAGE_KEY = 'arpolarContracts';
+const ORG_CHART_STORAGE_KEY = 'orgChartTree';
+
 
 function UserAvatar({ user }: { user: User }) {
     const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -60,18 +64,33 @@ function UserAvatar({ user }: { user: User }) {
 export default function AdminPage() {
   const [users, setUsers] = useState<User[]>([]);
   const [contracts, setContracts] = useState<Contract[]>([]);
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingUser, setEditingUser] = useState<User | null>(null);
   const [isClient, setIsClient] = useState(false);
   const { toast } = useToast();
+
+  // User Modal state
+  const [isUserModalOpen, setIsUserModalOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState<User | null>(null);
+
+  // Contract Modal state
+  const [isContractModalOpen, setIsContractModalOpen] = useState(false);
+  const [editingContract, setEditingContract] = useState<Contract | null>(null);
+
+  // Docs Modal state
+  const [docsModalContract, setDocsModalContract] = useState<Contract | null>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
 
   const loadData = () => {
     try {
       const savedUsers = localStorage.getItem(USERS_STORAGE_KEY);
       const savedContracts = localStorage.getItem(CONTRACTS_STORAGE_KEY);
       
-      setUsers(savedUsers ? JSON.parse(savedUsers) : []);
+      const allUsers: User[] = savedUsers ? JSON.parse(savedUsers) : [];
+      setUsers(allUsers);
       setContracts(savedContracts ? JSON.parse(savedContracts) : []);
+      
+      const adminUser = allUsers.find(u => u.role === 'Administrador');
+      setCurrentUser(adminUser || null);
+
     } catch (error) {
       console.error("Failed to load data from localStorage", error);
       toast({ title: "Erro ao carregar dados", variant: "destructive" });
@@ -85,14 +104,15 @@ export default function AdminPage() {
     return () => window.removeEventListener('storage', loadData);
   }, []);
 
-  const handleOpenAddModal = () => {
+  // --- User Management ---
+  const handleOpenAddUserModal = () => {
     setEditingUser(null);
-    setIsModalOpen(true);
+    setIsUserModalOpen(true);
   };
 
-  const handleOpenEditModal = (user: User) => {
+  const handleOpenEditUserModal = (user: User) => {
     setEditingUser(user);
-    setIsModalOpen(true);
+    setIsUserModalOpen(true);
   };
 
   const handleSaveUser = (userData: Omit<User, 'id'>, id?: string, avatarDataUrl?: string) => {
@@ -138,13 +158,10 @@ export default function AdminPage() {
 
 
     localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(updatedUsers));
-    
-    // Dispatch storage event to notify other components
     window.dispatchEvent(new StorageEvent('storage', { key: USERS_STORAGE_KEY }));
-
-    loadData();
+    
     toast({ title: toastTitle, description: toastDescription });
-    setIsModalOpen(false);
+    setIsUserModalOpen(false);
     setEditingUser(null);
   };
 
@@ -154,11 +171,115 @@ export default function AdminPage() {
 
     const updatedUsers = users.filter(u => u.id !== userId);
     localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(updatedUsers));
-    removeAvatar(userId); // Also remove avatar
+    removeAvatar(userId);
     
-    loadData();
+    window.dispatchEvent(new StorageEvent('storage', { key: USERS_STORAGE_KEY }));
     toast({ title: "Usuário Removido", description: `${userToDelete.name} foi removido do sistema.` });
   };
+  
+  // --- Contract Management ---
+  const handleOpenAddContractModal = () => {
+    setEditingContract(null);
+    setIsContractModalOpen(true);
+  }
+
+  const handleOpenEditContractModal = (contract: Contract) => {
+    setEditingContract(contract);
+    setIsContractModalOpen(true);
+  }
+  
+  const handleOpenDocsModal = (contract: Contract) => {
+    setDocsModalContract(contract);
+  }
+
+  const handleSaveContract = (contractData: Omit<Contract, 'id'|'documents'>, id?: string) => {
+    let currentContracts: Contract[] = [];
+    try {
+       currentContracts = JSON.parse(localStorage.getItem(CONTRACTS_STORAGE_KEY) || '[]');
+    } catch (e) {
+      console.error("Failed to parse contracts from localStorage", e);
+      currentContracts = [];
+    }
+
+    let updatedContracts: Contract[];
+    let toastTitle = '';
+    
+    if (id) {
+        updatedContracts = currentContracts.map(c => c.id === id ? { ...c, ...contractData, id } : c);
+        toastTitle = "Contrato Atualizado!";
+    } else {
+        const newContract: Contract = {
+            ...contractData,
+            id: `contract-${Date.now()}`,
+            documents: []
+        };
+        updatedContracts = [...currentContracts, newContract];
+        toastTitle = "Contrato Adicionado!";
+    }
+      
+    localStorage.setItem(CONTRACTS_STORAGE_KEY, JSON.stringify(updatedContracts));
+    window.dispatchEvent(new StorageEvent('storage', { key: CONTRACTS_STORAGE_KEY }));
+    
+    toast({ title: toastTitle });
+    setIsContractModalOpen(false);
+    setEditingContract(null);
+  };
+
+  const handleDeleteContract = (contractId: string) => {
+    const contractToDelete = contracts.find(c => c.id === contractId);
+    if (!contractToDelete) return;
+
+    const updatedContracts = contracts.filter(c => c.id !== contractId);
+    localStorage.setItem(CONTRACTS_STORAGE_KEY, JSON.stringify(updatedContracts));
+
+    // Also remove from org chart if it exists there
+    const savedTree = localStorage.getItem(ORG_CHART_STORAGE_KEY);
+    if (savedTree) {
+      let orgTree = JSON.parse(savedTree);
+      const newTree = removeNodeFromTree(orgTree, contractId);
+      localStorage.setItem(ORG_CHART_STORAGE_KEY, JSON.stringify(newTree));
+      window.dispatchEvent(new StorageEvent('storage', { key: ORG_CHART_STORAGE_KEY }));
+    }
+
+    window.dispatchEvent(new StorageEvent('storage', { key: CONTRACTS_STORAGE_KEY }));
+    toast({ title: 'Contrato Deletado', description: `O contrato "${contractToDelete.name}" foi removido.` });
+  };
+  
+  // --- Document Management ---
+  const handleSaveDocument = (contractId: string, document: Omit<ContractDocument, 'id' | 'uploadedAt'>) => {
+    const allContracts: Contract[] = JSON.parse(localStorage.getItem(CONTRACTS_STORAGE_KEY) || '[]');
+    const newDocument: ContractDocument = {
+        ...document,
+        id: `doc-${Date.now()}`,
+        uploadedAt: new Date().toISOString()
+    };
+    
+    const updatedContracts = allContracts.map(c => {
+        if (c.id === contractId) {
+            return { ...c, documents: [...(c.documents || []), newDocument] };
+        }
+        return c;
+    });
+
+    localStorage.setItem(CONTRACTS_STORAGE_KEY, JSON.stringify(updatedContracts));
+    window.dispatchEvent(new StorageEvent('storage', { key: CONTRACTS_STORAGE_KEY }));
+    toast({ title: "Documento Salvo!", description: `"${document.name}" foi adicionado.` });
+  };
+
+  const handleDeleteDocument = (contractId: string, documentId: string) => {
+     const allContracts: Contract[] = JSON.parse(localStorage.getItem(CONTRACTS_STORAGE_KEY) || '[]');
+     const updatedContracts = allContracts.map(c => {
+        if (c.id === contractId) {
+            return { ...c, documents: (c.documents || []).filter(doc => doc.id !== documentId) };
+        }
+        return c;
+    });
+
+    localStorage.setItem(CONTRACTS_STORAGE_KEY, JSON.stringify(updatedContracts));
+    window.dispatchEvent(new StorageEvent('storage', { key: CONTRACTS_STORAGE_KEY }));
+    toast({ title: "Documento Removido", variant: "destructive" });
+  };
+
 
   if (!isClient) return null;
 
@@ -167,12 +288,18 @@ export default function AdminPage() {
       <div className="flex items-center justify-between">
         <div>
             <h1 className="text-lg font-semibold md:text-2xl font-headline">Painel do Administrador</h1>
-            <p className="text-muted-foreground">Gerencie usuários, permissões e configurações do sistema.</p>
+            <p className="text-muted-foreground">Gerencie usuários, contratos e configurações do sistema.</p>
         </div>
-        <Button onClick={handleOpenAddModal}>
-            <PlusCircle className="mr-2" />
-            Adicionar Usuário
-        </Button>
+        <div className="flex gap-2">
+            <Button onClick={handleOpenAddUserModal}>
+                <PlusCircle className="mr-2" />
+                Adicionar Usuário
+            </Button>
+            <Button onClick={handleOpenAddContractModal} variant="secondary">
+                <PlusCircle className="mr-2" />
+                Adicionar Contrato
+            </Button>
+        </div>
       </div>
 
       <Card>
@@ -203,7 +330,7 @@ export default function AdminPage() {
                      <Badge variant={user.role === 'Administrador' ? 'destructive' : 'secondary'}>{user.role}</Badge>
                   </TableCell>
                   <TableCell>
-                    <Badge variant={user.status === 'Ativo' ? 'default' : 'outline'} className={user.status === 'Ativo' ? 'bg-status-resolved' : ''}>
+                    <Badge variant={user.status === 'Ativo' ? 'default' : 'outline'} className={user.status === 'Ativo' ? 'bg-green-500 text-white' : ''}>
                         {user.status}
                     </Badge>
                   </TableCell>
@@ -218,7 +345,7 @@ export default function AdminPage() {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
                         <DropdownMenuLabel>Ações</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => handleOpenEditModal(user)}>Editar Permissões</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleOpenEditUserModal(user)}>Editar</DropdownMenuItem>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
                              <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">Deletar</DropdownMenuItem>
@@ -244,13 +371,96 @@ export default function AdminPage() {
         </CardContent>
       </Card>
       
+       <Card>
+        <CardHeader>
+          <CardTitle>Gerenciamento de Contratos</CardTitle>
+          <CardDescription>Visualize e edite os contratos de clientes.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Nome do Contrato</TableHead>
+                <TableHead>Supervisor</TableHead>
+                <TableHead>Região</TableHead>
+                <TableHead><span className="sr-only">Ações</span></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {contracts.map((contract) => (
+                <TableRow key={contract.id}>
+                  <TableCell className="font-medium">{contract.name}</TableCell>
+                  <TableCell>{contract.supervisorName}</TableCell>
+                  <TableCell>{contract.region}</TableCell>
+                  <TableCell>
+                     <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button aria-haspopup="true" size="icon" variant="ghost">
+                          <MoreHorizontal className="h-4 w-4" />
+                          <span className="sr-only">Toggle menu</span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                        <DropdownMenuItem onClick={() => handleOpenDocsModal(contract)}>
+                          <FolderOpen className="mr-2 h-4 w-4"/> Documentos
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleOpenEditContractModal(contract)}>
+                          <Pencil className="mr-2 h-4 w-4"/> Editar
+                        </DropdownMenuItem>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                             <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">
+                              <Trash2 className="mr-2 h-4 w-4"/> Deletar
+                             </DropdownMenuItem>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+                              <AlertDialogDescription>Esta ação removerá o contrato permanentemente. Deseja continuar?</AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => handleDeleteContract(contract.id)}>Deletar</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </CardContent>
+      </Card>
+      
       <UserModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        isOpen={isUserModalOpen}
+        onClose={() => setIsUserModalOpen(false)}
         onSave={handleSaveUser}
         editingUser={editingUser}
         contracts={contracts}
       />
+
+      <ContractModal
+        isOpen={isContractModalOpen}
+        onClose={() => setIsContractModalOpen(false)}
+        onSave={handleSaveContract}
+        supervisors={users.filter(u => u.role === 'Supervisor' || u.role === 'Administrador')}
+        editingContract={editingContract}
+      />
+      
+      {docsModalContract && (
+        <ContractDocsModal 
+            isOpen={!!docsModalContract}
+            onClose={() => setDocsModalContract(null)}
+            contract={docsModalContract}
+            onSaveDocument={handleSaveDocument}
+            onDeleteDocument={handleDeleteDocument}
+            currentUser={currentUser}
+        />
+      )}
     </div>
   );
 }

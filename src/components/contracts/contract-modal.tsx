@@ -25,7 +25,7 @@ type ContractModalProps = {
   isOpen: boolean;
   onClose: () => void;
   supervisors: AppUser[];
-  onSave: (data: Omit<Contract, 'id'>, id?: string) => void;
+  onSave: (data: Omit<Contract, 'id'|'documents'>, id?: string) => void;
   editingContract: Contract | null;
 };
 
@@ -35,6 +35,8 @@ export function ContractModal({ isOpen, onClose, supervisors, onSave, editingCon
     const [address, setAddress] = useState('');
     const [region, setRegion] = useState('');
     const [backgroundImage, setBackgroundImage] = useState('');
+    const [artNumber, setArtNumber] = useState('');
+    const [artStartDate, setArtStartDate] = useState('');
     const fileInputRef = useRef<HTMLInputElement>(null);
     const { toast } = useToast();
 
@@ -46,6 +48,8 @@ export function ContractModal({ isOpen, onClose, supervisors, onSave, editingCon
                 setAddress(editingContract.address);
                 setRegion(editingContract.region);
                 setBackgroundImage(editingContract.backgroundImage);
+                setArtNumber(editingContract.artNumber || '');
+                setArtStartDate(editingContract.artStartDate || '');
             } else {
                 // Reset form for new contract
                 setName('');
@@ -53,6 +57,8 @@ export function ContractModal({ isOpen, onClose, supervisors, onSave, editingCon
                 setAddress('');
                 setRegion('');
                 setBackgroundImage('');
+                setArtNumber('');
+                setArtStartDate('');
             }
         }
     }, [editingContract, isOpen]);
@@ -122,10 +128,10 @@ export function ContractModal({ isOpen, onClose, supervisors, onSave, editingCon
     };
 
     const handleSubmit = () => {
-        if (!name || !supervisorId || !address || !region || !backgroundImage) {
+        if (!name || !supervisorId || !address || !region) {
             toast({
                 title: "Campos Obrigatórios",
-                description: "Por favor, preencha todos os campos, incluindo a imagem.",
+                description: "Por favor, preencha todos os campos obrigatórios.",
                 variant: "destructive",
             });
             return;
@@ -147,7 +153,9 @@ export function ContractModal({ isOpen, onClose, supervisors, onSave, editingCon
             supervisorName: supervisor.name,
             address,
             region,
-            backgroundImage
+            backgroundImage: backgroundImage || 'https://picsum.photos/seed/default/600/400',
+            artNumber,
+            artStartDate,
         }, editingContract?.id);
     }
 
@@ -182,6 +190,16 @@ export function ContractModal({ isOpen, onClose, supervisors, onSave, editingCon
                         <div className="grid gap-2">
                             <Label htmlFor="region">Região</Label>
                             <Input id="region" value={region} onChange={e => setRegion(e.target.value)} />
+                        </div>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="grid gap-2">
+                                <Label htmlFor="artNumber">Número da ART</Label>
+                                <Input id="artNumber" value={artNumber} onChange={e => setArtNumber(e.target.value)} />
+                            </div>
+                            <div className="grid gap-2">
+                                <Label htmlFor="artStartDate">Início da ART</Label>
+                                <Input id="artStartDate" type="date" value={artStartDate} onChange={e => setArtStartDate(e.target.value)} />
+                            </div>
                         </div>
                         <div className="grid gap-2">
                             <Label>Imagem de Fundo</Label>

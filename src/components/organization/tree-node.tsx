@@ -7,20 +7,8 @@ import { getAvatar } from '@/lib/avatar-storage';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Plus, Pencil, Trash2, Phone, Briefcase, Building, MessageSquarePlus, Eye, EyeOff, ChevronDown, ChevronUp, Bell, FileSignature, Mail } from 'lucide-react';
+import { Phone, Briefcase, Building, MessageSquarePlus, ChevronDown, ChevronUp, Bell, Mail } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { EmployeeModal } from './employee-modal';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog"
 import {
   Tooltip,
   TooltipContent,
@@ -34,7 +22,6 @@ type TreeNodeProps = {
   onAddChild: (parentId: string, child: Omit<OrgNode, 'children' | 'id'>) => void;
   onRemove: (nodeId: string) => void;
   onMoveNode: (draggedNodeId: string, targetNodeId: string) => void;
-  onOpenContractModal: () => void;
   onOpenTicketModal: (node: OrgNode) => void;
   onToggleVisibility: (nodeId: string) => void;
   privateTicketCount: number;
@@ -62,83 +49,18 @@ function NodeAvatar({ node }: { node: OrgNode }) {
     );
 }
 
-export function TreeNode({ node, onUpdate, onAddChild, onRemove, onMoveNode, onOpenContractModal, onOpenTicketModal, onToggleVisibility, privateTicketCount, isRoot = false }: TreeNodeProps) {
-  const [employeeModalOpen, setEmployeeModalOpen] = useState(false);
-  const [editingNode, setEditingNode] = useState<OrgNode | null>(null);
-  const [isDragOver, setIsDragOver] = useState(false);
+export function TreeNode({ node, onUpdate, onAddChild, onRemove, onMoveNode, onOpenTicketModal, onToggleVisibility, privateTicketCount, isRoot = false }: TreeNodeProps) {
   const [isExpanded, setIsExpanded] = useState(true);
   const isContractNode = node.role === 'Contrato';
-
-  const handleAdd = () => {
-    setEditingNode(null);
-    setEmployeeModalOpen(true);
-  };
-
-  const handleEdit = () => {
-    if (isContractNode) {
-        // Logic to edit contract details would go here
-        // For now, we can re-use the contract modal logic if needed
-        // Or open a specific editor for contract nodes.
-        // Let's assume onOpenContractModal can handle this.
-        onOpenContractModal(); // This needs to be adapted to pass contract ID
-    } else {
-        setEditingNode(node);
-        setEmployeeModalOpen(true);
-    }
-  };
-  
-  const handleSaveEmployee = (values: Omit<OrgNode, 'id' | 'children'>) => {
-    if (editingNode) {
-      onUpdate(editingNode.id, values);
-    } else {
-      onAddChild(node.id, values);
-    }
-  };
-
-  const handleDragStart = (e: React.DragEvent<HTMLDivElement>) => {
-    if (isRoot) return;
-    e.dataTransfer.setData('text/plain', node.id);
-    e.effectAllowed = 'move';
-  };
-  
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragOver(true);
-  };
-
-  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragOver(false);
-  };
-  
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragOver(false);
-    const draggedNodeId = e.dataTransfer.getData('text/plain');
-    if (draggedNodeId && draggedNodeId !== node.id) {
-      onMoveNode(draggedNodeId, node.id);
-    }
-  };
-  
   const formattedPhone = node.contact?.replace(/\D/g, '');
 
   return (
     <TooltipProvider>
     <div className="flex flex-col items-center text-center relative px-4">
       <Card 
-        draggable={!isRoot}
-        onDragStart={handleDragStart}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
         className={cn(
-        "w-60 text-center shadow-md hover:shadow-lg transition-all duration-300 hover:scale-105 relative group min-h-[260px] flex flex-col",
-        "bg-card",
-        isDragOver && "ring-2 ring-primary ring-offset-2",
-        !isRoot && "cursor-move"
+        "w-60 text-center shadow-md hover:shadow-lg transition-all duration-300 relative group min-h-[200px] flex flex-col",
+        "bg-card"
         )}>
         <CardContent className="p-4 flex flex-col items-center gap-2 relative h-full flex-1">
           <NodeAvatar node={node} />
@@ -150,61 +72,21 @@ export function TreeNode({ node, onUpdate, onAddChild, onRemove, onMoveNode, onO
           <div className="space-y-2">
             {node.role !== 'Contrato' && node.contact && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Phone className="w-4 h-4" />
-                  <span>{node.contact}</span>
+                  <Mail className="w-4 h-4" />
+                  <a href={`mailto:${node.contact}`} className="truncate hover:underline">{node.contact}</a>
               </div>
             )}
 
             {node.role === 'Contrato' && (
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Building className="w-4 h-4" />
-                    <span>Este é um nó de contrato</span>
+                    <span>Nó de Contrato</span>
                 </div>
-            )}
-
-            {node.contract && node.role !== 'Contrato' && (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                      <Briefcase className="w-4 h-4" />
-                      <span>{node.contract}</span>
-                  </div>
             )}
           </div>
 
+          {/* Action buttons */}
           <div className="absolute top-2 right-2 flex flex-col gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-             <Tooltip>
-                <TooltipTrigger asChild>
-                    <Button variant="outline" size="icon" className="h-7 w-7 bg-white/80" onClick={handleAdd}>
-                        <Plus className="h-4 w-4" />
-                    </Button>
-                </TooltipTrigger>
-                <TooltipContent><p>Adicionar Funcionário</p></TooltipContent>
-             </Tooltip>
-             <Tooltip>
-                <TooltipTrigger asChild>
-                    <Button variant="outline" size="icon" className="h-7 w-7 bg-white/80" onClick={handleEdit} disabled={isContractNode}>
-                        <Pencil className="h-4 w-4" />
-                    </Button>
-                </TooltipTrigger>
-                <TooltipContent><p>Editar</p></TooltipContent>
-            </Tooltip>
-            {!isRoot && (
-                <Tooltip>
-                    <TooltipTrigger asChild>
-                        <Button variant="outline" size="icon" className="h-7 w-7 bg-white/80" onClick={() => onToggleVisibility(node.id)}>
-                            {node.showInNeuralNet === false ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                        </Button>
-                    </TooltipTrigger>
-                    <TooltipContent><p>Visibilidade na Rede</p></TooltipContent>
-                </Tooltip>
-            )}
-             <Tooltip>
-                <TooltipTrigger asChild>
-                    <Button variant="outline" size="icon" className="h-7 w-7 bg-white/80" onClick={onOpenContractModal}>
-                        <FileSignature className="h-4 w-4" />
-                    </Button>
-                </TooltipTrigger>
-                <TooltipContent><p>Gerenciar Contratos</p></TooltipContent>
-            </Tooltip>
              <Tooltip>
                 <TooltipTrigger asChild>
                     <Button variant="outline" size="icon" className="h-7 w-7 bg-white/80" onClick={() => onOpenTicketModal(node)} disabled={isContractNode}>
@@ -213,7 +95,33 @@ export function TreeNode({ node, onUpdate, onAddChild, onRemove, onMoveNode, onO
                 </TooltipTrigger>
                 <TooltipContent><p>Criar Ticket</p></TooltipContent>
             </Tooltip>
+            {!isContractNode && node.contact && (
+                <>
+                <Tooltip>
+                    <TooltipTrigger asChild>
+                         <a href={`mailto:${node.contact}`}>
+                            <Button variant="outline" size="icon" className="h-7 w-7 bg-white/80">
+                                <Mail className="h-4 w-4" />
+                            </Button>
+                        </a>
+                    </TooltipTrigger>
+                    <TooltipContent><p>Enviar Email</p></TooltipContent>
+                </Tooltip>
+                 <Tooltip>
+                    <TooltipTrigger asChild>
+                        <a href={`https://wa.me/${formattedPhone}`} target="_blank" rel="noopener noreferrer">
+                            <Button variant="outline" size="icon" className="h-7 w-7 bg-white/80">
+                                <WhatsAppIcon />
+                            </Button>
+                        </a>
+                    </TooltipTrigger>
+                    <TooltipContent><p>Enviar WhatsApp</p></TooltipContent>
+                </Tooltip>
+                </>
+            )}
           </div>
+
+          {/* Private ticket indicator */}
           <div className="absolute top-2 left-2 flex flex-col gap-1.5 opacity-100 z-10">
              {privateTicketCount > 0 && (
                  <Tooltip>
@@ -230,57 +138,9 @@ export function TreeNode({ node, onUpdate, onAddChild, onRemove, onMoveNode, onO
                     <TooltipContent side="left"><p>Você tem {privateTicketCount} tickets privados</p></TooltipContent>
                 </Tooltip>
              )}
-            {!isContractNode && node.contact && (
-                <div className="flex flex-col gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Tooltip>
-                        <TooltipTrigger asChild>
-                             <a href={`mailto:${node.contact}`}>
-                                <Button variant="outline" size="icon" className="h-7 w-7 bg-white/80">
-                                    <Mail className="h-4 w-4" />
-                                </Button>
-                            </a>
-                        </TooltipTrigger>
-                        <TooltipContent side="left"><p>Enviar Email</p></TooltipContent>
-                    </Tooltip>
-                     <Tooltip>
-                        <TooltipTrigger asChild>
-                            <a href={`https://wa.me/${formattedPhone}`} target="_blank" rel="noopener noreferrer">
-                                <Button variant="outline" size="icon" className="h-7 w-7 bg-white/80">
-                                    <WhatsAppIcon />
-                                </Button>
-                            </a>
-                        </TooltipTrigger>
-                        <TooltipContent side="left"><p>Enviar WhatsApp</p></TooltipContent>
-                    </Tooltip>
-                </div>
-            )}
-             <AlertDialog>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                    <AlertDialogTrigger asChild>
-                        <Button variant="destructive" size="icon" className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <Trash2 className="h-4 w-4" />
-                        </Button>
-                    </AlertDialogTrigger>
-                </TooltipTrigger>
-                <TooltipContent side="left"><p>Deletar</p></TooltipContent>
-              </Tooltip>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Esta ação não pode ser desfeita. Isso removerá permanentemente o nó e todos os seus subordinados.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                  <AlertDialogAction onClick={() => onRemove(node.id)}>
-                    Continuar
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
           </div>
+          
+            {/* Expander button */}
             {node.children && node.children.length > 0 && (
                 <Button 
                     variant="ghost" 
@@ -294,13 +154,6 @@ export function TreeNode({ node, onUpdate, onAddChild, onRemove, onMoveNode, onO
         </CardContent>
       </Card>
       
-      <EmployeeModal
-        isOpen={employeeModalOpen}
-        onClose={() => setEmployeeModalOpen(false)}
-        onSave={handleSaveEmployee}
-        editingNode={editingNode}
-      />
-
       {isExpanded && node.children && node.children.length > 0 && (
         <>
           <div className="absolute top-full h-8 w-px bg-slate-600 left-1/2 -translate-x-1/2"></div>
@@ -317,7 +170,6 @@ export function TreeNode({ node, onUpdate, onAddChild, onRemove, onMoveNode, onO
                   onAddChild={onAddChild} 
                   onRemove={onRemove}
                   onMoveNode={onMoveNode}
-                  onOpenContractModal={onOpenContractModal}
                   onOpenTicketModal={onOpenTicketModal}
                   onToggleVisibility={onToggleVisibility}
                   privateTicketCount={privateTicketCount}

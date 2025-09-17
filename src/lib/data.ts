@@ -96,6 +96,20 @@ export type User = {
   };
 };
 
+export const initialUsers: User[] = [
+    {
+        id: 'admin-1',
+        name: 'Romilson Luis',
+        email: 'romilson@arpolar.com.br',
+        role: 'Administrador',
+        status: 'Ativo',
+        permissions: {
+            canViewAllContracts: true,
+            allowedContractIds: [],
+        },
+    },
+];
+
 export const initialOrgTree: OrgNode = {
   id: 'arpolar',
   name: 'Arpolar',
@@ -169,6 +183,7 @@ export const refrigerationQuestions: RefrigerationQuestion[] = [
     { id: 'q19', question: 'Um ventilador do condensador que não funciona pode causar:', options: ['Baixa pressão de descarga', 'Alta pressão de descarga e superaquecimento do compressor', 'Congelamento da linha de sucção', 'Operação normal do sistema'], correctAnswer: 'Alta pressão de descarga e superaquecimento do compressor', image: 'https://picsum.photos/800/400?random=19', imageHint: 'fan motor' },
     { id: 'q20', question: 'O que indica a presença de óleo nas conexões da tubulação?', options: ['Operação normal', 'Excesso de óleo no sistema', 'Um vazamento de refrigerante', 'Filtro secador saturado'], correctAnswer: 'Um vazamento de refrigerante', image: 'https://picsum.photos/800/400?random=20', imageHint: 'oil leak pipe' },
 ];
+
 
 
 

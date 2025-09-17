@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { PlusCircle, User, MapPin, Pencil, Trash2, FolderOpen } from 'lucide-react';
-import { type OrgNode, type Contract, initialOrgTree, type User as AppUser, type ContractDocument } from '@/lib/data';
+import { type OrgNode, type Contract, initialOrgTree, type User as AppUser, type ContractDocument, initialUsers } from '@/lib/data';
 import Image from 'next/image';
 import { ContractModal } from '@/components/contracts/contract-modal';
 import { useToast } from '@/hooks/use-toast';
@@ -116,19 +116,25 @@ export default function ContractsPage() {
         const savedUsers = localStorage.getItem(USERS_STORAGE_KEY);
 
         const allContracts: Contract[] = savedContracts ? JSON.parse(savedContracts) : [];
-        const allUsers: AppUser[] = savedUsers ? JSON.parse(savedUsers) : [];
+        const allUsers: AppUser[] = savedUsers ? JSON.parse(savedUsers) : initialUsers;
         
         const user = allUsers.find(u => u.email === CURRENT_USER_EMAIL) || allUsers.find(u => u.role === 'Administrador');
         setCurrentUser(user || null);
 
         let visibleContracts: Contract[] = [];
         if (user) {
-            if (user.permissions.canViewAllContracts) {
+            // Simplified logic: If the user is an admin, show all contracts.
+            // Otherwise, apply permission-based filtering.
+            if (user.role === 'Administrador' || user.permissions.canViewAllContracts) {
                 visibleContracts = allContracts;
             } else {
                 const allowedIds = new Set(user.permissions.allowedContractIds);
                 visibleContracts = allContracts.filter(c => allowedIds.has(c.id));
             }
+        } else {
+            // Fallback for when no specific user is identified: show all contracts.
+            // This ensures contracts are visible after creation.
+            visibleContracts = allContracts;
         }
         
         setContracts(visibleContracts);
@@ -206,10 +212,11 @@ export default function ContractsPage() {
   };
   
   const handleDeleteContract = (contractId: string) => {
-    const contractToDelete = contracts.find(c => c.id === contractId);
+    const allContracts: Contract[] = JSON.parse(localStorage.getItem(CONTRACTS_STORAGE_KEY) || '[]');
+    const contractToDelete = allContracts.find(c => c.id === contractId);
     if (!contractToDelete) return;
 
-    const updatedContracts = contracts.filter(c => c.id !== contractId);
+    const updatedContracts = allContracts.filter(c => c.id !== contractId);
     localStorage.setItem(CONTRACTS_STORAGE_KEY, JSON.stringify(updatedContracts));
 
     const savedTree = localStorage.getItem(ORG_CHART_STORAGE_KEY);
@@ -224,13 +231,14 @@ export default function ContractsPage() {
   };
   
   const handleSaveDocument = (contractId: string, document: Omit<ContractDocument, 'id' | 'uploadedAt'>) => {
+    const allContracts: Contract[] = JSON.parse(localStorage.getItem(CONTRACTS_STORAGE_KEY) || '[]');
     const newDocument: ContractDocument = {
         ...document,
         id: `doc-${Date.now()}`,
         uploadedAt: new Date().toISOString()
     };
     
-    const updatedContracts = contracts.map(c => {
+    const updatedContracts = allContracts.map(c => {
         if (c.id === contractId) {
             const updatedDocs = [...(c.documents || []), newDocument];
             return { ...c, documents: updatedDocs };
@@ -245,7 +253,8 @@ export default function ContractsPage() {
   };
 
   const handleDeleteDocument = (contractId: string, documentId: string) => {
-     const updatedContracts = contracts.map(c => {
+     const allContracts: Contract[] = JSON.parse(localStorage.getItem(CONTRACTS_STORAGE_KEY) || '[]');
+     const updatedContracts = allContracts.map(c => {
         if (c.id === contractId) {
             const updatedDocs = (c.documents || []).filter(doc => doc.id !== documentId);
             return { ...c, documents: updatedDocs };
@@ -277,7 +286,7 @@ export default function ContractsPage() {
       {contracts.length === 0 ? (
         <div className="flex flex-col items-center justify-center flex-1 py-12 text-center bg-gray-100/50 rounded-lg">
             <p className="text-lg font-semibold text-muted-foreground">Nenhum contrato encontrado.</p>
-            <p className="mt-2 text-sm text-muted-foreground">Verifique suas permissões ou adicione um novo contrato.</p>
+            <p className="mt-2 text-sm text-muted-foreground">Adicione um novo contrato para começar.</p>
         </div>
       ) : (
          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">

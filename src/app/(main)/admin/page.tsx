@@ -1,12 +1,12 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { useState, useEffect, useMemo } from 'react';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { MoreHorizontal, PlusCircle, Trash2, Pencil, FolderOpen, History, UserCheck } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Trash2, Pencil, FolderOpen, History, UserCheck, AlertTriangle, FilterX } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -14,6 +14,13 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import type { User, Contract, ContractDocument } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 import { UserModal } from '@/components/admin/user-modal';
@@ -30,14 +37,104 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
-import { getAvatar, removeAvatar, saveAvatar } from '@/lib/avatar-storage';
+import { getAvatar } from '@/lib/avatar-storage';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { removeNodeFromTree } from '@/lib/tree-utils';
+import { cn } from '@/lib/utils';
+import { differenceInDays, isValid, format } from 'date-fns';
 
 const USERS_STORAGE_KEY = 'arpolarUsers';
 const CONTRACTS_STORAGE_KEY = 'arpolarContracts';
 const ORG_CHART_STORAGE_KEY = 'orgChartTree';
 
+
+// --- Componente do Cartão de Status do Documento ---
+function DocStatusCard({ contract }: { contract: Contract }) {
+    const isArt = contract.documentType === 'ART de manutenção do sistema de ar condicionado';
+
+    const getStatus = () => {
+        if (!isArt || !contract.docStartDate || !contract.docEndDate) {
+            return {
+                daysRemaining: null,
+                statusColor: 'bg-gray-500',
+                statusText: isArt ? 'Datas da ART não definidas' : 'Não é uma ART',
+            };
+        }
+
+        const startDate = new Date(contract.docStartDate);
+        const expiryDate = new Date(contract.docEndDate);
+        
+        if (!isValid(startDate) || !isValid(expiryDate)) {
+             return { daysRemaining: null, statusColor: 'bg-gray-500', statusText: 'Datas inválidas' };
+        }
+
+        const daysRemaining = differenceInDays(expiryDate, new Date());
+
+        if (daysRemaining < 0) {
+            return { daysRemaining, statusColor: 'bg-black', statusText: 'Vencida' };
+        }
+        if (daysRemaining <= 7) {
+            return { daysRemaining, statusColor: 'bg-red-600', statusText: 'Vencimento crítico' };
+        }
+        if (daysRemaining <= 30) {
+            return { daysRemaining, statusColor: 'bg-yellow-500', statusText: 'Atenção ao vencimento' };
+        }
+        return {
+            daysRemaining,
+            statusColor: 'bg-green-600',
+            statusText: 'Em dia',
+        };
+    };
+
+    const { daysRemaining, statusColor, statusText } = getStatus();
+    const startDate = contract.docStartDate ? new Date(contract.docStartDate) : null;
+    const expiryDate = contract.docEndDate ? new Date(contract.docEndDate) : null;
+
+
+    return (
+        <Card className={cn("text-white w-full max-w-md mx-auto shadow-lg", statusColor)}>
+            <CardHeader>
+                <CardTitle className="flex items-center gap-3">
+                    <AlertTriangle/>
+                    Status do Documento Principal
+                </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+                <div>
+                    <p className="text-sm opacity-80">Contrato</p>
+                    <p className="font-bold text-lg">{contract.name}</p>
+                </div>
+                 <div>
+                    <p className="text-sm opacity-80">Tipo de Documento</p>
+                    <p className="font-semibold">{contract.documentType || 'Não informado'}</p>
+                </div>
+                <div className="flex justify-between">
+                    <div>
+                        <p className="text-sm opacity-80">Data de Início</p>
+                        <p className="font-semibold">{startDate && isValid(startDate) ? format(startDate, 'dd/MM/yyyy') : 'N/A'}</p>
+                    </div>
+                     <div>
+                        <p className="text-sm opacity-80">Data de Fim</p>
+                        <p className="font-semibold">{expiryDate && isValid(expiryDate) ? format(expiryDate, 'dd/MM/yyyy') : 'N/A'}</p>
+                    </div>
+                </div>
+                {isArt && daysRemaining !== null && (
+                    <div className="text-center bg-black/20 p-3 rounded-lg">
+                        <p className="text-sm opacity-80">Status da ART</p>
+                        <p className="text-2xl font-bold">
+                            {daysRemaining >= 0 ? `${daysRemaining} dias restantes` : `Vencida há ${Math.abs(daysRemaining)} dias`}
+                        </p>
+                        <p className="text-sm font-medium">{statusText}</p>
+                    </div>
+                )}
+                 {!isArt && (
+                     <div className="text-center bg-black/20 p-3 rounded-lg">
+                        <p className="font-semibold">Este documento não tem controle de vencimento.</p>
+                    </div>
+                 )}
+            </CardContent>
+        </Card>
+    );
+}
 
 function UserAvatar({ user }: { user: User }) {
     const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
@@ -55,7 +152,7 @@ function UserAvatar({ user }: { user: User }) {
     return (
         <Avatar className="h-9 w-9">
             <AvatarImage src={avatarUrl ?? undefined} alt={user.name} />
-            <AvatarFallback>{user.name.slice(0, 2).toUpperCase()}</AvatarFallback>
+            <AvatarFallback>{user.name.slice(0, 2).toUpperCase()}></AvatarFallback>
         </Avatar>
     );
 }
@@ -78,6 +175,11 @@ export default function AdminPage() {
   // Docs Modal state
   const [docsModalContract, setDocsModalContract] = useState<Contract | null>(null);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
+
+  // New state for filters and selected contract info
+  const [selectedSupervisorId, setSelectedSupervisorId] = useState<string | null>(null);
+  const [selectedContractForInfo, setSelectedContractForInfo] = useState<Contract | null>(null);
+
 
   const loadData = () => {
     try {
@@ -258,13 +360,15 @@ export default function AdminPage() {
     const updatedContracts = contracts.filter(c => c.id !== contractId);
     localStorage.setItem(CONTRACTS_STORAGE_KEY, JSON.stringify(updatedContracts));
     
-    // Also remove any employees associated with this contract
-    const allUsers: User[] = JSON.parse(localStorage.getItem(USERS_STORAGE_KEY) || '[]');
-    const updatedUsers = allUsers.filter(u => !u.permissions.allowedContractIds.includes(contractId)); // This is a weak link, contract name is better
-    localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(updatedUsers));
+    // Also remove any employees associated with this contract from the org chart
+     const savedTree = localStorage.getItem(ORG_CHART_STORAGE_KEY);
+    if (savedTree) {
+      let tree = JSON.parse(savedTree);
+      tree = removeNodeFromTree(tree, contractId);
+      localStorage.setItem(ORG_CHART_STORAGE_KEY, JSON.stringify(tree));
+    }
     
     window.dispatchEvent(new StorageEvent('storage', { key: CONTRACTS_STORAGE_KEY }));
-    window.dispatchEvent(new StorageEvent('storage', { key: USERS_STORAGE_KEY }));
     window.dispatchEvent(new StorageEvent('storage', { key: ORG_CHART_STORAGE_KEY }));
 
     toast({ 
@@ -310,6 +414,16 @@ export default function AdminPage() {
     toast({ title: "Documento Removido", variant: "destructive" });
   };
 
+  const supervisors = useMemo(() => {
+    return users.filter(u => u.status === 'Ativo' && (u.role === 'Supervisor' || u.role === 'Administrador'));
+  }, [users]);
+  
+  const filteredContracts = useMemo(() => {
+    if (!selectedSupervisorId) {
+        return contracts;
+    }
+    return contracts.filter(c => c.supervisorId === selectedSupervisorId);
+  }, [contracts, selectedSupervisorId]);
 
   if (!isClient) return null;
 
@@ -321,7 +435,7 @@ export default function AdminPage() {
             <p className="text-muted-foreground">Gerencie usuários, contratos e configurações do sistema.</p>
         </div>
         <div className="flex gap-2">
-            <Button onClick={handleOpenAddUserModal} variant={isUserModalOpen ? 'secondary' : 'default'}>
+           <Button onClick={handleOpenAddUserModal} variant={isUserModalOpen ? 'secondary' : 'default'}>
                 <PlusCircle className="mr-2" />
                 Adicionar Usuário
             </Button>
@@ -403,6 +517,41 @@ export default function AdminPage() {
           <CardDescription>Visualize e edite os contratos de clientes.</CardDescription>
         </CardHeader>
         <CardContent>
+            <div className="grid md:grid-cols-2 gap-6 mb-6">
+                <div className="flex flex-col gap-4">
+                    <div className="flex items-center gap-4">
+                        <div className="flex-1">
+                            <Label htmlFor="supervisor-filter">Filtrar por Supervisor</Label>
+                            <Select onValueChange={setSelectedSupervisorId} value={selectedSupervisorId || 'all'}>
+                                <SelectTrigger id="supervisor-filter">
+                                <SelectValue placeholder="Selecione um supervisor" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                <SelectItem value="all">Todos os Supervisores</SelectItem>
+                                {supervisors.map(s => (
+                                    <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
+                                ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        {selectedSupervisorId && (
+                            <Button variant="ghost" size="icon" onClick={() => setSelectedSupervisorId(null)} className="mt-6">
+                                <FilterX className="h-5 w-5" />
+                            </Button>
+                        )}
+                    </div>
+                </div>
+                 <div className="flex items-center justify-center">
+                    {selectedContractForInfo ? (
+                        <DocStatusCard contract={selectedContractForInfo} />
+                    ) : (
+                        <div className="text-center text-muted-foreground p-4 border-2 border-dashed rounded-lg h-full flex flex-col justify-center items-center">
+                            <AlertTriangle className="w-8 h-8 mb-2" />
+                            <p>Selecione um contrato na tabela para ver o status do documento.</p>
+                        </div>
+                    )}
+                 </div>
+            </div>
           <Table>
             <TableHeader>
               <TableRow>
@@ -414,8 +563,11 @@ export default function AdminPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {contracts.map((contract) => (
-                <TableRow key={contract.id} className={contract.status === 'Inativo' ? 'bg-muted/50 text-muted-foreground' : ''}>
+              {filteredContracts.map((contract) => (
+                <TableRow key={contract.id} className={cn(
+                    contract.status === 'Inativo' ? 'bg-muted/50 text-muted-foreground' : 'cursor-pointer',
+                    selectedContractForInfo?.id === contract.id && 'bg-accent'
+                )} onClick={() => setSelectedContractForInfo(contract)}>
                   <TableCell className="font-medium">{contract.name}</TableCell>
                   <TableCell>{contract.supervisorName}</TableCell>
                    <TableCell>
@@ -495,7 +647,7 @@ export default function AdminPage() {
         isOpen={isContractModalOpen}
         onClose={() => setIsContractModalOpen(false)}
         onSave={handleSaveContract}
-        supervisors={users.filter(u => u.status === 'Ativo' && (u.role === 'Supervisor' || u.role === 'Administrador'))}
+        supervisors={supervisors}
         editingContract={editingContract}
       />
       
@@ -512,7 +664,5 @@ export default function AdminPage() {
     </div>
   );
 }
-
-    
 
     

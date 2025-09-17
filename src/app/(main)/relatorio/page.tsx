@@ -156,7 +156,7 @@ export default function ReportPage() {
                                             {/* Content can be placed here if needed over the image */}
                                         </div>
                                          {isAdmin && (
-                                            <div className="absolute top-4 right-4 flex gap-2">
+                                            <div className="absolute top-4 right-4 flex gap-2 z-10">
                                                 <Button size="icon" onClick={() => handleOpenModal(cover)}>
                                                     <Edit />
                                                 </Button>

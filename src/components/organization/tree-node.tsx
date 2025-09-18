@@ -225,4 +225,3 @@ export function TreeNode({ node, onMoveNode, onOpenTicketModal, privateTicketCou
     </TooltipProvider>
   );
 }
-

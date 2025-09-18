@@ -199,4 +199,3 @@ export default function OrganogramaPage() {
     </div>
   );
 }
-

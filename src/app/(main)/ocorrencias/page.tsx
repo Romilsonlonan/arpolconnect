@@ -32,10 +32,10 @@ const ArpolarIcons = () => (
 
 const SummaryCard = ({ title, value }: { title: string, value: string }) => (
   <Card className="bg-blue-800 text-white border-blue-700 shadow-lg flex-1">
-    <CardHeader className="pb-2">
+    <CardHeader className="pb-2 items-center">
       <CardTitle className="text-sm font-medium">{title}</CardTitle>
     </CardHeader>
-    <CardContent>
+    <CardContent className="items-center text-center">
       <p className="text-3xl font-bold">{value}</p>
     </CardContent>
   </Card>

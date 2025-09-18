@@ -68,7 +68,7 @@ const GaugeChart = ({ value, maxValue, label, color, timeValue }: { value: numbe
                         </Pie>
                     </PieChart>
                 </ChartContainer>
-                <div className="absolute bottom-14 flex flex-col items-center">
+                <div className="absolute bottom-[4.5rem] flex flex-col items-center">
                     <span className="text-2xl font-bold text-gray-800">{timeValue}</span>
                     <div className="text-xs text-gray-500 flex justify-between w-[150%]">
                         <span>00:00:00</span>
@@ -107,8 +107,8 @@ const QtdGaugeChart = ({ value, maxValue, label, color }: { value: number; maxVa
                         </Pie>
                     </PieChart>
                 </ChartContainer>
-                 <div className="absolute bottom-14 flex flex-col items-center">
-                    <span className="text-4xl font-bold text-gray-800">{value}</span>
+                 <div className="absolute bottom-[4.5rem] flex flex-col items-center">
+                    <span className="text-4xl font-bold text-gray-800 pb-2">{value}</span>
                      <div className="text-xs text-gray-500 flex justify-between w-[150%]">
                         <span>0</span>
                         <span>{maxValue}</span>

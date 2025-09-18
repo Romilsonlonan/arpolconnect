@@ -21,7 +21,7 @@ import {
 } from '@/components/ui/chart';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, ComposedChart, Line, PieChart, Pie, Cell } from 'recharts';
 import { format } from 'date-fns';
-import { AlertTriangle, XCircle, Clock, CheckCircle, CalendarIcon, Settings, ArrowLeft, ArrowRight, FilterX } from 'lucide-react';
+import { AlertTriangle, XCircle, Clock, CheckCircle, CalendarIcon, Settings, ArrowLeft, ArrowRight, FilterX, Maximize, Minimize } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { PreventiveStatusCardData, PreventiveConsultation, PreventiveChartData, MonthlyChartData } from '@/lib/data';
 import { Calendar } from '@/components/ui/calendar';
@@ -176,6 +176,8 @@ export default function ReportPage() {
     to: new Date(2025, 7, 1),
   });
   const [selectedContractName, setSelectedContractName] = useState<string | null>(null);
+  const [expandedChart, setExpandedChart] = useState<'contracts' | 'monthly' | null>(null);
+
 
   const filteredData = useMemo(() => {
     if (!selectedContractName) {
@@ -324,7 +326,19 @@ export default function ReportPage() {
             </div>
 
             <div className="grid grid-cols-2 gap-4 flex-1">
-                <div className="bg-white/90 text-black rounded-lg flex flex-col">
+                <div 
+                    className={cn(
+                        "bg-white/90 text-black rounded-lg flex flex-col relative cursor-pointer group",
+                        expandedChart && expandedChart !== 'contracts' && 'hidden',
+                        expandedChart === 'contracts' && 'col-span-2'
+                    )}
+                    onClick={() => setExpandedChart(expandedChart === 'contracts' ? null : 'contracts')}
+                >
+                    <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+                         <Button variant="ghost" size="icon">
+                            {expandedChart === 'contracts' ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
+                        </Button>
+                    </div>
                     <div className="bg-blue-900 text-white p-2 text-center text-lg font-semibold">Preventivas por Contratos</div>
                     <div className="flex-1 p-4">
                          <ChartContainer config={contractsChartConfig} className="w-full h-full">
@@ -343,7 +357,19 @@ export default function ReportPage() {
                     </div>
                 </div>
 
-                 <div className="bg-white/90 text-black rounded-lg flex flex-col">
+                 <div 
+                    className={cn(
+                        "bg-white/90 text-black rounded-lg flex flex-col relative cursor-pointer group",
+                        expandedChart && expandedChart !== 'monthly' && 'hidden',
+                        expandedChart === 'monthly' && 'col-span-2'
+                    )}
+                     onClick={() => setExpandedChart(expandedChart === 'monthly' ? null : 'monthly')}
+                >
+                    <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button variant="ghost" size="icon">
+                           {expandedChart === 'monthly' ? <Minimize className="h-5 w-5" /> : <Maximize className="h-5 w-5" />}
+                        </Button>
+                    </div>
                     <header className="bg-blue-900 text-white p-2 text-center text-lg font-semibold">
                         Total Preventivas Mensais {selectedContractName && `- ${selectedContractName}`}
                     </header>
@@ -356,10 +382,10 @@ export default function ReportPage() {
                                 <ChartTooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(0,0,0,0.1)' }} />
                                 <ChartLegend wrapperStyle={{ paddingTop: '30px' }} />
                                 
-                                <Bar dataKey="Realizadas" fill="var(--color-Realizadas)" barSize={20} radius={[4,4,0,0]}/>
-                                <Bar dataKey="Atrasadas" fill="var(--color-Atrasadas)" barSize={20} radius={[4,4,0,0]}/>
-                                <Bar dataKey="Não Realizadas" fill="var(--color-Não Realizadas)" barSize={20} radius={[4,4,0,0]}/>
-                                <Bar dataKey="Pendentes" fill="var(--color-Pendentes)" barSize={20} radius={[4,4,0,0]}/>
+                                <Bar dataKey="Realizadas" fill="var(--color-Realizadas)" barSize={20} />
+                                <Bar dataKey="Atrasadas" fill="var(--color-Atrasadas)" barSize={20} />
+                                <Bar dataKey="Não Realizadas" fill="var(--color-Não Realizadas)" barSize={20} />
+                                <Bar dataKey="Pendentes" fill="var(--color-Pendentes)" barSize={20} />
                                 <Line type="monotone" dataKey="Realizadas" stroke="var(--color-Realizadas)" strokeWidth={2} dot={false} />
                                 <Line type="monotone" dataKey="Atrasadas" stroke="var(--color-Atrasadas)" strokeWidth={2} dot={false} />
                             </ComposedChart>
@@ -372,3 +398,4 @@ export default function ReportPage() {
   );
 }
 
+    

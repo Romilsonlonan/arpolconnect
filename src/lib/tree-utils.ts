@@ -110,7 +110,7 @@ export function buildTreeFromUsersAndContracts(users: User[], contracts: Contrac
       role: user.role,
       contact: user.email,
       avatar: '', // Will be handled by getAvatar
-      showInNeuralNet: user.role === 'Supervisor' || user.role === 'Administrador',
+      showInNeuralNet: user.showInReports,
       children: []
     };
     nodeMap.set(user.id, userNode);

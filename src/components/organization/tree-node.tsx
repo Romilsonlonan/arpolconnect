@@ -121,16 +121,6 @@ export function TreeNode({ node, onUpdate, onAddChild, onRemove, onMoveNode, onO
                 </Tooltip>
                 </>
             )}
-             {isSupervisorNode && !isRoot && (
-                 <Tooltip>
-                    <TooltipTrigger asChild>
-                        <Button variant="outline" size="icon" className="h-7 w-7 bg-white/80" onClick={() => onToggleVisibility(node.id)}>
-                            {isVisibleInNeuralNet ? <Eye className="h-4 w-4" /> : <EyeOff className="h-4 w-4" />}
-                        </Button>
-                    </TooltipTrigger>
-                    <TooltipContent><p>{isVisibleInNeuralNet ? 'Ocultar da Rede' : 'Mostrar na Rede'}</p></TooltipContent>
-                </Tooltip>
-            )}
           </div>
 
           {/* Private ticket indicator */}

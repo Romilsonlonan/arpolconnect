@@ -35,8 +35,7 @@ export default function OrganogramaPage() {
       const savedUsers = localStorage.getItem(USERS_STORAGE_KEY);
       const savedContracts = localStorage.getItem(CONTRACTS_STORAGE_KEY);
       const savedMessages = localStorage.getItem(DASHBOARD_MESSAGES_KEY);
-      const savedTree = localStorage.getItem(ORG_CHART_STORAGE_KEY);
-
+      
       const users: AppUser[] = savedUsers ? JSON.parse(savedUsers) : [];
       const contracts: Contract[] = savedContracts ? JSON.parse(savedContracts) : [];
       
@@ -45,13 +44,9 @@ export default function OrganogramaPage() {
         setMessages(JSON.parse(savedMessages));
       }
       
-      let finalTree;
-      if (savedTree) {
-        finalTree = JSON.parse(savedTree);
-      } else {
-        finalTree = buildTreeFromUsersAndContracts(users, contracts);
-        localStorage.setItem(ORG_CHART_STORAGE_KEY, JSON.stringify(finalTree));
-      }
+      // The tree is now always derived from users and contracts
+      const finalTree = buildTreeFromUsersAndContracts(users, contracts);
+      localStorage.setItem(ORG_CHART_STORAGE_KEY, JSON.stringify(finalTree));
       setTree(finalTree);
 
     } catch (error) {
@@ -64,32 +59,17 @@ export default function OrganogramaPage() {
     setIsClient(true);
     loadData();
 
-    window.addEventListener('storage', loadData);
-    return () => window.removeEventListener('storage', loadData);
+    // Listen to changes in users or contracts to rebuild the tree
+    const handleStorageChange = (e: StorageEvent) => {
+        if (e.key === USERS_STORAGE_KEY || e.key === CONTRACTS_STORAGE_KEY || e.key === DASHBOARD_MESSAGES_KEY) {
+            loadData();
+        }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
-  const handleToggleVisibility = (nodeId: string) => {
-    if (!tree) return;
-    
-    const newTree = updateTree(tree, (node) => {
-      if (node.id === nodeId) {
-        const isVisible = !(node.showInNeuralNet !== false); // Default to true if undefined
-        node.showInNeuralNet = !isVisible;
-         toast({
-            title: `Visibilidade Alterada`,
-            description: `${node.name} ${!isVisible ? 'agora será exibido' : 'não será mais exibido'} na Rede de Supervisores.`,
-        });
-      }
-      return node;
-    });
-
-    setTree(newTree);
-    localStorage.setItem(ORG_CHART_STORAGE_KEY, JSON.stringify(newTree));
-    window.dispatchEvent(new StorageEvent('storage', { key: ORG_CHART_STORAGE_KEY }));
-  };
-
-
-  // Placeholder functions, as direct editing from organograma is disabled
   const handlePlaceholder = () => {};
 
   const handleOpenTicketModal = (node: OrgNode) => {
@@ -167,7 +147,7 @@ export default function OrganogramaPage() {
             onRemove={handlePlaceholder}
             onMoveNode={handlePlaceholder}
             onOpenTicketModal={handleOpenTicketModal}
-            onToggleVisibility={handleToggleVisibility}
+            onToggleVisibility={handlePlaceholder} // Visibility is now handled in Admin
             privateTicketCount={privateTicketCounts.get(tree.id) || 0}
             isRoot={true}
           />

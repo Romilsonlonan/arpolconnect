@@ -3,7 +3,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
-import { initialOrgTree, type OrgNode, type Message } from '@/lib/data';
+import { initialOrgTree, type OrgNode, type Message, type User } from '@/lib/data';
 import { getAvatar } from '@/lib/avatar-storage';
 import { Avatar, AvatarFallback, AvatarImage } from '../ui/avatar';
 import {
@@ -16,34 +16,20 @@ import { cn } from '@/lib/utils';
 
 const ORG_CHART_STORAGE_KEY = 'orgChartTree';
 const DASHBOARD_MESSAGES_KEY = 'dashboardMessages';
+const USERS_STORAGE_KEY = 'arpolarUsers';
 const AVATAR_STORAGE_PREFIX = 'avatar_';
 
 
-function getVisibleNodes(tree: OrgNode): OrgNode[] {
-    const visibleNodes: OrgNode[] = [];
-    const rolesToShow = ['Supervisor', 'Supervisor de Qualidade', 'Administrador'];
-
-    function findVisible(node: OrgNode) {
-        // Check if the node's role is one of the roles to be shown and if it's not hidden
-        if (node.showInNeuralNet !== false && rolesToShow.includes(node.role)) {
-             visibleNodes.push(node);
-        }
-
-        if (node.children) {
-            for (const child of node.children) {
-                findVisible(child);
-            }
-        }
-    }
-    
-    // Start traversal from the root
-    findVisible(tree);
-    
-    // The filter for id 'arpolar' is redundant if we only push nodes with specific roles, but it's good for safety.
-    return visibleNodes.filter(node => node.id !== 'arpolar');
+function getVisibleNodes(users: User[]): User[] {
+    const rolesToShow = ['Supervisor', 'Supervisor de Qualidade', 'Administrador', 'Coordenador', 'Gerente', 'Diretor'];
+    return users.filter(user => 
+        user.status === 'Ativo' &&
+        rolesToShow.includes(user.role) &&
+        user.showInReports !== false // default to true
+    );
 }
 
-function NodeAvatar({ node, alertLevel, isSelected }: { node: OrgNode, alertLevel: 'critical' | 'warning' | 'none', isSelected: boolean }) {
+function NodeAvatar({ node, alertLevel, isSelected }: { node: User, alertLevel: 'critical' | 'warning' | 'none', isSelected: boolean }) {
     const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
     useEffect(() => {
@@ -64,8 +50,6 @@ function NodeAvatar({ node, alertLevel, isSelected }: { node: OrgNode, alertLeve
         return () => window.removeEventListener('storage', handleStorageChange);
     }, [node.id]);
 
-    const finalAvatarUrl = avatarUrl || node.avatar;
-    
     const shadowClass = useMemo(() => {
         if (isSelected) return 'ring-4 ring-offset-2 ring-accent';
         switch (alertLevel) {
@@ -81,7 +65,7 @@ function NodeAvatar({ node, alertLevel, isSelected }: { node: OrgNode, alertLeve
             "w-16 h-16 border-4 border-background shadow-lg hover:scale-110 transition-all cursor-pointer rounded-full",
             shadowClass
         )}>
-            <AvatarImage src={finalAvatarUrl ?? undefined} alt={node.name} data-ai-hint="person portrait" />
+            <AvatarImage src={avatarUrl ?? undefined} alt={node.name} data-ai-hint="person portrait" />
             <AvatarFallback>{node.name.substring(0, 2)}</AvatarFallback>
         </Avatar>
     );
@@ -89,7 +73,7 @@ function NodeAvatar({ node, alertLevel, isSelected }: { node: OrgNode, alertLeve
 
 
 export function SupervisorNeuralNet({ onNodeClick, selectedNodeId }: { onNodeClick: (nodeId: string | null) => void, selectedNodeId: string | null }) {
-    const [nodes, setNodes] = useState<OrgNode[]>([]);
+    const [nodes, setNodes] = useState<User[]>([]);
     const [messages, setMessages] = useState<Message[]>([]);
     const [isClient, setIsClient] = useState(false);
     
@@ -97,9 +81,9 @@ export function SupervisorNeuralNet({ onNodeClick, selectedNodeId }: { onNodeCli
       setIsClient(true);
       
       const handleStorageChange = () => {
-         const savedTree = localStorage.getItem(ORG_CHART_STORAGE_KEY);
-         const orgTree = savedTree ? JSON.parse(savedTree) : initialOrgTree;
-         setNodes(getVisibleNodes(orgTree));
+         const savedUsers = localStorage.getItem(USERS_STORAGE_KEY);
+         const allUsers: User[] = savedUsers ? JSON.parse(savedUsers) : [];
+         setNodes(getVisibleNodes(allUsers));
 
          const savedMessages = localStorage.getItem(DASHBOARD_MESSAGES_KEY);
          setMessages(savedMessages ? JSON.parse(savedMessages) : []);
@@ -210,7 +194,7 @@ export function SupervisorNeuralNet({ onNodeClick, selectedNodeId }: { onNodeCli
                                 </TooltipTrigger>
                                 <TooltipContent>
                                     <p className="font-semibold">{node.name}</p>
-                                    <p className="text-muted-foreground">{node.contact}</p>
+                                    <p className="text-muted-foreground">{node.email}</p>
                                 </TooltipContent>
                             </Tooltip>
                         </div>

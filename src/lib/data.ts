@@ -90,8 +90,9 @@ export type User = {
   id: string;
   name: string;
   email: string;
-  role: 'Administrador' | 'Supervisor' | 'Mecânico' | 'Visualizador';
+  role: 'Administrador' | 'Supervisor' | 'Mecânico' | 'Visualizador' | 'Supervisor de Qualidade' | string;
   status: 'Ativo' | 'Inativo';
+  showInReports?: boolean;
   permissions: {
     canViewAllContracts: boolean;
     allowedContractIds: string[];
@@ -164,6 +165,7 @@ export const initialUsers: User[] = [
         email: 'romilson@arpolar.com.br',
         role: 'Administrador',
         status: 'Ativo',
+        showInReports: true,
         permissions: {
             canViewAllContracts: true,
             allowedContractIds: [],

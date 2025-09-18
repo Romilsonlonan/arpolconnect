@@ -58,13 +58,27 @@ export default function ReportSupervisorSelectionPage() {
     const [supervisors, setSupervisors] = useState<User[]>([]);
     
     useEffect(() => {
-        const savedUsers = localStorage.getItem(USERS_STORAGE_KEY);
-        if (savedUsers) {
-            const allUsers: User[] = JSON.parse(savedUsers);
-            const supervisorRoles = ['Supervisor', 'Coordenador', 'Administrador', 'Diretor', 'Gerente', 'Supervisor de Qualidade'];
-            const filtered = allUsers.filter(user => supervisorRoles.includes(user.role) && user.status === 'Ativo');
-            setSupervisors(filtered);
+        const loadData = () => {
+            const savedUsers = localStorage.getItem(USERS_STORAGE_KEY);
+            if (savedUsers) {
+                const allUsers: User[] = JSON.parse(savedUsers);
+                const supervisorRoles = ['Supervisor', 'Coordenador', 'Administrador', 'Diretor', 'Gerente', 'Supervisor de Qualidade'];
+                const filtered = allUsers.filter(user => 
+                    supervisorRoles.includes(user.role) && 
+                    user.status === 'Ativo' &&
+                    user.showInReports !== false // Default to true if undefined
+                );
+                setSupervisors(filtered);
+            }
         }
+        loadData();
+
+        window.addEventListener('storage', (e) => {
+            if (e.key === USERS_STORAGE_KEY) {
+                loadData();
+            }
+        });
+
     }, []);
 
     return (

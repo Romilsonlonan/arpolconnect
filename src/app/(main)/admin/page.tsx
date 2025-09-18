@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { MoreHorizontal, PlusCircle, Trash2, Pencil, FolderOpen, History, UserCheck, AlertTriangle, FilterX } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Trash2, Pencil, FolderOpen, History, UserCheck, AlertTriangle, FilterX, Eye, EyeOff } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -43,6 +43,7 @@ import { cn } from '@/lib/utils';
 import { differenceInDays, isValid, parseISO, format, startOfDay } from 'date-fns';
 import { Label } from '@/components/ui/label';
 import { removeNodeFromTree } from '@/lib/tree-utils';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const USERS_STORAGE_KEY = 'arpolarUsers';
 const CONTRACTS_STORAGE_KEY = 'arpolarContracts';
@@ -233,13 +234,14 @@ export default function AdminPage() {
     let userId = id;
 
     if (userId) { // Editing user
-      updatedUsers = currentUsers.map(u => u.id === userId ? { ...u, ...userData, id: userId } : u);
+      updatedUsers = currentUsers.map(u => u.id === userId ? { ...u, ...userData, id: userId, showInReports: u.showInReports } : u);
       toastTitle = "Usuário Atualizado!";
       toastDescription = `As informações de "${userData.name}" foram atualizadas.`;
     } else { // Adding new user
       const newUser: User = {
         ...userData,
-        id: `user-${Date.now()}`
+        id: `user-${Date.now()}`,
+        showInReports: true, // Default to visible
       };
       userId = newUser.id;
       updatedUsers = [...currentUsers, newUser];
@@ -284,6 +286,25 @@ export default function AdminPage() {
     });
   };
   
+    const handleToggleVisibility = (userId: string) => {
+        const userToUpdate = users.find(u => u.id === userId);
+        if (!userToUpdate) return;
+        
+        const isVisible = !(userToUpdate.showInReports === false); // default to true
+        const newVisibility = !isVisible;
+
+        const updatedUsers = users.map(u => u.id === userId ? { ...u, showInReports: newVisibility } : u);
+
+        localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(updatedUsers));
+        window.dispatchEvent(new StorageEvent('storage', { key: USERS_STORAGE_KEY }));
+        window.dispatchEvent(new StorageEvent('storage', { key: ORG_CHART_STORAGE_KEY }));
+
+        toast({
+            title: `Visibilidade Alterada`,
+            description: `${userToUpdate.name} ${newVisibility ? 'agora será exibido' : 'não será mais exibido'} nos relatórios e redes.`,
+        });
+    };
+
   // --- Contract Management ---
   const handleOpenAddContractModal = () => {
     setEditingContract(null);
@@ -431,6 +452,8 @@ export default function AdminPage() {
     }
   }, [filteredContracts, selectedContractForInfo]);
 
+  const supervisorRoles = ['Supervisor', 'Supervisor de Qualidade', 'Administrador', 'Coordenador', 'Gerente', 'Diretor'];
+
   if (!isClient) return null;
 
   return (
@@ -466,6 +489,7 @@ export default function AdminPage() {
                 <TableHead>Função</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Email</TableHead>
+                <TableHead>Visibilidade</TableHead>
                 <TableHead><span className="sr-only">Ações</span></TableHead>
               </TableRow>
             </TableHeader>
@@ -485,6 +509,22 @@ export default function AdminPage() {
                     </Badge>
                   </TableCell>
                   <TableCell>{user.email}</TableCell>
+                   <TableCell>
+                    {supervisorRoles.includes(user.role) && (
+                         <TooltipProvider>
+                            <Tooltip>
+                                <TooltipTrigger asChild>
+                                    <Button variant="ghost" size="icon" onClick={() => handleToggleVisibility(user.id)}>
+                                        {user.showInReports !== false ? <Eye className="h-5 w-5" /> : <EyeOff className="h-5 w-5 text-muted-foreground" />}
+                                    </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                    <p>{user.showInReports !== false ? 'Visível nos relatórios. Clique para ocultar.' : 'Oculto nos relatórios. Clique para exibir.'}</p>
+                                </TooltipContent>
+                            </Tooltip>
+                        </TooltipProvider>
+                    )}
+                  </TableCell>
                   <TableCell>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>

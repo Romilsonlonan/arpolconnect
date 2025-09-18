@@ -178,7 +178,7 @@ export default function ReportPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {consultationData.map((row, i) => (
+                        {consultationData.slice(0, 5).map((row, i) => (
                             <TableRow key={i}>
                                 <TableCell>{row.contract}</TableCell>
                                 <TableCell>{row.monthYear}</TableCell>

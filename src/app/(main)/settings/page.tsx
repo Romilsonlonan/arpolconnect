@@ -24,6 +24,7 @@ const themes = [
     { name: 'Grafite', id: 'graphite', primary: '240 10% 40%', accent: '240 5% 65%', background: '240 5% 97%' },
     { name: 'Vibrante', id: 'vibrant', primary: '340 80% 55%', accent: '45 90% 55%', background: '30 100% 97%' },
     { name: 'Solar', id: 'solar', primary: '45 90% 50%', accent: '50 100% 60%', background: '50 100% 97%' },
+    { name: 'Marinho', id: 'navy', primary: '215 40% 30%', accent: '195 50% 50%', background: '210 30% 98%' },
 ];
 
 export default function SettingsPage() {

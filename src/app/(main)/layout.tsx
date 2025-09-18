@@ -21,6 +21,7 @@ import {
   BrainCircuit,
   ShieldCheck,
   BarChart2,
+  ListChecks,
 } from 'lucide-react';
 
 import {
@@ -97,6 +98,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
       { href: '/tickets', icon: <ClipboardList />, label: 'Tickets por Responsável' },
       { href: '/organograma', icon: <GitMerge />, label: 'Organograma' },
       { href: '/relatorio', icon: <BarChart2 />, label: 'Relatório' },
+      { href: '/ocorrencias', icon: <ListChecks />, label: 'Ocorrências' },
       { href: '/evaluation', icon: <FileText />, label: 'Avaliação' },
       { href: '/dds-info', icon: <Presentation />, label: 'DDS Info' },
       { href: '/support', icon: <BrainCircuit />, label: 'Suporte IA' },

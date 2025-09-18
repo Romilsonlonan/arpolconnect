@@ -3,6 +3,7 @@
 
 import { useState, useMemo } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -21,7 +22,7 @@ import {
 } from '@/components/ui/chart';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, ComposedChart, Line, PieChart, Pie, Cell } from 'recharts';
 import { format } from 'date-fns';
-import { AlertTriangle, XCircle, Clock, CheckCircle, CalendarIcon, Settings, ArrowLeft, ArrowRight, FilterX, Maximize, Minimize } from 'lucide-react';
+import { AlertTriangle, XCircle, Clock, CheckCircle, CalendarIcon, Settings, ArrowLeft, ArrowRight, FilterX, Maximize, Minimize, ListChecks } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { PreventiveStatusCardData, PreventiveConsultation, PreventiveChartData, MonthlyChartData } from '@/lib/data';
 import { Calendar } from '@/components/ui/calendar';
@@ -247,10 +248,15 @@ export default function ReportPage() {
                         <PopoverContent className="w-auto p-0"><Calendar mode="single" selected={dateRange.to} onSelect={(d) => setDateRange(prev => ({...prev, to: d}))} /></PopoverContent>
                     </Popover>
              </div>
-
-            <div className="flex-1 relative mt-4">
-                 <Image src="https://i.ibb.co/YyY2S54/tecnico-grafico.png" alt="Técnico com gráficos" fill className="object-contain" unoptimized/>
-                 <p className="absolute bottom-0 left-0 text-xs text-black/50">Técnico com tablet</p>
+            
+            <div className="relative mt-8">
+                 <Image src="https://i.ibb.co/YyY2S54/tecnico-grafico.png" alt="Técnico com gráficos" width={200} height={300} className="object-contain mx-auto" unoptimized/>
+                 <Link href="/ocorrencias" className='w-full'>
+                    <Button variant="outline" className="w-full mt-2 text-black bg-white/50 border-black/20">
+                        <ListChecks className="mr-2" />
+                        Consulta de Ocorrências
+                    </Button>
+                 </Link>
             </div>
         </aside>
 
@@ -275,11 +281,13 @@ export default function ReportPage() {
                 </div>
             </header>
             
-            <div className="flex justify-center items-center gap-6">
+             <div className="flex justify-center items-center gap-6">
                 <StatusCard title="Atrasadas" value={filteredData.statusCards.overdue} icon={<AlertTriangle />} />
                 <StatusCard title="Não Realizadas" value={filteredData.statusCards.notDone} icon={<XCircle />} />
-                <Button variant="ghost" size="icon" className="h-16 w-16 text-white/50"><ArrowLeft className="h-12 w-12" /></Button>
-                <Button variant="ghost" size="icon" className="h-16 w-16 text-white/50"><ArrowRight className="h-12 w-12" /></Button>
+                <div className="flex items-center gap-2">
+                    <Button variant="ghost" size="icon" className="h-16 w-16 text-white/50"><ArrowLeft className="h-12 w-12" /></Button>
+                    <Button variant="ghost" size="icon" className="h-16 w-16 text-white/50"><ArrowRight className="h-12 w-12" /></Button>
+                </div>
                 <StatusCard title="Pendentes" value={filteredData.statusCards.pending} icon={<Clock />} />
                 <StatusCard title="Realizadas" value={filteredData.statusCards.done} icon={<CheckCircle />} />
             </div>
@@ -341,7 +349,7 @@ export default function ReportPage() {
                     </div>
                     <div className="bg-blue-900 text-white p-2 text-center text-lg font-semibold">Preventivas por Contratos</div>
                     <div className="flex-1 p-4">
-                         <ChartContainer config={contractsChartConfig} className="w-full h-full">
+                         <ChartContainer config={contractsChartConfig} className="w-full h-full min-h-[100px]">
                             <BarChart data={contractsChartDataWithHighlight} margin={{ top: 20, right: 20, left: -10, bottom: 25 }}>
                                 <CartesianGrid vertical={false} strokeDasharray="3 3"/>
                                 <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={8} angle={-25} textAnchor="end" height={60} interval={0} />
@@ -374,7 +382,7 @@ export default function ReportPage() {
                         Total Preventivas Mensais {selectedContractName && `- ${selectedContractName}`}
                     </header>
                     <div className="flex-1 p-4">
-                        <ChartContainer config={monthlyChartConfig} className="w-full h-full">
+                        <ChartContainer config={monthlyChartConfig} className="w-full h-full min-h-[100px]">
                             <ComposedChart data={filteredData.monthlyChartData} margin={{ top: 20, right: 30, left: 20, bottom: 25 }}>
                                 <CartesianGrid vertical={false} />
                                 <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={10} />

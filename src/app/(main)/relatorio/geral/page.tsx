@@ -108,13 +108,13 @@ export default function PerformanceGeralPage() {
         <div className="grid grid-cols-12 gap-6 items-stretch p-6 bg-yellow-300 rounded-lg flex-1">
            
             {/* Left Section with Chart and Image */}
-            <div className="col-span-12 lg:col-span-6 lg:col-start-1 xl:col-span-5 xl:col-start-2 flex flex-col h-full">
+            <div className="col-span-12 lg:col-span-6 xl:col-span-5 xl:col-start-2 flex flex-col h-full">
                 <div className="bg-blue-800 text-white p-2 text-center text-lg font-semibold rounded-t-md">Fechamento do mês - Preventivas</div>
-                <div className="flex items-end bg-white/80 p-4 rounded-b-md flex-1">
+                <div className="flex items-center justify-center bg-white/80 p-4 rounded-b-md flex-1">
                      <div className="relative w-[200px] h-[300px] self-end -mb-4 -ml-4 hidden xl:block">
                          <Image src="https://i.ibb.co/YyY2S54/tecnico-grafico.png" alt="Técnico com gráficos" layout="fill" className="object-contain" unoptimized />
                     </div>
-                    <div className="flex-1 -mt-8">
+                    <div className="flex-1 flex items-center justify-center">
                          <ChartContainer config={{}} className="w-full h-64">
                             <PieChart>
                                 <Tooltip formatter={(value, name, props) => [`${props.payload.value.toLocaleString('pt-BR')} (${props.payload.percentage}%)`, name]} />

@@ -279,7 +279,7 @@ export default function ReportDetailsPage() {
                 <StatusCard title="Atrasadas" value={filteredData.statusCards.overdue} icon={<AlertTriangle />} />
                 <StatusCard title="Não Realizadas" value={filteredData.statusCards.notDone} icon={<XCircle />} />
                 <div className="flex items-center gap-2">
-                    <Link href="/dashboard">
+                    <Link href="/relatorio">
                         <Button variant="ghost" size="icon" className="h-16 w-16 text-white/50 hover:text-white"><ArrowLeft className="h-12 w-12" /></Button>
                     </Link>
                     <Link href="/ocorrencias">
@@ -403,3 +403,5 @@ export default function ReportDetailsPage() {
     </div>
   );
 }
+
+    

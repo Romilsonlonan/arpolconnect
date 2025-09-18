@@ -161,7 +161,7 @@ export default function OcorrenciasPage() {
            
             {/* Left Section with Image */}
             <div className="col-span-2 flex flex-col gap-4 items-center">
-                 <Image src="https://i.ibb.co/n6k8wVw/tecnico-ocorrencias.png" alt="Técnico com prancheta" width={150} height={300} className="object-contain" />
+                 <Image src="https://i.ibb.co/N672KnDX/ocorrencias.png" alt="Técnico com prancheta" width={150} height={300} className="object-contain" />
                  <div className="w-full">
                     <p className="text-sm font-semibold mb-1 text-gray-700">Mês/Ano</p>
                     <Select defaultValue="08/2025">

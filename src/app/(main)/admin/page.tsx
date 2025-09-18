@@ -285,6 +285,27 @@ export default function AdminPage() {
         description: `O status de ${userToUpdate.name} foi alterado para ${newStatus}.` 
     });
   };
+
+  const handleDeleteUser = (userId: string) => {
+    const userToDelete = users.find(u => u.id === userId);
+    if (!userToDelete) return;
+
+    // Prevent deleting the main admin if you wish
+    // if (userToDelete.role === 'Administrador' && users.filter(u => u.role === 'Administrador').length === 1) {
+    //   toast({ title: "Ação não permitida", description: "Não é possível excluir o único administrador.", variant: "destructive"});
+    //   return;
+    // }
+
+    const updatedUsers = users.filter(u => u.id !== userId);
+    localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(updatedUsers));
+    window.dispatchEvent(new StorageEvent('storage', { key: USERS_STORAGE_KEY }));
+
+    toast({
+      title: "Usuário Excluído",
+      description: `O usuário "${userToDelete.name}" foi removido permanentemente.`,
+      variant: 'destructive'
+    });
+  };
   
     const handleToggleVisibility = (userId: string) => {
         const userToUpdate = users.find(u => u.id === userId);
@@ -540,12 +561,35 @@ export default function AdminPage() {
                         </DropdownMenuItem>
                         {user.status === 'Ativo' ? (
                             <DropdownMenuItem onClick={() => handleToggleUserStatus(user.id, user.status)} className="text-orange-600">
-                                <Trash2 className="mr-2 h-4 w-4" /> Desativar
+                                <UserCheck className="mr-2 h-4 w-4" /> Desativar
                             </DropdownMenuItem>
                         ) : (
-                            <DropdownMenuItem onClick={() => handleToggleUserStatus(user.id, user.status)}>
-                                <History className="mr-2 h-4 w-4" /> Reativar
-                            </DropdownMenuItem>
+                            <>
+                                <DropdownMenuItem onClick={() => handleToggleUserStatus(user.id, user.status)}>
+                                    <History className="mr-2 h-4 w-4" /> Reativar
+                                </DropdownMenuItem>
+                                <AlertDialog>
+                                  <AlertDialogTrigger asChild>
+                                    <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-destructive">
+                                      <Trash2 className="mr-2 h-4 w-4" /> Deletar
+                                    </DropdownMenuItem>
+                                  </AlertDialogTrigger>
+                                  <AlertDialogContent>
+                                    <AlertDialogHeader>
+                                      <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+                                      <AlertDialogDescription>
+                                        Esta ação é permanente e removerá todos os dados do usuário. Isso não pode ser desfeito.
+                                      </AlertDialogDescription>
+                                    </AlertDialogHeader>
+                                    <AlertDialogFooter>
+                                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                                      <AlertDialogAction onClick={() => handleDeleteUser(user.id)}>
+                                        Deletar Permanentemente
+                                      </AlertDialogAction>
+                                    </AlertDialogFooter>
+                                  </AlertDialogContent>
+                                </AlertDialog>
+                            </>
                         )}
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -715,3 +759,5 @@ export default function AdminPage() {
     </div>
   );
 }
+
+    

@@ -262,9 +262,9 @@ export default function ReportDetailsPage() {
             className="col-span-10 p-6 flex flex-col gap-4"
             style={{background: 'linear-gradient(180deg, #3B82F6 0%, #1E3A8A 100%)'}}
         >
-             <header className="flex items-center justify-between text-white">
+             <header className="flex items-center justify-between text-white h-10">
                 <h1 className="text-xl font-bold">
-                    {selectedContractName ? `Detalhes do Contrato: ${selectedContractName}` : "Supervisora Danielle - Gestão de Contratos"}
+                    {selectedContractName ? `Detalhes do Contrato: ${selectedContractName}` : ""}
                 </h1>
                 <div className="flex items-center gap-4">
                     {selectedContractName && (
@@ -273,8 +273,6 @@ export default function ReportDetailsPage() {
                             Limpar Filtro
                         </Button>
                     )}
-                    <ArpolarIcon />
-                    <Settings className="h-6 w-6" />
                 </div>
             </header>
             

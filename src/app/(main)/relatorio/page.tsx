@@ -251,12 +251,6 @@ export default function ReportPage() {
             
             <div className="relative mt-8">
                  <Image src="https://i.ibb.co/YyY2S54/tecnico-grafico.png" alt="Técnico com gráficos" width={200} height={300} className="object-contain mx-auto" unoptimized/>
-                 <Link href="/ocorrencias" className='w-full'>
-                    <Button variant="outline" className="w-full mt-2 text-black bg-white/50 border-black/20">
-                        <ListChecks className="mr-2" />
-                        Consulta de Ocorrências
-                    </Button>
-                 </Link>
             </div>
         </aside>
 
@@ -286,7 +280,9 @@ export default function ReportPage() {
                 <StatusCard title="Não Realizadas" value={filteredData.statusCards.notDone} icon={<XCircle />} />
                 <div className="flex items-center gap-2">
                     <Button variant="ghost" size="icon" className="h-16 w-16 text-white/50"><ArrowLeft className="h-12 w-12" /></Button>
-                    <Button variant="ghost" size="icon" className="h-16 w-16 text-white/50"><ArrowRight className="h-12 w-12" /></Button>
+                    <Link href="/ocorrencias">
+                        <Button variant="ghost" size="icon" className="h-16 w-16 text-white/50"><ArrowRight className="h-12 w-12" /></Button>
+                    </Link>
                 </div>
                 <StatusCard title="Pendentes" value={filteredData.statusCards.pending} icon={<Clock />} />
                 <StatusCard title="Realizadas" value={filteredData.statusCards.done} icon={<CheckCircle />} />
@@ -405,5 +401,3 @@ export default function ReportPage() {
     </div>
   );
 }
-
-    

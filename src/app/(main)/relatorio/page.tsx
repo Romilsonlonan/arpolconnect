@@ -83,14 +83,14 @@ export default function ReportSupervisorSelectionPage() {
 
     return (
         <div 
-            className="flex flex-col gap-6 p-6 rounded-lg min-h-full"
-            style={{background: 'linear-gradient(to bottom, #fde047, #facc15)'}}
+            className="flex flex-col gap-6 p-6 rounded-lg min-h-full bg-cover bg-center"
+            style={{backgroundImage: "url('https://i.ibb.co/whGtbqCQ/Captura-de-tela-2025-09-11-172139.png')"}}
         >
             {/* Header */}
-            <header className="flex items-center justify-between text-blue-900">
+            <header className="flex items-center justify-between text-white">
                 <div className="flex items-center gap-4">
                     <Link href="/motivacional">
-                        <Button variant="outline" size="icon" className="bg-white/50 border-blue-900/20 hover:bg-white/80 text-blue-900">
+                        <Button variant="outline" size="icon" className="bg-white/20 border-white/30 hover:bg-white/30 text-white">
                             <ArrowLeft />
                         </Button>
                     </Link>
@@ -100,7 +100,7 @@ export default function ReportSupervisorSelectionPage() {
             </header>
 
             {/* Main Content */}
-            <div className="flex-1 p-4 md:p-6 bg-yellow-300/50 rounded-lg">
+            <div className="flex-1 p-4 md:p-6 bg-black/10 backdrop-blur-sm rounded-lg">
                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6">
                     {supervisors.map(supervisor => (
                         <SupervisorCard key={supervisor.id} supervisor={supervisor} />

@@ -148,6 +148,14 @@ export type PreventiveChartData = {
   done: number;
 };
 
+export type MonthlyChartData = {
+    name: string;
+    Atrasadas: number;
+    Realizadas: number;
+    'Não Realizadas': number;
+    Pendentes: number;
+}
+
 export const initialUsers: User[] = [
     {
         id: 'admin-1',
@@ -198,8 +206,16 @@ export const refrigerationQuestions: RefrigerationQuestion[] = [
     { id: 'q20', question: 'O que indica a presença de óleo nas conexões da tubulação?', options: ['Operação normal', 'Excesso de óleo no sistema', 'Um vazamento de refrigerante', 'Filtro secador saturado'], correctAnswer: 'Um vazamento de refrigerante', image: 'https://picsum.photos/800/400?random=20', imageHint: 'oil leak pipe' },
 ];
 
-
-
+export const monthlyChartData: MonthlyChartData[] = [
+    { name: 'jan 2025', Atrasadas: 8000, 'Não Realizadas': 0, Pendentes: 0, Realizadas: 15500 },
+    { name: 'fev 2025', Atrasadas: 6200, 'Não Realizadas': 0, Pendentes: 0, Realizadas: 15500 },
+    { name: 'mar 2025', Atrasadas: 9500, 'Não Realizadas': 0, Pendentes: 0, Realizadas: 15500 },
+    { name: 'abr 2025', Atrasadas: 4000, 'Não Realizadas': 1000, Pendentes: 0, Realizadas: 19500 },
+    { name: 'mai 2025', Atrasadas: 7500, 'Não Realizadas': 0, Pendentes: 0, Realizadas: 42000 },
+    { name: 'jun 2025', Atrasadas: 3000, 'Não Realizadas': 0, Pendentes: 0, Realizadas: 25000 },
+    { name: 'jul 2025', Atrasadas: 3500, 'Não Realizadas': 0, Pendentes: 0, Realizadas: 26000 },
+    { name: 'ago 2025', Atrasadas: 5000, 'Não Realizadas': 0, Pendentes: 0, Realizadas: 23000 },
+];
     
 
     

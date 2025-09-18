@@ -1,9 +1,9 @@
 
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useMemo } from 'react';
 import Image from 'next/image';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import {
@@ -19,15 +19,15 @@ import {
   ChartLegendContent,
   ChartConfig,
 } from '@/components/ui/chart';
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis, ComposedChart, Line, PieChart, Pie, Cell } from 'recharts';
 import { format } from 'date-fns';
 import { ArrowRight, AlertTriangle, XCircle, Clock, CheckCircle, CalendarIcon, Settings, ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { PreventiveStatusCardData, PreventiveConsultation, PreventiveChartData } from '@/lib/data';
+import type { PreventiveStatusCardData, PreventiveConsultation, PreventiveChartData, MonthlyChartData } from '@/lib/data';
 import { Calendar } from '@/components/ui/calendar';
 
 
-// --- Mock Data (ajustado para corresponder à imagem) ---
+// --- Mock Data ---
 const statusCardsData: PreventiveStatusCardData[] = [
   { title: 'Atrasadas', value: '17.340', color: 'yellow', icon: <AlertTriangle /> },
   { title: 'Não Realizadas', value: '35.391', color: 'yellow', icon: <XCircle /> },
@@ -57,12 +57,33 @@ const chartData: PreventiveChartData[] = [
   { name: 'ICON ALPHAVILLE', overdue: 1318, notDone: 12037, pending: 0, done: 14373 },
 ];
 
-const chartConfig: ChartConfig = {
+const monthlyChartData: MonthlyChartData[] = [
+    { name: 'jan 2025', Atrasadas: 8000, 'Não Realizadas': 0, Pendentes: 0, Realizadas: 15500 },
+    { name: 'fev 2025', Atrasadas: 6200, 'Não Realizadas': 0, Pendentes: 0, Realizadas: 15500 },
+    { name: 'mar 2025', Atrasadas: 9500, 'Não Realizadas': 0, Pendentes: 0, Realizadas: 15500 },
+    { name: 'abr 2025', Atrasadas: 4000, 'Não Realizadas': 1000, Pendentes: 0, Realizadas: 19500 },
+    { name: 'mai 2025', Atrasadas: 7500, 'Não Realizadas': 0, Pendentes: 0, Realizadas: 42000 },
+    { name: 'jun 2025', Atrasadas: 3000, 'Não Realizadas': 0, Pendentes: 0, Realizadas: 25000 },
+    { name: 'jul 2025', Atrasadas: 3500, 'Não Realizadas': 0, Pendentes: 0, Realizadas: 26000 },
+    { name: 'ago 2025', Atrasadas: 5000, 'Não Realizadas': 0, Pendentes: 0, Realizadas: 23000 },
+];
+
+
+const contractsChartConfig = {
   overdue: { label: 'Atrasadas', color: '#ff0000' },
   notDone: { label: 'Não Realizadas', color: '#ffa500' },
   pending: { label: 'Pendentes', color: '#0000ff' },
   done: { label: 'Realizadas', color: '#008000' },
-};
+} satisfies ChartConfig;
+
+const monthlyChartConfig = {
+    Atrasadas: { label: 'Atrasadas', color: '#990000' },
+    'Atrasadas (linha)': { label: 'Atrasadas (linha)', color: '#990000' },
+    'Não Realizadas': { label: 'Não Realizadas', color: '#ffa500' },
+    Pendentes: { label: 'Pendentes', color: '#0000ff' },
+    Realizadas: { label: 'Realizadas', color: '#006400' },
+    'Realizadas (linha)': { label: 'Realizadas (linha)', color: '#006400' },
+} satisfies ChartConfig;
 
 const ArpolarIcon = ({ className }: { className?: string }) => (
     <Image src="https://i.ibb.co/ksM7sG9D/Logo.png" alt="Arpolar Icon" width={32} height={32} className={className} unoptimized/>
@@ -82,12 +103,177 @@ const StatusCard = ({ title, value, icon }: {title: string, value: string, icon:
     </div>
 );
 
+// --- Custom Tooltip for Monthly Chart ---
+const CustomTooltip = ({ active, payload, label }: any) => {
+  if (active && payload && payload.length) {
+    const data = payload[0].payload;
+    const total = data.Atrasadas + data.Realizadas;
+    const atrasadasPercent = total > 0 ? (data.Atrasadas / total) * 100 : 0;
+    const realizadasPercent = total > 0 ? (data.Realizadas / total) * 100 : 0;
 
+    const pieData = [
+      { name: 'Atrasadas', value: data.Atrasadas, color: monthlyChartConfig.Atrasadas.color },
+      { name: 'Realizadas', value: data.Realizadas, color: monthlyChartConfig.Realizadas.color },
+    ];
+
+    return (
+      <Card className="w-64">
+        <CardHeader>
+            <p className="font-bold text-center">{label}</p>
+        </CardHeader>
+        <CardContent>
+          <div className="w-full h-32">
+             <ChartContainer config={monthlyChartConfig} className="w-full h-full">
+                <PieChart>
+                  <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={30} outerRadius={50} paddingAngle={2}>
+                    {pieData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                </PieChart>
+              </ChartContainer>
+          </div>
+          <div className="mt-4 text-sm space-y-1">
+             <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full" style={{backgroundColor: monthlyChartConfig.Atrasadas.color}}></div>
+                    <span>Atrasadas</span>
+                </div>
+                <span>{atrasadasPercent.toFixed(1)}%</span>
+             </div>
+             <div className="flex justify-between items-center">
+                 <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full" style={{backgroundColor: monthlyChartConfig.Realizadas.color}}></div>
+                    <span>Realizadas</span>
+                </div>
+                <span>{realizadasPercent.toFixed(1)}%</span>
+             </div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return null;
+};
+
+
+// --- Main Page Component ---
 export default function ReportPage() {
   const [dateRange, setDateRange] = useState<{ from: Date | undefined; to: Date | undefined }>({
     from: new Date(2025, 0, 1),
     to: new Date(2025, 7, 1),
   });
+  const [viewMode, setViewMode] = useState<'contracts' | 'monthly'>('contracts');
+
+  const renderContractsView = () => (
+    <>
+        {/* Header */}
+        <header className="flex items-center justify-between text-white">
+            <div className="w-10 h-10 bg-white/20 rounded-md" />
+            <h1 className="text-xl font-bold">Supervisora Danielle - Gestão de Contratos</h1>
+            <div className="flex items-center gap-2">
+                <div className="w-8 h-8 bg-white/20 rounded-md" />
+                <div className="w-8 h-8 bg-white/20 rounded-md" />
+                <div className="w-8 h-8 bg-white/20 rounded-md" />
+                <ArpolarIcon />
+                <Settings className="h-6 w-6" />
+            </div>
+        </header>
+        
+        {/* Status Cards */}
+        <div className="flex justify-center items-center gap-6">
+            <StatusCard {...statusCardsData[0]} icon={<AlertTriangle />} />
+            <StatusCard {...statusCardsData[1]} icon={<XCircle />} />
+            <Button variant="ghost" size="icon" className="h-16 w-16 text-white/50"><ArrowLeft className="h-12 w-12" /></Button>
+            <Button variant="ghost" size="icon" className="h-16 w-16 text-white/50"><ArrowRight className="h-12 w-12" /></Button>
+            <StatusCard {...statusCardsData[2]} icon={<Clock />} />
+            <StatusCard {...statusCardsData[3]} icon={<CheckCircle />} />
+        </div>
+
+        {/* Table */}
+        <div className="bg-white/90 text-black rounded-lg overflow-hidden">
+             <div className="bg-blue-900 text-white p-2 text-center text-lg font-semibold">Consultas por Contratos</div>
+            <Table>
+                <TableHeader>
+                    <TableRow className="bg-yellow-400 hover:bg-yellow-400">
+                        <TableHead className="text-blue-900 font-bold">Contratos_Danielle</TableHead>
+                        <TableHead className="text-blue-900 font-bold">Mês/Ano</TableHead>
+                        <TableHead className="text-blue-900 font-bold">Status</TableHead>
+                        <TableHead className="text-blue-900 font-bold">Atrasadas</TableHead>
+                        <TableHead className="text-blue-900 font-bold">Não Realizadas</TableHead>
+                        <TableHead className="text-blue-900 font-bold">Pendentes</TableHead>
+                        <TableHead className="text-blue-900 font-bold">Realizadas</TableHead>
+                    </TableRow>
+                </TableHeader>
+                <TableBody>
+                    {consultationData.slice(0, 5).map((row, i) => (
+                        <TableRow key={i}>
+                            <TableCell>{row.contract}</TableCell>
+                            <TableCell>{row.monthYear}</TableCell>
+                            <TableCell>{row.status}</TableCell>
+                            <TableCell>{row.overdue}</TableCell>
+                            <TableCell>{row.notDone}</TableCell>
+                            <TableCell>{row.pending}</TableCell>
+                            <TableCell>{row.done}</TableCell>
+                        </TableRow>
+                    ))}
+                     <TableRow className="font-bold bg-gray-200">
+                        <TableCell colSpan={3}>Total</TableCell>
+                        <TableCell>{consultationTotals.overdue}</TableCell>
+                        <TableCell>{consultationTotals.notDone}</TableCell>
+                        <TableCell>{consultationTotals.pending}</TableCell>
+                        <TableCell>{consultationTotals.done}</TableCell>
+                     </TableRow>
+                </TableBody>
+            </Table>
+        </div>
+
+        {/* Chart */}
+        <div className="bg-white/90 text-black rounded-lg flex-1 flex flex-col">
+            <div className="bg-blue-900 text-white p-2 text-center text-lg font-semibold">Preventivas por Contratos</div>
+            <div className="flex-1 p-4">
+                 <ChartContainer config={contractsChartConfig} className="w-full h-full">
+                    <BarChart data={chartData} margin={{ top: 20, right: 20, left: -10, bottom: 5 }}>
+                        <CartesianGrid vertical={false} strokeDasharray="3 3"/>
+                        <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={8} angle={-15} textAnchor="end" height={50} />
+                        <YAxis tickFormatter={(value) => `${value / 1000}k`} />
+                        <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
+                        <ChartLegend content={<ChartLegendContent />} />
+                        <Bar dataKey="done" stackId="a" fill="var(--color-done)" radius={[4, 4, 0, 0]} />
+                        <Bar dataKey="overdue" stackId="a" fill="var(--color-overdue)" />
+                        <Bar dataKey="notDone" stackId="a" fill="var(--color-notDone)" />
+                    </BarChart>
+                </ChartContainer>
+            </div>
+        </div>
+    </>
+  );
+
+  const renderMonthlyView = () => (
+    <div className="bg-white/90 text-black rounded-lg flex-1 flex flex-col h-full">
+        <header className="bg-blue-900 text-white p-2 text-center text-lg font-semibold">
+            Total Preventivas Mensais
+        </header>
+        <div className="flex-1 p-4">
+            <ChartContainer config={monthlyChartConfig} className="w-full h-full">
+                <ComposedChart data={monthlyChartData} margin={{ top: 20, right: 30, left: 20, bottom: 40 }}>
+                    <CartesianGrid vertical={false} />
+                    <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={10} />
+                    <YAxis domain={[0, 60000]} />
+                    <ChartTooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(0,0,0,0.1)' }} />
+                    <ChartLegend wrapperStyle={{ paddingTop: '30px' }} />
+                    
+                    <Bar dataKey="Atrasadas" fill="var(--color-Atrasadas)" barSize={20} />
+                    <Bar dataKey="Realizadas" fill="var(--color-Realizadas)" barSize={20} />
+                    
+                    <Line type="monotone" dataKey="Realizadas" name="Realizadas (linha)" stroke="var(--color-Realizadas (linha))" strokeWidth={2} dot={false} />
+                    <Line type="monotone" dataKey="Atrasadas" name="Atrasadas (linha)" stroke="var(--color-Atrasadas (linha))" strokeWidth={2} dot={false} />
+                </ComposedChart>
+            </ChartContainer>
+        </div>
+    </div>
+  );
 
   return (
     <div className="grid grid-cols-12 gap-0 min-h-[calc(100vh-104px)] -m-6">
@@ -104,8 +290,8 @@ export default function ReportPage() {
             </div>
 
             <div className="flex flex-col gap-3 mt-8">
-                 <Button className="w-full justify-between bg-blue-900 hover:bg-blue-800 text-white text-md py-6 shadow-md rounded-lg">Contratos <ArrowRight /></Button>
-                 <Button className="w-full justify-between bg-white hover:bg-gray-100 text-blue-900 text-md py-6 shadow-md rounded-lg">Mensal <ArrowRight /></Button>
+                 <Button onClick={() => setViewMode('contracts')} className={cn("w-full justify-between text-md py-6 shadow-md rounded-lg", viewMode === 'contracts' ? "bg-blue-900 hover:bg-blue-800 text-white" : "bg-white hover:bg-gray-100 text-blue-900")}>Contratos <ArrowRight /></Button>
+                 <Button onClick={() => setViewMode('monthly')} className={cn("w-full justify-between text-md py-6 shadow-md rounded-lg", viewMode === 'monthly' ? "bg-blue-900 hover:bg-blue-800 text-white" : "bg-white hover:bg-gray-100 text-blue-900")}>Mensal <ArrowRight /></Button>
             </div>
 
              <div className="flex flex-col gap-2 mt-4">
@@ -140,85 +326,7 @@ export default function ReportPage() {
             className="col-span-10 p-6 flex flex-col gap-4"
             style={{background: 'linear-gradient(180deg, #3B82F6 0%, #1E3A8A 100%)'}}
         >
-             {/* Header */}
-            <header className="flex items-center justify-between text-white">
-                <div className="w-10 h-10 bg-white/20 rounded-md" />
-                <h1 className="text-xl font-bold">Supervisora Danielle - Gestão de Contratos</h1>
-                <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 bg-white/20 rounded-md" />
-                    <div className="w-8 h-8 bg-white/20 rounded-md" />
-                    <div className="w-8 h-8 bg-white/20 rounded-md" />
-                    <ArpolarIcon />
-                    <Settings className="h-6 w-6" />
-                </div>
-            </header>
-            
-            {/* Status Cards */}
-            <div className="flex justify-center items-center gap-6">
-                <StatusCard {...statusCardsData[0]} />
-                <StatusCard {...statusCardsData[1]} />
-                <Button variant="ghost" size="icon" className="h-16 w-16 text-white/50"><ArrowLeft className="h-12 w-12" /></Button>
-                <Button variant="ghost" size="icon" className="h-16 w-16 text-white/50"><ArrowRight className="h-12 w-12" /></Button>
-                <StatusCard {...statusCardsData[2]} />
-                <StatusCard {...statusCardsData[3]} />
-            </div>
-
-            {/* Table */}
-            <div className="bg-white/90 text-black rounded-lg overflow-hidden">
-                 <div className="bg-blue-900 text-white p-2 text-center text-lg font-semibold">Consultas por Contratos</div>
-                <Table>
-                    <TableHeader>
-                        <TableRow className="bg-yellow-400 hover:bg-yellow-400">
-                            <TableHead className="text-blue-900 font-bold">Contratos_Danielle</TableHead>
-                            <TableHead className="text-blue-900 font-bold">Mês/Ano</TableHead>
-                            <TableHead className="text-blue-900 font-bold">Status</TableHead>
-                            <TableHead className="text-blue-900 font-bold">Atrasadas</TableHead>
-                            <TableHead className="text-blue-900 font-bold">Não Realizadas</TableHead>
-                            <TableHead className="text-blue-900 font-bold">Pendentes</TableHead>
-                            <TableHead className="text-blue-900 font-bold">Realizadas</TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {consultationData.slice(0, 5).map((row, i) => (
-                            <TableRow key={i}>
-                                <TableCell>{row.contract}</TableCell>
-                                <TableCell>{row.monthYear}</TableCell>
-                                <TableCell>{row.status}</TableCell>
-                                <TableCell>{row.overdue}</TableCell>
-                                <TableCell>{row.notDone}</TableCell>
-                                <TableCell>{row.pending}</TableCell>
-                                <TableCell>{row.done}</TableCell>
-                            </TableRow>
-                        ))}
-                         <TableRow className="font-bold bg-gray-200">
-                            <TableCell colSpan={3}>Total</TableCell>
-                            <TableCell>{consultationTotals.overdue}</TableCell>
-                            <TableCell>{consultationTotals.notDone}</TableCell>
-                            <TableCell>{consultationTotals.pending}</TableCell>
-                            <TableCell>{consultationTotals.done}</TableCell>
-                         </TableRow>
-                    </TableBody>
-                </Table>
-            </div>
-
-            {/* Chart */}
-            <div className="bg-white/90 text-black rounded-lg flex-1 flex flex-col">
-                <div className="bg-blue-900 text-white p-2 text-center text-lg font-semibold">Preventivas por Contratos</div>
-                <div className="flex-1 p-4">
-                     <ChartContainer config={chartConfig} className="w-full h-full">
-                        <BarChart data={chartData} margin={{ top: 20, right: 20, left: -10, bottom: 5 }}>
-                            <CartesianGrid vertical={false} strokeDasharray="3 3"/>
-                            <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={8} angle={-15} textAnchor="end" height={50} />
-                            <YAxis tickFormatter={(value) => `${value / 1000}k`} />
-                            <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
-                            <ChartLegend content={<ChartLegendContent />} />
-                            <Bar dataKey="done" stackId="a" fill="var(--color-done)" radius={[4, 4, 0, 0]} />
-                            <Bar dataKey="overdue" stackId="a" fill="var(--color-overdue)" />
-                            <Bar dataKey="notDone" stackId="a" fill="var(--color-notDone)" />
-                        </BarChart>
-                    </ChartContainer>
-                </div>
-            </div>
+             {viewMode === 'contracts' ? renderContractsView() : renderMonthlyView()}
         </main>
     </div>
   );

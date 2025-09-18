@@ -72,8 +72,8 @@ export default function ReportBannerPage() {
           </Button>
         </Link>
         <div>
-          <h1 className="text-2xl font-bold font-headline">Indicadores de Planejamento</h1>
-          <p className="text-muted-foreground">Escolha um relatório para visualizar os indicadores de desempenho.</p>
+          <h1 className="text-2xl font-bold font-headline">Relatório de Atividades</h1>
+          <p className="text-muted-foreground">Supervisores 2025</p>
         </div>
       </div>
 

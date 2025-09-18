@@ -36,9 +36,12 @@ export function ReportCoverModal({ isOpen, onClose, onSave, editingCover }: Repo
   const [quote, setQuote] = useState('');
   const [quoteAuthor, setQuoteAuthor] = useState('');
   const [characterImageUrl, setCharacterImageUrl] = useState('');
+  const [supervisorName, setSupervisorName] = useState('');
+  const [supervisorImageUrl, setSupervisorImageUrl] = useState('');
   
   const bgFileInputRef = useRef<HTMLInputElement>(null);
   const charFileInputRef = useRef<HTMLInputElement>(null);
+  const supervisorFileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -51,6 +54,8 @@ export function ReportCoverModal({ isOpen, onClose, onSave, editingCover }: Repo
         setQuote(editingCover.quote || '');
         setQuoteAuthor(editingCover.quoteAuthor || '');
         setCharacterImageUrl(editingCover.characterImageUrl || '');
+        setSupervisorName(editingCover.supervisorName || '');
+        setSupervisorImageUrl(editingCover.supervisorImageUrl || '');
       } else {
         setType('cover');
         setTitle('');
@@ -59,6 +64,8 @@ export function ReportCoverModal({ isOpen, onClose, onSave, editingCover }: Repo
         setQuote('');
         setQuoteAuthor('');
         setCharacterImageUrl('');
+        setSupervisorName('');
+        setSupervisorImageUrl('');
       }
     }
   }, [editingCover, isOpen]);
@@ -102,6 +109,8 @@ export function ReportCoverModal({ isOpen, onClose, onSave, editingCover }: Repo
       quoteAuthor,
       characterImageUrl,
       supervisors: type === 'supervisors' ? (editingCover?.supervisors || []) : undefined,
+      supervisorName,
+      supervisorImageUrl
     }, editingCover?.id);
   };
 
@@ -124,6 +133,7 @@ export function ReportCoverModal({ isOpen, onClose, onSave, editingCover }: Repo
                       <SelectItem value="cover">Capa de Apresentação</SelectItem>
                       <SelectItem value="motivational">Página Motivacional</SelectItem>
                       <SelectItem value="supervisors">Página de Supervisores</SelectItem>
+                      <SelectItem value="supervisor-report">Página de Relatório Individual</SelectItem>
                   </SelectContent>
               </Select>
           </div>
@@ -163,6 +173,31 @@ export function ReportCoverModal({ isOpen, onClose, onSave, editingCover }: Repo
                 <Button variant="outline" onClick={() => charFileInputRef.current?.click()}>
                   <Upload className="mr-2" />
                   {characterImageUrl ? 'Alterar Imagem do Personagem' : 'Carregar Imagem'}
+                </Button>
+              </div>
+            </>
+          )}
+
+          {type === 'supervisor-report' && (
+            <>
+              <div className="grid gap-2">
+                <Label htmlFor="supervisorName">Nome do Supervisor</Label>
+                <Input id="supervisorName" value={supervisorName} onChange={(e) => setSupervisorName(e.target.value)} />
+              </div>
+              <div className="grid gap-2">
+                <Label>Imagem do Supervisor</Label>
+                {supervisorImageUrl && (
+                  <div className="relative w-24 h-24 rounded-md overflow-hidden border">
+                    <Image src={supervisorImageUrl} alt="Pré-visualização" fill style={{ objectFit: 'cover' }} unoptimized />
+                  </div>
+                )}
+                <Input
+                  id="supervisor-image-upload" type="file" accept="image/*" className="hidden"
+                  ref={supervisorFileInputRef} onChange={(e) => handleImageUpload(e, setSupervisorImageUrl)}
+                />
+                <Button variant="outline" onClick={() => supervisorFileInputRef.current?.click()}>
+                  <Upload className="mr-2" />
+                  {supervisorImageUrl ? 'Alterar Imagem' : 'Carregar Imagem'}
                 </Button>
               </div>
             </>

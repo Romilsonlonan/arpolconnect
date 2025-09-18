@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from '@/components/ui/carousel';
-import { PlusCircle, Edit, Trash2, Home, BarChart2 } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, Home, BarChart2, ArrowRight, ChevronsLeft, ChevronsRight } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ReportCoverModal } from '@/components/report/report-cover-modal';
 import type { User, ReportCover, SupervisorCardData } from '@/lib/data';
@@ -70,13 +70,20 @@ const initialCovers: ReportCover[] = [
         subtitle: '',
         imageUrl: 'https://i.ibb.co/zVzbGGgD/fundoaqc.jpg', // Yellow geometric background
         supervisors: supervisorData,
+    },
+    {
+        id: 'cover-initial-4',
+        type: 'supervisor-report',
+        title: 'Relatório Danielle',
+        subtitle: '',
+        imageUrl: 'https://i.ibb.co/b3FhL7d/dani-bg.png',
+        supervisorName: 'Danielle',
+        supervisorImageUrl: 'https://i.ibb.co/yYvyfB9/steve-jobs.png', // Placeholder
     }
 ];
 
 const ArpolarIcon = () => (
-    <svg viewBox="0 0 100 100" className="h-6 w-6 text-white" fill="currentColor">
-        <path d="M50 5 L95 95 H5 Z" />
-    </svg>
+     <Image src="https://i.ibb.co/CBr2Y9n/logo-arpolar-icon.png" alt="Arpolar Icon" width={32} height={32} />
 )
 
 export default function ReportPage() {
@@ -195,7 +202,7 @@ export default function ReportPage() {
                                             fill
                                             className={cn(
                                                 "object-cover",
-                                                cover.type !== 'supervisors' && 'opacity-30'
+                                                cover.type !== 'supervisors' && cover.type !== 'supervisor-report' && 'opacity-30'
                                             )}
                                             priority
                                         />
@@ -229,7 +236,7 @@ export default function ReportPage() {
                                                         </CardContent>
                                                     </Card>
                                                 </div>
-                                            ) : cover.type === 'supervisors' && (
+                                            ) : cover.type === 'supervisors' ? (
                                                 <>
                                                     <header className="bg-blue-900 text-white p-4 flex items-center justify-between">
                                                         <div className='flex items-center gap-4'>
@@ -238,14 +245,13 @@ export default function ReportPage() {
                                                         </div>
                                                         <h2 className="text-xl font-bold">{cover.title}</h2>
                                                         <div className='flex items-center gap-4'>
-                                                            <Image src="https://i.ibb.co/1nCg9m3/report-cover-example.png" alt="Icon" width={24} height={24} />
                                                             <BarChart2 className="h-6 w-6"/>
                                                             <ArpolarIcon />
                                                         </div>
                                                     </header>
                                                     <div className="flex-1 p-8 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 gap-4 items-center place-content-center">
                                                        {(cover.supervisors || []).map(s => (
-                                                         <Card key={s.id} className='bg-yellow-400 border-4 border-blue-900 rounded-2xl overflow-hidden shadow-lg'>
+                                                         <Card key={s.id} className='bg-yellow-400 border-4 border-blue-900 rounded-2xl overflow-hidden shadow-lg cursor-pointer hover:scale-105 transition-transform'>
                                                             <CardHeader className='bg-blue-900 text-white text-center p-2'>
                                                                 <h3 className='font-bold text-sm'>{s.role}</h3>
                                                                 <p className='text-xs'>{s.name}</p>
@@ -260,7 +266,35 @@ export default function ReportPage() {
                                                        ))}
                                                     </div>
                                                 </>
-                                            )}
+                                            ) : cover.type === 'supervisor-report' ? (
+                                                <div className="absolute inset-0 flex items-center justify-center p-8">
+                                                    <div className='absolute left-0 top-0 bottom-0 w-1/3 flex items-center justify-center'>
+                                                        <div className="w-64 h-64 rounded-full bg-white flex items-center justify-center shadow-2xl">
+                                                             <Avatar className='w-60 h-60'>
+                                                                <AvatarImage src={cover.supervisorImageUrl} alt={cover.supervisorName} />
+                                                                <AvatarFallback>{cover.supervisorName?.charAt(0)}</AvatarFallback>
+                                                            </Avatar>
+                                                        </div>
+                                                    </div>
+                                                     <div className='absolute right-0 top-0 bottom-0 w-2/3 flex flex-col items-start justify-center text-blue-900 pl-20'>
+                                                        <ArpolarIcon />
+                                                        <h1 className='text-6xl font-bold mt-4'>Relatório</h1>
+                                                        <h2 className='text-6xl font-bold'>{cover.supervisorName}</h2>
+                                                        <Button className='mt-8 bg-yellow-400 text-blue-900 hover:bg-yellow-500'>
+                                                            Clique aqui para Seguir
+                                                            <ArrowRight className='ml-2'/>
+                                                        </Button>
+                                                     </div>
+                                                      <div className='absolute bottom-8 right-8 flex gap-4'>
+                                                        <Button variant='outline' size='icon' className='rounded-full h-12 w-12 bg-white/50 border-blue-900 text-blue-900'>
+                                                            <ChevronsLeft className='h-8 w-8'/>
+                                                        </Button>
+                                                        <Button variant='outline' size='icon' className='rounded-full h-12 w-12 bg-white/50 border-blue-900 text-blue-900'>
+                                                            <ChevronsRight className='h-8 w-8'/>
+                                                        </Button>
+                                                     </div>
+                                                </div>
+                                            ) : null}
                                         </div>
                                          {isAdmin && (
                                             <div className="absolute top-4 right-4 flex gap-2 z-10">

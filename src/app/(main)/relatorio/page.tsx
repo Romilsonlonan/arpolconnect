@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -76,7 +75,7 @@ export default function ReportSupervisorSelectionPage() {
             {/* Header */}
             <header className="flex items-center justify-between text-blue-900">
                 <div className="flex items-center gap-4">
-                    <Link href="/dashboard">
+                    <Link href="/motivacional">
                         <Button variant="outline" size="icon" className="bg-white/50 border-blue-900/20 hover:bg-white/80 text-blue-900">
                             <ArrowLeft />
                         </Button>

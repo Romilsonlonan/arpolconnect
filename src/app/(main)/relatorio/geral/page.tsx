@@ -105,7 +105,10 @@ export default function PerformanceGeralPage() {
         </div>
 
         {/* Main Content */}
-        <div className="grid grid-cols-12 gap-6 items-stretch p-6 bg-yellow-300 rounded-lg flex-1">
+        <div 
+          className="grid grid-cols-12 gap-6 items-stretch p-6 bg-cover bg-center rounded-lg flex-1"
+          style={{backgroundImage: "url('https://i.ibb.co/zVzbGGgD/fundoaqc.jpg')"}}
+        >
            
             {/* Left Section with Chart and Image */}
             <div className="col-span-12 lg:col-span-6 xl:col-span-5 xl:col-start-2 flex flex-col h-full">
@@ -193,3 +196,5 @@ export default function PerformanceGeralPage() {
     </div>
   );
 }
+
+    

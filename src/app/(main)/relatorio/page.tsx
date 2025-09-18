@@ -21,7 +21,7 @@ import {
 } from '@/components/ui/chart';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts';
 import { format } from 'date-fns';
-import { ArrowRight, AlertTriangle, XCircle, Clock, CheckCircle, CalendarIcon, Settings } from 'lucide-react';
+import { ArrowRight, AlertTriangle, XCircle, Clock, CheckCircle, CalendarIcon, Settings, ArrowLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { PreventiveStatusCardData, PreventiveConsultation, PreventiveChartData } from '@/lib/data';
 import { Calendar } from '@/components/ui/calendar';
@@ -69,7 +69,7 @@ const ArpolarIcon = ({ className }: { className?: string }) => (
 );
 
 const StatusCard = ({ title, value, icon }: {title: string, value: string, icon: React.ReactNode}) => (
-    <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-white border border-white/20">
+    <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-white border border-white/20 w-56">
       <div className="flex items-center gap-3">
         <div className="bg-white/20 p-2 rounded-full">
             {icon}
@@ -157,7 +157,7 @@ export default function ReportPage() {
             <div className="flex justify-center items-center gap-6">
                 <StatusCard {...statusCardsData[0]} />
                 <StatusCard {...statusCardsData[1]} />
-                <Button variant="ghost" size="icon" className="h-16 w-16 text-white/50"><ArrowRight className="h-12 w-12 rotate-180" /></Button>
+                <Button variant="ghost" size="icon" className="h-16 w-16 text-white/50"><ArrowLeft className="h-12 w-12" /></Button>
                 <Button variant="ghost" size="icon" className="h-16 w-16 text-white/50"><ArrowRight className="h-12 w-12" /></Button>
                 <StatusCard {...statusCardsData[2]} />
                 <StatusCard {...statusCardsData[3]} />
@@ -205,7 +205,7 @@ export default function ReportPage() {
             <div className="bg-white/90 text-black rounded-lg flex-1 flex flex-col">
                 <div className="bg-blue-900 text-white p-2 text-center text-lg font-semibold">Preventivas por Contratos</div>
                 <div className="flex-1 p-4">
-                     <ChartContainer config={chartConfig} className="w-full h-full min-h-[100px]">
+                     <ChartContainer config={chartConfig} className="w-full h-full">
                         <BarChart data={chartData} margin={{ top: 20, right: 20, left: -10, bottom: 5 }}>
                             <CartesianGrid vertical={false} strokeDasharray="3 3"/>
                             <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={8} angle={-15} textAnchor="end" height={50} />
@@ -223,5 +223,3 @@ export default function ReportPage() {
     </div>
   );
 }
-
-    

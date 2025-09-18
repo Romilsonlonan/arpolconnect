@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight, BarChart2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { User } from '@/lib/data';
 import { getAvatar } from '@/lib/avatar-storage';
@@ -96,7 +96,11 @@ export default function ReportSupervisorSelectionPage() {
                     </Link>
                 </div>
                 <h1 className="text-xl md:text-2xl font-bold text-black">Relatório de Atividades - Supervisores 2025</h1>
-                <div className="w-10"> {/* Placeholder for spacing */} </div>
+                <Link href="/relatorio/geral">
+                    <Button variant="outline" size="icon" className="bg-white/20 border-white/30 hover:bg-white/30 text-white">
+                        <BarChart2 />
+                    </Button>
+                </Link>
             </header>
 
             {/* Main Content */}

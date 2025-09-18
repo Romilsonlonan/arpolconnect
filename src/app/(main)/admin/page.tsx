@@ -455,9 +455,11 @@ export default function AdminPage() {
     window.dispatchEvent(new StorageEvent('storage', { key: CONTRACTS_STORAGE_KEY }));
     toast({ title: "Documento Removido", variant: "destructive" });
   };
+  
+  const supervisorRoles = ['Supervisor', 'Supervisor de Qualidade', 'Administrador', 'Coordenador', 'Gerente', 'Diretor', 'Gerente de Contratos', 'Coordenador de Contratos'];
 
   const supervisors = useMemo(() => {
-    return users.filter(u => u.status === 'Ativo' && (u.role === 'Supervisor' || u.role === 'Administrador'));
+    return users.filter(u => u.status === 'Ativo' && supervisorRoles.includes(u.role));
   }, [users]);
   
   const filteredContracts = useMemo(() => {
@@ -474,7 +476,6 @@ export default function AdminPage() {
     }
   }, [filteredContracts, selectedContractForInfo]);
 
-  const supervisorRoles = ['Supervisor', 'Supervisor de Qualidade', 'Administrador', 'Coordenador', 'Gerente', 'Diretor', 'Gerente de Contratos', 'Coordenador de Contratos'];
 
   if (!isClient) return null;
 
@@ -612,13 +613,13 @@ export default function AdminPage() {
                 <div className="flex flex-col gap-4">
                     <div className="flex items-center gap-4">
                         <div className="flex-1">
-                            <Label htmlFor="supervisor-filter">Filtrar por Supervisor</Label>
+                            <Label htmlFor="supervisor-filter">Filtrar por Dependência</Label>
                             <Select onValueChange={setSelectedSupervisorId} value={selectedSupervisorId || 'all'}>
                                 <SelectTrigger id="supervisor-filter">
-                                <SelectValue placeholder="Selecione um supervisor" />
+                                <SelectValue placeholder="Selecione uma dependência" />
                                 </SelectTrigger>
                                 <SelectContent>
-                                <SelectItem value="all">Todos os Supervisores</SelectItem>
+                                <SelectItem value="all">Todas as Dependências</SelectItem>
                                 {supervisors.map(s => (
                                     <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>
                                 ))}
@@ -647,7 +648,7 @@ export default function AdminPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Nome do Contrato</TableHead>
-                <TableHead>Supervisor</TableHead>
+                <TableHead>Dependência</TableHead>
                 <TableHead>Status</TableHead>
                 <TableHead>Região</TableHead>
                 <TableHead><span className="sr-only">Ações</span></TableHead>

@@ -20,6 +20,7 @@ import type { Contract, User as AppUser } from '@/lib/data';
 import Image from 'next/image';
 import { Upload } from 'lucide-react';
 import { ScrollArea } from '../ui/scroll-area';
+import { Separator } from '../ui/separator';
 
 type ContractModalProps = {
   isOpen: boolean;
@@ -148,7 +149,7 @@ export function ContractModal({ isOpen, onClose, supervisors, onSave, editingCon
         if (!name || !supervisorId || !address || !region) {
             toast({
                 title: "Campos Obrigatórios",
-                description: "Por favor, preencha nome, supervisor, endereço e região.",
+                description: "Por favor, preencha nome, dependência, endereço e região.",
                 variant: "destructive",
             });
             return;
@@ -164,19 +165,24 @@ export function ContractModal({ isOpen, onClose, supervisors, onSave, editingCon
         }
 
         const supervisor = supervisors.find(s => s.id === supervisorId);
-        if (!supervisor) {
+        
+        let supervisorName = 'Arpolar';
+        if (supervisor) {
+            supervisorName = supervisor.name;
+        } else if (supervisorId !== 'arpolar') {
             toast({
-                title: "Supervisor Inválido",
-                description: "O supervisor selecionado não foi encontrado.",
+                title: "Dependência Inválida",
+                description: "A dependência selecionada não foi encontrada.",
                 variant: "destructive",
             });
             return;
         }
 
+
         onSave({
             name,
             supervisorId,
-            supervisorName: supervisor.name,
+            supervisorName: supervisorName,
             address,
             region,
             backgroundImage: backgroundImage || 'https://picsum.photos/seed/default/600/400',
@@ -203,10 +209,12 @@ export function ContractModal({ isOpen, onClose, supervisors, onSave, editingCon
                             <Input id="name" value={name} onChange={e => setName(e.target.value)} />
                         </div>
                         <div className="grid gap-2">
-                            <Label htmlFor="supervisor">Supervisor Responsável</Label>
+                            <Label htmlFor="supervisor">Dependência</Label>
                             <Select onValueChange={setSupervisorId} value={supervisorId}>
-                                <SelectTrigger><SelectValue placeholder="Selecione um supervisor" /></SelectTrigger>
+                                <SelectTrigger><SelectValue placeholder="Selecione uma dependência" /></SelectTrigger>
                                 <SelectContent>
+                                    <SelectItem value="arpolar">Arpolar (Empresa)</SelectItem>
+                                    <Separator />
                                     {supervisors.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
                                 </SelectContent>
                             </Select>
@@ -283,5 +291,3 @@ export function ContractModal({ isOpen, onClose, supervisors, onSave, editingCon
         </Dialog>
     )
 }
-
-    

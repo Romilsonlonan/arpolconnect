@@ -21,7 +21,7 @@ import {
 } from '@/components/ui/chart';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, ComposedChart, Line, PieChart, Pie, Cell } from 'recharts';
 import { format } from 'date-fns';
-import { ArrowRight, AlertTriangle, XCircle, Clock, CheckCircle, CalendarIcon, Settings, ArrowLeft } from 'lucide-react';
+import { ArrowRight, AlertTriangle, XCircle, Clock, CheckCircle, CalendarIcon, Settings, ArrowLeft, FilterX } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { PreventiveStatusCardData, PreventiveConsultation, PreventiveChartData, MonthlyChartData } from '@/lib/data';
 import { Calendar } from '@/components/ui/calendar';
@@ -36,11 +36,13 @@ const statusCardsData: PreventiveStatusCardData[] = [
 ];
 
 const consultationData: PreventiveConsultation[] = [
-  { contract: 'ICON ALPHAVILLE', monthYear: '03/2025', status: 'Ativo', overdue: 0, notDone: 4680, pending: 0, done: 1484 },
-  { contract: 'ICON ALPHAVILLE', monthYear: '02/2025', status: 'Ativo', overdue: 0, notDone: 4040, pending: 0, done: 2124 },
-  { contract: 'ICON ALPHAVILLE', monthYear: '01/2025', status: 'Ativo', overdue: 0, notDone: 3317, pending: 0, done: 5830 },
-  { contract: 'RIVER ONE', monthYear: '03/2025', status: 'Ativo', overdue: 10483, notDone: 3258, pending: 0, done: 9091 },
-  { contract: 'RIVER ONE', monthYear: '02/2025', status: 'Ativo', overdue: 6857, notDone: 2224, pending: 0, done: 7262 },
+  { contract: 'ICON ALPHAVILLE', monthYear: '03/2025', status: 'Ativo', overdue: 0, notDone: 4680, pending: 0, done: 1484, monthly: [{ name: 'jan 2025', Atrasadas: 100, Realizadas: 1800 }, { name: 'fev 2025', Atrasadas: 50, Realizadas: 2000 }, { name: 'mar 2025', Atrasadas: 0, Realizadas: 1484 }] },
+  { contract: 'ICON ALPHAVILLE', monthYear: '02/2025', status: 'Ativo', overdue: 0, notDone: 4040, pending: 0, done: 2124, monthly: [] },
+  { contract: 'ICON ALPHAVILLE', monthYear: '01/2025', status: 'Ativo', overdue: 0, notDone: 3317, pending: 0, done: 5830, monthly: [] },
+  { contract: 'RIVER ONE', monthYear: '03/2025', status: 'Ativo', overdue: 10483, notDone: 3258, pending: 0, done: 9091, monthly: [{ name: 'jan 2025', Atrasadas: 4000, Realizadas: 8000 }, { name: 'fev 2025', Atrasadas: 3000, Realizadas: 8500 }, { name: 'mar 2025', Atrasadas: 3483, Realizadas: 9091 }] },
+  { contract: 'RIVER ONE', monthYear: '02/2025', status: 'Ativo', overdue: 6857, notDone: 2224, pending: 0, done: 7262, monthly: [] },
+  { contract: 'RIVERSIDE', monthYear: '03/2025', status: 'Ativo', overdue: 3366, notDone: 67, pending: 0, done: 8000, monthly: [{ name: 'jan 2025', Atrasadas: 1000, Realizadas: 7000 }, { name: 'fev 2025', Atrasadas: 1200, Realizadas: 7500 }, { name: 'mar 2025', Atrasadas: 1166, Realizadas: 8000 }] },
+  { contract: 'JATOBA', monthYear: '03/2025', status: 'Ativo', overdue: 1570, notDone: 1828, pending: 0, done: 5000, monthly: [{ name: 'jan 2025', Atrasadas: 500, Realizadas: 4000 }, { name: 'fev 2025', Atrasadas: 400, Realizadas: 4500 }, { name: 'mar 2025', Atrasadas: 670, Realizadas: 5000 }] },
 ];
 
 const consultationTotals = {
@@ -50,14 +52,14 @@ const consultationTotals = {
     done: 25791,
 }
 
-const chartData: PreventiveChartData[] = [
+const contractsChartData: PreventiveChartData[] = [
   { name: 'RIVER ONE', overdue: 10483, notDone: 3258, pending: 0, done: 71932 },
   { name: 'RIVERSIDE', overdue: 3366, notDone: 67, pending: 0, done: 33256 },
   { name: 'JATOBA', overdue: 1570, notDone: 1828, pending: 0, done: 16274 },
   { name: 'ICON ALPHAVILLE', overdue: 1318, notDone: 12037, pending: 0, done: 14373 },
 ];
 
-const monthlyChartData: MonthlyChartData[] = [
+const totalMonthlyChartData: MonthlyChartData[] = [
     { name: 'jan 2025', Atrasadas: 8000, 'Não Realizadas': 0, Pendentes: 0, Realizadas: 15500 },
     { name: 'fev 2025', Atrasadas: 6200, 'Não Realizadas': 0, Pendentes: 0, Realizadas: 15500 },
     { name: 'mar 2025', Atrasadas: 9500, 'Não Realizadas': 0, Pendentes: 0, Realizadas: 15500 },
@@ -165,115 +167,41 @@ export default function ReportPage() {
     to: new Date(2025, 7, 1),
   });
   const [viewMode, setViewMode] = useState<'contracts' | 'monthly'>('contracts');
+  const [selectedContractName, setSelectedContractName] = useState<string | null>(null);
 
-  const renderContractsView = () => (
-    <>
-        {/* Header */}
-        <header className="flex items-center justify-between text-white">
-            <div className="w-10 h-10 bg-white/20 rounded-md" />
-            <h1 className="text-xl font-bold">Supervisora Danielle - Gestão de Contratos</h1>
-            <div className="flex items-center gap-2">
-                <div className="w-8 h-8 bg-white/20 rounded-md" />
-                <div className="w-8 h-8 bg-white/20 rounded-md" />
-                <div className="w-8 h-8 bg-white/20 rounded-md" />
-                <ArpolarIcon />
-                <Settings className="h-6 w-6" />
-            </div>
-        </header>
-        
-        {/* Status Cards */}
-        <div className="flex justify-center items-center gap-6">
-            <StatusCard {...statusCardsData[0]} icon={<AlertTriangle />} />
-            <StatusCard {...statusCardsData[1]} icon={<XCircle />} />
-            <Button variant="ghost" size="icon" className="h-16 w-16 text-white/50"><ArrowLeft className="h-12 w-12" /></Button>
-            <Button variant="ghost" size="icon" className="h-16 w-16 text-white/50"><ArrowRight className="h-12 w-12" /></Button>
-            <StatusCard {...statusCardsData[2]} icon={<Clock />} />
-            <StatusCard {...statusCardsData[3]} icon={<CheckCircle />} />
-        </div>
+  const filteredData = useMemo(() => {
+    if (!selectedContractName) {
+        return {
+            statusCards: { overdue: '17.340', notDone: '35.391', pending: '0', done: '210.213' },
+            monthlyChartData: totalMonthlyChartData,
+        };
+    }
+    const contractRow = consultationData.find(c => c.contract === selectedContractName && c.monthYear === '03/2025');
+    if (contractRow) {
+        return {
+            statusCards: {
+                overdue: contractRow.overdue.toLocaleString('pt-BR'),
+                notDone: contractRow.notDone.toLocaleString('pt-BR'),
+                pending: contractRow.pending.toLocaleString('pt-BR'),
+                done: contractRow.done.toLocaleString('pt-BR'),
+            },
+            monthlyChartData: contractRow.monthly?.map(m => ({ ...m, 'Não Realizadas': 0, Pendentes: 0 })) || [],
+        };
+    }
+    return {
+        statusCards: { overdue: '0', notDone: '0', pending: '0', done: '0' },
+        monthlyChartData: [],
+    };
+  }, [selectedContractName]);
 
-        {/* Table */}
-        <div className="bg-white/90 text-black rounded-lg overflow-hidden">
-             <div className="bg-blue-900 text-white p-2 text-center text-lg font-semibold">Consultas por Contratos</div>
-            <Table>
-                <TableHeader>
-                    <TableRow className="bg-yellow-400 hover:bg-yellow-400">
-                        <TableHead className="text-blue-900 font-bold">Contratos_Danielle</TableHead>
-                        <TableHead className="text-blue-900 font-bold">Mês/Ano</TableHead>
-                        <TableHead className="text-blue-900 font-bold">Status</TableHead>
-                        <TableHead className="text-blue-900 font-bold">Atrasadas</TableHead>
-                        <TableHead className="text-blue-900 font-bold">Não Realizadas</TableHead>
-                        <TableHead className="text-blue-900 font-bold">Pendentes</TableHead>
-                        <TableHead className="text-blue-900 font-bold">Realizadas</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {consultationData.slice(0, 5).map((row, i) => (
-                        <TableRow key={i}>
-                            <TableCell>{row.contract}</TableCell>
-                            <TableCell>{row.monthYear}</TableCell>
-                            <TableCell>{row.status}</TableCell>
-                            <TableCell>{row.overdue}</TableCell>
-                            <TableCell>{row.notDone}</TableCell>
-                            <TableCell>{row.pending}</TableCell>
-                            <TableCell>{row.done}</TableCell>
-                        </TableRow>
-                    ))}
-                     <TableRow className="font-bold bg-gray-200">
-                        <TableCell colSpan={3}>Total</TableCell>
-                        <TableCell>{consultationTotals.overdue}</TableCell>
-                        <TableCell>{consultationTotals.notDone}</TableCell>
-                        <TableCell>{consultationTotals.pending}</TableCell>
-                        <TableCell>{consultationTotals.done}</TableCell>
-                     </TableRow>
-                </TableBody>
-            </Table>
-        </div>
+  const contractsChartDataWithHighlight = useMemo(() => {
+    return contractsChartData.map(item => ({
+      ...item,
+      // @ts-ignore
+      fillOpacity: selectedContractName === null || item.name === selectedContractName ? 1 : 0.3,
+    }));
+  }, [selectedContractName]);
 
-        {/* Chart */}
-        <div className="bg-white/90 text-black rounded-lg flex-1 flex flex-col">
-            <div className="bg-blue-900 text-white p-2 text-center text-lg font-semibold">Preventivas por Contratos</div>
-            <div className="flex-1 p-4">
-                 <ChartContainer config={contractsChartConfig} className="w-full h-full">
-                    <BarChart data={chartData} margin={{ top: 20, right: 20, left: -10, bottom: 5 }}>
-                        <CartesianGrid vertical={false} strokeDasharray="3 3"/>
-                        <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={8} angle={-15} textAnchor="end" height={50} />
-                        <YAxis tickFormatter={(value) => `${value / 1000}k`} />
-                        <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
-                        <ChartLegend content={<ChartLegendContent />} />
-                        <Bar dataKey="done" stackId="a" fill="var(--color-done)" radius={[4, 4, 0, 0]} />
-                        <Bar dataKey="overdue" stackId="a" fill="var(--color-overdue)" />
-                        <Bar dataKey="notDone" stackId="a" fill="var(--color-notDone)" />
-                    </BarChart>
-                </ChartContainer>
-            </div>
-        </div>
-    </>
-  );
-
-  const renderMonthlyView = () => (
-    <div className="bg-white/90 text-black rounded-lg flex-1 flex flex-col h-full">
-        <header className="bg-blue-900 text-white p-2 text-center text-lg font-semibold">
-            Total Preventivas Mensais
-        </header>
-        <div className="flex-1 p-4">
-            <ChartContainer config={monthlyChartConfig} className="w-full h-full">
-                <ComposedChart data={monthlyChartData} margin={{ top: 20, right: 30, left: 20, bottom: 40 }}>
-                    <CartesianGrid vertical={false} />
-                    <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={10} />
-                    <YAxis domain={[0, 60000]} />
-                    <ChartTooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(0,0,0,0.1)' }} />
-                    <ChartLegend wrapperStyle={{ paddingTop: '30px' }} />
-                    
-                    <Bar dataKey="Atrasadas" fill="var(--color-Atrasadas)" barSize={20} />
-                    <Bar dataKey="Realizadas" fill="var(--color-Realizadas)" barSize={20} />
-                    
-                    <Line type="monotone" dataKey="Realizadas" name="Realizadas (linha)" stroke="var(--color-Realizadas (linha))" strokeWidth={2} dot={false} />
-                    <Line type="monotone" dataKey="Atrasadas" name="Atrasadas (linha)" stroke="var(--color-Atrasadas (linha))" strokeWidth={2} dot={false} />
-                </ComposedChart>
-            </ChartContainer>
-        </div>
-    </div>
-  );
 
   return (
     <div className="grid grid-cols-12 gap-0 min-h-[calc(100vh-104px)] -m-6">
@@ -326,7 +254,114 @@ export default function ReportPage() {
             className="col-span-10 p-6 flex flex-col gap-4"
             style={{background: 'linear-gradient(180deg, #3B82F6 0%, #1E3A8A 100%)'}}
         >
-             {viewMode === 'contracts' ? renderContractsView() : renderMonthlyView()}
+             <header className="flex items-center justify-between text-white">
+                <h1 className="text-xl font-bold">
+                    {selectedContractName ? `Detalhes do Contrato: ${selectedContractName}` : "Supervisora Danielle - Gestão de Contratos"}
+                </h1>
+                <div className="flex items-center gap-4">
+                    {selectedContractName && (
+                        <Button variant="secondary" onClick={() => setSelectedContractName(null)}>
+                            <FilterX className="mr-2 h-4 w-4" />
+                            Limpar Filtro
+                        </Button>
+                    )}
+                    <ArpolarIcon />
+                    <Settings className="h-6 w-6" />
+                </div>
+            </header>
+            
+            <div className="flex justify-center items-center gap-6">
+                <StatusCard title="Atrasadas" value={filteredData.statusCards.overdue} icon={<AlertTriangle />} />
+                <StatusCard title="Não Realizadas" value={filteredData.statusCards.notDone} icon={<XCircle />} />
+                <Button variant="ghost" size="icon" className="h-16 w-16 text-white/50"><ArrowLeft className="h-12 w-12" /></Button>
+                <Button variant="ghost" size="icon" className="h-16 w-16 text-white/50"><ArrowRight className="h-12 w-12" /></Button>
+                <StatusCard title="Pendentes" value={filteredData.statusCards.pending} icon={<Clock />} />
+                <StatusCard title="Realizadas" value={filteredData.statusCards.done} icon={<CheckCircle />} />
+            </div>
+
+            <div className="bg-white/90 text-black rounded-lg overflow-hidden">
+                 <div className="bg-blue-900 text-white p-2 text-center text-lg font-semibold">Consultas por Contratos</div>
+                <Table>
+                    <TableHeader>
+                        <TableRow className="bg-yellow-400 hover:bg-yellow-400">
+                            <TableHead className="text-blue-900 font-bold">Contratos_Danielle</TableHead>
+                            <TableHead className="text-blue-900 font-bold">Mês/Ano</TableHead>
+                            <TableHead className="text-blue-900 font-bold">Status</TableHead>
+                            <TableHead className="text-blue-900 font-bold">Atrasadas</TableHead>
+                            <TableHead className="text-blue-900 font-bold">Não Realizadas</TableHead>
+                            <TableHead className="text-blue-900 font-bold">Pendentes</TableHead>
+                            <TableHead className="text-blue-900 font-bold">Realizadas</TableHead>
+                        </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                        {consultationData.slice(0, 5).map((row, i) => (
+                            <TableRow 
+                                key={i} 
+                                onClick={() => setSelectedContractName(row.contract)}
+                                className={cn("cursor-pointer", selectedContractName === row.contract && "bg-yellow-200")}
+                            >
+                                <TableCell>{row.contract}</TableCell>
+                                <TableCell>{row.monthYear}</TableCell>
+                                <TableCell>{row.status}</TableCell>
+                                <TableCell>{row.overdue}</TableCell>
+                                <TableCell>{row.notDone}</TableCell>
+                                <TableCell>{row.pending}</TableCell>
+                                <TableCell>{row.done}</TableCell>
+                            </TableRow>
+                        ))}
+                         <TableRow className="font-bold bg-gray-200">
+                            <TableCell colSpan={3}>Total</TableCell>
+                            <TableCell>{consultationTotals.overdue}</TableCell>
+                            <TableCell>{consultationTotals.notDone}</TableCell>
+                            <TableCell>{consultationTotals.pending}</TableCell>
+                            <TableCell>{consultationTotals.done}</TableCell>
+                         </TableRow>
+                    </TableBody>
+                </Table>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 flex-1">
+                <div className="bg-white/90 text-black rounded-lg flex flex-col">
+                    <div className="bg-blue-900 text-white p-2 text-center text-lg font-semibold">Preventivas por Contratos</div>
+                    <div className="flex-1 p-4">
+                         <ChartContainer config={contractsChartConfig} className="w-full h-full min-h-[100px]">
+                            <BarChart data={contractsChartDataWithHighlight} margin={{ top: 20, right: 20, left: -10, bottom: 25 }}>
+                                <CartesianGrid vertical={false} strokeDasharray="3 3"/>
+                                <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={8} angle={-25} textAnchor="end" height={60} interval={0} />
+                                <YAxis tickFormatter={(value) => `${value / 1000}k`} />
+                                <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
+                                <ChartLegend content={<ChartLegendContent />} />
+                                <Bar dataKey="done" stackId="a" fill="var(--color-done)" radius={[4, 4, 0, 0]} />
+                                <Bar dataKey="overdue" stackId="a" fill="var(--color-overdue)" />
+                                <Bar dataKey="notDone" stackId="a" fill="var(--color-notDone)" />
+                            </BarChart>
+                        </ChartContainer>
+                    </div>
+                </div>
+
+                 <div className="bg-white/90 text-black rounded-lg flex flex-col">
+                    <header className="bg-blue-900 text-white p-2 text-center text-lg font-semibold">
+                        Total Preventivas Mensais {selectedContractName && `- ${selectedContractName}`}
+                    </header>
+                    <div className="flex-1 p-4">
+                        <ChartContainer config={monthlyChartConfig} className="w-full h-full min-h-[100px]">
+                            <ComposedChart data={filteredData.monthlyChartData} margin={{ top: 20, right: 30, left: 20, bottom: 25 }}>
+                                <CartesianGrid vertical={false} />
+                                <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={10} />
+                                <YAxis domain={[0, 'dataMax']} />
+                                <ChartTooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(0,0,0,0.1)' }} />
+                                <ChartLegend wrapperStyle={{ paddingTop: '30px' }} />
+                                
+                                <Bar dataKey="Atrasadas" fill="var(--color-Atrasadas)" barSize={20} />
+                                <Bar dataKey="Realizadas" fill="var(--color-Realizadas)" barSize={20} />
+                                
+                                <Line type="monotone" dataKey="Realizadas" name="Realizadas (linha)" stroke="var(--color-Realizadas (linha))" strokeWidth={2} dot={false} />
+                                <Line type="monotone" dataKey="Atrasadas" name="Atrasadas (linha)" stroke="var(--color-Atrasadas (linha))" strokeWidth={2} dot={false} />
+                            </ComposedChart>
+                        </ChartContainer>
+                    </div>
+                </div>
+            </div>
         </main>
     </div>
   );

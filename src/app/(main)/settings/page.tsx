@@ -53,9 +53,9 @@ export default function SettingsPage() {
         }
 
         const savedThemeId = localStorage.getItem(APP_THEME_STORAGE_KEY);
-        const themeToApply = themes.find(t => t.id === savedThemeId) || themes[0];
-        setActiveTheme(themeToApply.id);
-        applyTheme(themeToApply, false); // Don't save again on initial load
+        if (savedThemeId) {
+            setActiveTheme(savedThemeId);
+        }
 
     } catch (error) {
         console.error("Failed to load settings from localStorage", error);
@@ -109,18 +109,18 @@ export default function SettingsPage() {
     }
   };
 
-  const applyTheme = (theme: typeof themes[0], save: boolean = true) => {
+  const applyTheme = (theme: typeof themes[0]) => {
     document.documentElement.style.setProperty('--primary', theme.primary);
     document.documentElement.style.setProperty('--accent', theme.accent);
     document.documentElement.style.setProperty('--background', theme.background);
     setActiveTheme(theme.id);
     
-    if (save) {
-        try {
-            localStorage.setItem(APP_THEME_STORAGE_KEY, theme.id);
-        } catch (error) {
-            console.error("Failed to save theme to localStorage", error);
-        }
+    try {
+        localStorage.setItem(APP_THEME_STORAGE_KEY, theme.id);
+        // Disparar um evento para que o layout possa reagir
+        window.dispatchEvent(new StorageEvent('storage', { key: APP_THEME_STORAGE_KEY }));
+    } catch (error) {
+        console.error("Failed to save theme to localStorage", error);
     }
   };
 

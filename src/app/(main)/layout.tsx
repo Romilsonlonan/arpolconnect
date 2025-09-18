@@ -52,6 +52,26 @@ import { useState, useEffect } from 'react';
 
 const USER_AVATAR_STORAGE_KEY = 'userAvatar';
 const USER_SETTINGS_STORAGE_KEY = 'userSettings';
+const APP_THEME_STORAGE_KEY = 'appTheme';
+
+const themes = [
+    { name: 'Padrão', id: 'default', primary: '207 44% 49%', accent: '185 64% 69%', background: '208 100% 97.1%' },
+    { name: 'Oceano', id: 'ocean', primary: '220 80% 50%', accent: '190 70% 60%', background: '210 40% 98%' },
+    { name: 'Floresta', id: 'forest', primary: '120 40% 40%', accent: '90 50% 55%', background: '90 20% 96%' },
+    { name: 'Grafite', id: 'graphite', primary: '240 10% 40%', accent: '240 5% 65%', background: '240 5% 97%' },
+    { name: 'Vibrante', id: 'vibrant', primary: '340 80% 55%', accent: '45 90% 55%', background: '30 100% 97%' },
+    { name: 'Solar', id: 'solar', primary: '45 90% 50%', accent: '50 100% 60%', background: '50 100% 97%' },
+    { name: 'Marinho', id: 'navy', primary: '215 40% 30%', accent: '195 50% 50%', background: '210 30% 98%' },
+];
+
+function applyTheme(themeId: string) {
+    const theme = themes.find(t => t.id === themeId) || themes[0];
+    if (document && document.documentElement) {
+        document.documentElement.style.setProperty('--primary', theme.primary);
+        document.documentElement.style.setProperty('--accent', theme.accent);
+        document.documentElement.style.setProperty('--background', theme.background);
+    }
+}
 
 
 function MainLayoutContent({ children }: { children: React.ReactNode }) {
@@ -78,11 +98,21 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
             }
         };
 
+        const loadAndApplyTheme = () => {
+            const savedThemeId = localStorage.getItem(APP_THEME_STORAGE_KEY);
+            applyTheme(savedThemeId || 'default');
+        };
+
+        // Run on initial load
         updateUserData();
+        loadAndApplyTheme();
 
         const handleStorageChange = (event: StorageEvent) => {
             if (event.key === USER_AVATAR_STORAGE_KEY || event.key === USER_SETTINGS_STORAGE_KEY) {
                 updateUserData();
+            }
+            if (event.key === APP_THEME_STORAGE_KEY) {
+                loadAndApplyTheme();
             }
         };
 

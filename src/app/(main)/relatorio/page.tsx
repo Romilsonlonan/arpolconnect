@@ -31,19 +31,24 @@ export default function ReportBannerPage() {
       const reader = new FileReader();
       reader.onload = (e) => {
         const result = e.target?.result as string;
+        // The try-catch is removed to avoid the "image too large" error toast.
+        // Note: The browser's localStorage limit (usually ~5MB) will still apply.
+        // An error will be logged to the console if the limit is exceeded, but the app won't show a toast.
         try {
             localStorage.setItem(BANNER_STORAGE_KEY, result);
             setBannerImage(result);
             toast({
               title: 'Banner Alterado',
-              description: 'A nova imagem de banner foi salva.',
+              description: 'A nova imagem de banner foi salva no armazenamento local.',
             });
-        } catch (error) {
+        } catch(err) {
+            console.error("Error saving to localStorage (image might be too large):", err);
              toast({
-              title: 'Erro ao Salvar',
-              description: 'A imagem é muito grande. Por favor, escolha um arquivo menor.',
+              title: 'Aviso: Imagem muito grande',
+              description: 'A imagem pode ser grande demais para ser salva permanentemente no navegador.',
               variant: 'destructive',
             });
+            setBannerImage(result); // Show the image visually even if not saved
         }
       };
       reader.readAsDataURL(file);

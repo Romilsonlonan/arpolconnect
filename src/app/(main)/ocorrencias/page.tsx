@@ -3,6 +3,7 @@
 
 import { useState } from 'react';
 import Image from 'next/image';
+import Link from 'next/link';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -145,7 +146,9 @@ export default function OcorrenciasPage() {
 
         {/* Summary Cards */}
         <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" className="text-white"><ArrowLeft className="h-8 w-8"/></Button>
+            <Link href="/relatorio">
+                <Button variant="ghost" size="icon" className="text-white"><ArrowLeft className="h-8 w-8"/></Button>
+            </Link>
             <SummaryCard title="Qtd de Ocorrências" value="264" />
             <SummaryCard title="Hrs Trab Ocorrências" value="345:23:60" />
             <SummaryCard title="Total Hrs Atividades" value="1180:33:00" />

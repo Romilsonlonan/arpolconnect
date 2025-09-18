@@ -39,7 +39,28 @@ type UserModalProps = {
   contracts: Contract[];
 };
 
-const userRoles: User['role'][] = ['Administrador', 'Supervisor', 'Mecânico', 'Visualizador'];
+const userRoles: string[] = [
+    'Administrador', 
+    'Supervisor', 
+    'Mecânico', 
+    'Visualizador',
+    'Técnico de Planejamento',
+    'Supervisor de Qualidade',
+    '1/2 Oficial',
+    'Ajudante',
+    'Eletricista',
+    'Diretor',
+    'Gerente',
+    'Coordenador',
+    'Gerente de Contratos',
+    'Coordenador de Contratos',
+    'Auxiliar Administrativo',
+    'Mecânico de Corretiva',
+    'Supervisor de Corretiva',
+    'Coordenador de Corretiva',
+    'Auxiliar de PMOC',
+    'PMOC'
+];
 const PLACEHOLDER_AVATAR = 'https://placehold.co/100x100';
 
 export function UserModal({ isOpen, onClose, onSave, editingUser, contracts }: UserModalProps) {

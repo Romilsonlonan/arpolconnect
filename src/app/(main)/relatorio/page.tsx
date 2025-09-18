@@ -29,19 +29,19 @@ const USERS_STORAGE_KEY = 'arpolarUsers';
 const REPORTS_STORAGE_KEY = 'arpolarReports';
 
 const supervisorData: SupervisorCardData[] = [
+    { id: 's0', name: 'Anthony', role: 'Coordenador', avatarUrl: 'https://i.ibb.co/yYvyfB9/steve-jobs.png' },
     { id: 's1', name: 'Danielle', role: 'Supervisora', avatarUrl: 'https://i.ibb.co/yYvyfB9/steve-jobs.png' },
     { id: 's2', name: 'Joel', role: 'Supervisor', avatarUrl: 'https://i.ibb.co/yYvyfB9/steve-jobs.png' },
     { id: 's3', name: 'Lucas', role: 'Supervisor', avatarUrl: 'https://i.ibb.co/yYvyfB9/steve-jobs.png' },
     { id: 's4', name: 'Marcelo', role: 'Supervisor', avatarUrl: 'https://i.ibb.co/yYvyfB9/steve-jobs.png' },
-    { id: 's5', name: 'Anthony', role: 'Coordenador', avatarUrl: 'https://i.ibb.co/yYvyfB9/steve-jobs.png' },
-    { id: 's6', name: 'Renato', role: 'Supervisor', avatarUrl: 'https://i.ibb.co/yYvyfB9/steve-jobs.png' },
-    { id: 's7', name: 'Robson', role: 'Supervisor', avatarUrl: 'https://i.ibb.co/yYvyfB9/steve-jobs.png' },
-    { id: 's8', name: 'Thiago', role: 'Supervisor', avatarUrl: 'https://i.ibb.co/yYvyfB9/steve-jobs.png' },
-    { id: 's9', name: 'Wanderson', role: 'Supervisor', avatarUrl: 'https://i.ibb.co/yYvyfB9/steve-jobs.png' },
-    { id: 's10', name: 'Marcus', role: 'Supervisor AQC', avatarUrl: 'https://i.ibb.co/yYvyfB9/steve-jobs.png' },
-    { id: 's11', name: 'Mário', role: 'Supervisor', avatarUrl: 'https://i.ibb.co/yYvyfB9/steve-jobs.png' },
-    { id: 's12', name: 'Everton', role: 'Supervisor', avatarUrl: 'https://i.ibb.co/yYvyfB9/steve-jobs.png' },
-    { id: 's13', name: 'Rafael', role: 'Supervisor', avatarUrl: 'https://i.ibb.co/yYvyfB9/steve-jobs.png' },
+    { id: 's5', name: 'Renato', role: 'Supervisor', avatarUrl: 'https://i.ibb.co/yYvyfB9/steve-jobs.png' },
+    { id: 's6', name: 'Robson', role: 'Supervisor', avatarUrl: 'https://i.ibb.co/yYvyfB9/steve-jobs.png' },
+    { id: 's7', name: 'Thiago', role: 'Supervisor', avatarUrl: 'https://i.ibb.co/yYvyfB9/steve-jobs.png' },
+    { id: 's8', name: 'Wanderson', role: 'Supervisor', avatarUrl: 'https://i.ibb.co/yYvyfB9/steve-jobs.png' },
+    { id: 's9', name: 'Marcus', role: 'Supervisor AQC', avatarUrl: 'https://i.ibb.co/yYvyfB9/steve-jobs.png' },
+    { id: 's10', name: 'Mário', role: 'Supervisor', avatarUrl: 'https://i.ibb.co/yYvyfB9/steve-jobs.png' },
+    { id: 's11', name: 'Everton', role: 'Supervisor', avatarUrl: 'https://i.ibb.co/yYvyfB9/steve-jobs.png' },
+    { id: 's12', name: 'Rafael', role: 'Supervisor', avatarUrl: 'https://i.ibb.co/yYvyfB9/steve-jobs.png' },
 ];
 
 
@@ -243,8 +243,8 @@ export default function ReportPage() {
                                                             <ArpolarIcon />
                                                         </div>
                                                     </header>
-                                                    <div className="flex-1 p-8 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6 items-center place-content-center">
-                                                       {cover.supervisors?.map(s => (
+                                                    <div className="flex-1 p-8 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 gap-4 items-center place-content-center">
+                                                       {(cover.supervisors || []).map(s => (
                                                          <Card key={s.id} className='bg-yellow-400 border-4 border-blue-900 rounded-2xl overflow-hidden shadow-lg'>
                                                             <CardHeader className='bg-blue-900 text-white text-center p-2'>
                                                                 <h3 className='font-bold text-sm'>{s.role}</h3>

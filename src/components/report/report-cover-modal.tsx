@@ -100,7 +100,8 @@ export function ReportCoverModal({ isOpen, onClose, onSave, editingCover }: Repo
       imageUrl,
       quote,
       quoteAuthor,
-      characterImageUrl
+      characterImageUrl,
+      supervisors: type === 'supervisors' ? (editingCover?.supervisors || []) : undefined,
     }, editingCover?.id);
   };
 
@@ -122,6 +123,7 @@ export function ReportCoverModal({ isOpen, onClose, onSave, editingCover }: Repo
                   <SelectContent>
                       <SelectItem value="cover">Capa de Apresentação</SelectItem>
                       <SelectItem value="motivational">Página Motivacional</SelectItem>
+                      <SelectItem value="supervisors">Página de Supervisores</SelectItem>
                   </SelectContent>
               </Select>
           </div>

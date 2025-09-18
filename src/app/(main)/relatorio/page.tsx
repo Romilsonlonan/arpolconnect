@@ -3,13 +3,13 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious, type CarouselApi } from '@/components/ui/carousel';
-import { PlusCircle, Edit, Trash2 } from 'lucide-react';
+import { PlusCircle, Edit, Trash2, Home, BarChart2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ReportCoverModal } from '@/components/report/report-cover-modal';
-import type { User, ReportCover } from '@/lib/data';
+import type { User, ReportCover, SupervisorCardData } from '@/lib/data';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,10 +21,29 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
+import { cn } from '@/lib/utils';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 
 const USERS_STORAGE_KEY = 'arpolarUsers';
 const REPORTS_STORAGE_KEY = 'arpolarReports';
+
+const supervisorData: SupervisorCardData[] = [
+    { id: 's1', name: 'Danielle', role: 'Supervisora', avatarUrl: 'https://i.ibb.co/yYvyfB9/steve-jobs.png' },
+    { id: 's2', name: 'Joel', role: 'Supervisor', avatarUrl: 'https://i.ibb.co/yYvyfB9/steve-jobs.png' },
+    { id: 's3', name: 'Lucas', role: 'Supervisor', avatarUrl: 'https://i.ibb.co/yYvyfB9/steve-jobs.png' },
+    { id: 's4', name: 'Marcelo', role: 'Supervisor', avatarUrl: 'https://i.ibb.co/yYvyfB9/steve-jobs.png' },
+    { id: 's5', name: 'Anthony', role: 'Coordenador', avatarUrl: 'https://i.ibb.co/yYvyfB9/steve-jobs.png' },
+    { id: 's6', name: 'Renato', role: 'Supervisor', avatarUrl: 'https://i.ibb.co/yYvyfB9/steve-jobs.png' },
+    { id: 's7', name: 'Robson', role: 'Supervisor', avatarUrl: 'https://i.ibb.co/yYvyfB9/steve-jobs.png' },
+    { id: 's8', name: 'Thiago', role: 'Supervisor', avatarUrl: 'https://i.ibb.co/yYvyfB9/steve-jobs.png' },
+    { id: 's9', name: 'Wanderson', role: 'Supervisor', avatarUrl: 'https://i.ibb.co/yYvyfB9/steve-jobs.png' },
+    { id: 's10', name: 'Marcus', role: 'Supervisor AQC', avatarUrl: 'https://i.ibb.co/yYvyfB9/steve-jobs.png' },
+    { id: 's11', name: 'Mário', role: 'Supervisor', avatarUrl: 'https://i.ibb.co/yYvyfB9/steve-jobs.png' },
+    { id: 's12', name: 'Everton', role: 'Supervisor', avatarUrl: 'https://i.ibb.co/yYvyfB9/steve-jobs.png' },
+    { id: 's13', name: 'Rafael', role: 'Supervisor', avatarUrl: 'https://i.ibb.co/yYvyfB9/steve-jobs.png' },
+];
+
 
 const initialCovers: ReportCover[] = [
     {
@@ -43,8 +62,22 @@ const initialCovers: ReportCover[] = [
         quote: 'Seja um padrão de qualidade. Algumas pessoas não estão acostumadas a um ambiente onde a excelência é esperada.',
         quoteAuthor: 'Steve Jobs',
         characterImageUrl: 'https://i.ibb.co/yYvyfB9/steve-jobs.png',
+    },
+    {
+        id: 'cover-initial-3',
+        type: 'supervisors',
+        title: 'Relatório de Atividades - Supervisores 2025',
+        subtitle: '',
+        imageUrl: 'https://i.ibb.co/zVzbGGgD/fundoaqc.jpg', // Yellow geometric background
+        supervisors: supervisorData,
     }
 ];
+
+const ArpolarIcon = () => (
+    <svg viewBox="0 0 100 100" className="h-6 w-6 text-white" fill="currentColor">
+        <path d="M50 5 L95 95 H5 Z" />
+    </svg>
+)
 
 export default function ReportPage() {
     const [covers, setCovers] = useState<ReportCover[]>(initialCovers);
@@ -160,35 +193,73 @@ export default function ReportPage() {
                                             src={cover.imageUrl}
                                             alt={cover.title}
                                             fill
-                                            className="object-cover opacity-30"
+                                            className={cn(
+                                                "object-cover",
+                                                cover.type !== 'supervisors' && 'opacity-30'
+                                            )}
                                             priority
                                         />
-                                        <div className="absolute inset-0 flex flex-col items-center justify-center text-white p-8">
+                                        <div className="absolute inset-0 flex flex-col">
                                             {cover.type === 'cover' ? (
-                                                <div className="text-center">
-                                                    <h2 className="text-5xl font-bold font-headline">{cover.title}</h2>
-                                                    <p className="text-2xl mt-2">{cover.subtitle}</p>
+                                                <div className="flex-1 flex items-center justify-center text-center text-white p-8">
+                                                    <div>
+                                                        <h2 className="text-5xl font-bold font-headline">{cover.title}</h2>
+                                                        <p className="text-2xl mt-2">{cover.subtitle}</p>
+                                                    </div>
                                                 </div>
-                                            ) : (
-                                                <Card className="bg-slate-200/90 text-slate-800 max-w-4xl w-full shadow-2xl rounded-2xl">
-                                                    <CardContent className="p-8 md:p-12 text-center">
-                                                        <blockquote className="text-2xl md:text-3xl font-semibold italic">
-                                                            "{cover.quote}"
-                                                        </blockquote>
-                                                        <p className="text-xl md:text-2xl font-medium mt-6">- {cover.quoteAuthor}</p>
-                                                        {cover.characterImageUrl && (
-                                                            <div className="mt-8 flex justify-center">
-                                                                <Image 
-                                                                    src={cover.characterImageUrl}
-                                                                    alt={cover.quoteAuthor || 'Personagem'}
-                                                                    width={120}
-                                                                    height={120}
-                                                                    className="rounded-full object-cover w-24 h-24 md:w-32 md:h-32"
-                                                                />
-                                                            </div>
-                                                        )}
-                                                    </CardContent>
-                                                </Card>
+                                            ) : cover.type === 'motivational' ? (
+                                                <div className="flex-1 flex items-center justify-center text-center text-white p-8">
+                                                    <Card className="bg-slate-200/90 text-slate-800 max-w-4xl w-full shadow-2xl rounded-2xl">
+                                                        <CardContent className="p-8 md:p-12 text-center">
+                                                            <blockquote className="text-2xl md:text-3xl font-semibold italic">
+                                                                "{cover.quote}"
+                                                            </blockquote>
+                                                            <p className="text-xl md:text-2xl font-medium mt-6">- {cover.quoteAuthor}</p>
+                                                            {cover.characterImageUrl && (
+                                                                <div className="mt-8 flex justify-center">
+                                                                    <Image 
+                                                                        src={cover.characterImageUrl}
+                                                                        alt={cover.quoteAuthor || 'Personagem'}
+                                                                        width={120}
+                                                                        height={120}
+                                                                        className="rounded-full object-cover w-24 h-24 md:w-32 md:h-32"
+                                                                    />
+                                                                </div>
+                                                            )}
+                                                        </CardContent>
+                                                    </Card>
+                                                </div>
+                                            ) : cover.type === 'supervisors' && (
+                                                <>
+                                                    <header className="bg-blue-900 text-white p-4 flex items-center justify-between">
+                                                        <div className='flex items-center gap-4'>
+                                                            <ArpolarIcon />
+                                                            <Home className="h-6 w-6"/>
+                                                        </div>
+                                                        <h2 className="text-xl font-bold">{cover.title}</h2>
+                                                        <div className='flex items-center gap-4'>
+                                                            <Image src="https://i.ibb.co/1nCg9m3/report-cover-example.png" alt="Icon" width={24} height={24} />
+                                                            <BarChart2 className="h-6 w-6"/>
+                                                            <ArpolarIcon />
+                                                        </div>
+                                                    </header>
+                                                    <div className="flex-1 p-8 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-6 items-center place-content-center">
+                                                       {cover.supervisors?.map(s => (
+                                                         <Card key={s.id} className='bg-yellow-400 border-4 border-blue-900 rounded-2xl overflow-hidden shadow-lg'>
+                                                            <CardHeader className='bg-blue-900 text-white text-center p-2'>
+                                                                <h3 className='font-bold text-sm'>{s.role}</h3>
+                                                                <p className='text-xs'>{s.name}</p>
+                                                            </CardHeader>
+                                                            <CardContent className='p-4 flex justify-center items-center'>
+                                                                <Avatar className='w-24 h-24 border-4 border-blue-900'>
+                                                                    <AvatarImage src={s.avatarUrl} />
+                                                                    <AvatarFallback>{s.name.charAt(0)}</AvatarFallback>
+                                                                </Avatar>
+                                                            </CardContent>
+                                                         </Card>
+                                                       ))}
+                                                    </div>
+                                                </>
                                             )}
                                         </div>
                                          {isAdmin && (

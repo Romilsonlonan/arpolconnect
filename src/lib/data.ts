@@ -97,9 +97,16 @@ export type User = {
   };
 };
 
+export type SupervisorCardData = {
+    id: string;
+    name: string;
+    role: string;
+    avatarUrl: string;
+}
+
 export type ReportCover = {
     id: string;
-    type: 'cover' | 'motivational';
+    type: 'cover' | 'motivational' | 'supervisors';
     title: string;
     subtitle: string;
     imageUrl: string;
@@ -107,6 +114,8 @@ export type ReportCover = {
     quote?: string;
     quoteAuthor?: string;
     characterImageUrl?: string;
+    // Supervisors page fields
+    supervisors?: SupervisorCardData[];
 };
 
 export const initialUsers: User[] = [

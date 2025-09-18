@@ -63,7 +63,7 @@ export default function PerformanceGeralPage() {
 
   return (
     <div 
-        className="flex flex-col gap-6 p-6 rounded-lg min-h-full"
+        className="flex flex-col gap-8 p-6 rounded-lg min-h-full"
         style={{background: 'linear-gradient(180deg, #3B82F6 0%, #1E3A8A 100%)'}}
     >
         {/* Header */}
@@ -105,7 +105,7 @@ export default function PerformanceGeralPage() {
         </div>
 
         {/* Main Content */}
-        <div className="grid grid-cols-12 gap-6 items-end p-6 bg-yellow-300 rounded-lg flex-1">
+        <div className="grid grid-cols-12 gap-6 items-stretch p-6 bg-yellow-300 rounded-lg flex-1">
            
             {/* Left Section with Chart and Image */}
             <div className="col-span-6 flex flex-col h-full">

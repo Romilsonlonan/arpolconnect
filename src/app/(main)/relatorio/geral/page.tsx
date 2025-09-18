@@ -63,7 +63,7 @@ export default function PerformanceGeralPage() {
 
   return (
     <div 
-        className="flex flex-col gap-4 p-6 rounded-lg"
+        className="flex flex-col gap-6 p-6 rounded-lg min-h-full"
         style={{background: 'linear-gradient(180deg, #3B82F6 0%, #1E3A8A 100%)'}}
     >
         {/* Header */}
@@ -88,7 +88,7 @@ export default function PerformanceGeralPage() {
         </div>
 
         {/* Month Selector */}
-        <div className="flex justify-center gap-2 flex-wrap">
+        <div className="flex justify-center gap-2 flex-wrap py-2">
             {months.map(month => (
                 <Button 
                     key={month}
@@ -105,12 +105,12 @@ export default function PerformanceGeralPage() {
         </div>
 
         {/* Main Content */}
-        <div className="grid grid-cols-12 gap-6 items-end p-6 bg-yellow-300 rounded-lg">
+        <div className="grid grid-cols-12 gap-6 items-end p-6 bg-yellow-300 rounded-lg flex-1">
            
             {/* Left Section with Chart and Image */}
-            <div className="col-span-6 flex flex-col gap-4">
+            <div className="col-span-6 flex flex-col h-full">
                 <div className="bg-blue-800 text-white p-2 text-center text-lg font-semibold rounded-t-md">Fechamento do mês - Preventivas</div>
-                <div className="flex items-end bg-white/80 p-4 rounded-b-md">
+                <div className="flex items-end bg-white/80 p-4 rounded-b-md flex-1">
                      <div className="relative w-[200px] h-[300px] self-end -mb-4 -ml-4">
                          <Image src="https://i.ibb.co/YyY2S54/tecnico-grafico.png" alt="Técnico com gráficos" layout="fill" className="object-contain" unoptimized />
                     </div>
@@ -152,9 +152,9 @@ export default function PerformanceGeralPage() {
             </div>
 
             {/* Right Section with Chart */}
-            <div className="col-span-6 flex flex-col gap-4">
+            <div className="col-span-6 flex flex-col h-full">
                  <div className="bg-blue-800 text-white p-2 text-center text-lg font-semibold rounded-t-md">Fechamento do mês - Ocorrências</div>
-                <div className="bg-white/80 p-4 rounded-b-md h-full">
+                <div className="bg-white/80 p-4 rounded-b-md flex-1">
                      <ChartContainer config={{}} className="w-full h-64">
                          <PieChart>
                             <Tooltip formatter={(value, name, props) => [`${props.payload.value.toLocaleString('pt-BR')} (${props.payload.percentage}%)`, name]} />

@@ -11,7 +11,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import { Calendar } from '@/components/ui/calendar';
 import {
   ChartContainer,
   ChartTooltip,
@@ -25,6 +24,7 @@ import { format } from 'date-fns';
 import { ArrowRight, AlertTriangle, XCircle, Clock, CheckCircle, CalendarIcon, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { PreventiveStatusCardData, PreventiveConsultation, PreventiveChartData } from '@/lib/data';
+import { Calendar } from '@/components/ui/calendar';
 
 
 // --- Mock Data (ajustado para corresponder à imagem) ---
@@ -205,7 +205,7 @@ export default function ReportPage() {
             <div className="bg-white/90 text-black rounded-lg flex-1 flex flex-col">
                 <div className="bg-blue-900 text-white p-2 text-center text-lg font-semibold">Preventivas por Contratos</div>
                 <div className="flex-1 p-4">
-                     <ChartContainer config={chartConfig} className="w-full h-full">
+                     <ChartContainer config={chartConfig} className="w-full h-full min-h-[100px]">
                         <BarChart data={chartData} margin={{ top: 20, right: 20, left: -10, bottom: 5 }}>
                             <CartesianGrid vertical={false} strokeDasharray="3 3"/>
                             <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={8} angle={-15} textAnchor="end" height={50} />
@@ -223,3 +223,5 @@ export default function ReportPage() {
     </div>
   );
 }
+
+    

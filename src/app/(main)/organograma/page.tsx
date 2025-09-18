@@ -7,9 +7,10 @@ import { TreeNode } from '@/components/organization/tree-node';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
-import { buildTreeFromUsersAndContracts, updateTree, findNode } from '@/lib/tree-utils';
+import { buildTreeFromUsersAndContracts, findNode } from '@/lib/tree-utils';
 import { TicketModal } from '@/components/organization/ticket-modal';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 
 const ORG_CHART_STORAGE_KEY = 'orgChartTree';
@@ -28,6 +29,9 @@ export default function OrganogramaPage() {
   const [ticketNode, setTicketNode] = useState<OrgNode | null>(null);
   const [allUsers, setAllUsers] = useState<AppUser[]>([]);
   const { toast } = useToast();
+  
+  // State for drag-over effect
+  const [dragOverNodeId, setDragOverNodeId] = useState<string | null>(null);
   
   const loadData = () => {
      try {
@@ -70,8 +74,6 @@ export default function OrganogramaPage() {
     return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
-  const handlePlaceholder = () => {};
-
   const handleOpenTicketModal = (node: OrgNode) => {
     setTicketNode(node);
     setIsTicketModalOpen(true);
@@ -100,10 +102,8 @@ export default function OrganogramaPage() {
     
     const users: AppUser[] = JSON.parse(localStorage.getItem(USERS_STORAGE_KEY) || '[]');
     const targetNodeInTree = findNode(tree!, targetNodeId);
-
     const targetUser = users.find(u => u.id === targetNodeId);
 
-    // Define roles that can be supervisors
     const validSupervisorRoles = ['Diretor', 'Gerente', 'Coordenador', 'Supervisor', 'Gerente de Contratos', 'Coordenador de Contratos', 'Supervisor de Qualidade', 'Administrador'];
     
     const isTargetValidSupervisor = targetUser && validSupervisorRoles.includes(targetUser.role);
@@ -145,6 +145,80 @@ export default function OrganogramaPage() {
     return counts;
   }, [messages]);
 
+  // --- Drag and Drop Handlers ---
+  const handleDragStart = (e: React.DragEvent, nodeId: string) => {
+    e.dataTransfer.setData('application/reactflow', nodeId);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+  
+  const handleDragOver = (e: React.DragEvent, node: OrgNode) => {
+    e.preventDefault();
+    const validSupervisorRoles = ['Diretor', 'Gerente', 'Coordenador', 'Supervisor', 'Gerente de Contratos', 'Coordenador de Contratos', 'Supervisor de Qualidade', 'Administrador'];
+    const isTargetValid = (validSupervisorRoles.includes(node.role) || node.id === 'arpolar');
+    
+    if (isTargetValid) {
+        setDragOverNodeId(node.id);
+        e.dataTransfer.dropEffect = 'move';
+    } else {
+        setDragOverNodeId(null);
+        e.dataTransfer.dropEffect = 'none';
+    }
+  };
+  
+  const handleDragLeave = () => {
+    setDragOverNodeId(null);
+  };
+
+  const handleDrop = (e: React.DragEvent, targetNode: OrgNode) => {
+    e.preventDefault();
+    setDragOverNodeId(null);
+    const draggedNodeId = e.dataTransfer.getData('application/reactflow');
+    if (draggedNodeId && draggedNodeId !== targetNode.id) {
+        handleMoveNode(draggedNodeId, targetNode.id);
+    }
+  };
+
+  // Recursive rendering function
+  const renderNode = (node: OrgNode, isRoot = false): JSX.Element => {
+    const isCompanyRoot = node.id === 'arpolar';
+    
+    return (
+      <div
+        key={node.id}
+        className={cn(
+          "flex flex-col items-center text-center relative",
+          !isRoot && "px-4"
+        )}
+        onDragOver={(e) => handleDragOver(e, node)}
+        onDragLeave={handleDragLeave}
+        onDrop={(e) => handleDrop(e, node)}
+      >
+        <TreeNode
+            node={node}
+            isDraggable={!isCompanyRoot}
+            isDragOver={dragOverNodeId === node.id}
+            onDragStart={(e) => handleDragStart(e, node.id)}
+            onOpenTicketModal={handleOpenTicketModal}
+            privateTicketCount={privateTicketCounts.get(node.id) || 0}
+        />
+        {node.children && node.children.length > 0 && (
+          <>
+            <div className="absolute top-full h-8 w-px bg-slate-600 left-1/2 -translate-x-1/2"></div>
+            <div className="flex pt-16 relative before:content-[''] before:absolute before:top-8 before:w-full before:h-px before:bg-slate-600">
+              {node.children.map((child, index) => (
+                <div key={child.id} className={cn(
+                  "relative before:content-[''] before:absolute before:bottom-full before:left-1/2 before:-translate-x-1/2 before:w-px before:h-8 before:bg-slate-600",
+                   index > 0 && "ml-4",
+                )}>
+                  {renderNode(child)}
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+    );
+  };
 
   if (!isClient || !tree) {
     return null;
@@ -180,13 +254,7 @@ export default function OrganogramaPage() {
           className="transition-transform duration-300"
           style={{ transform: `scale(${zoom})`, transformOrigin: 'top left' }}
         >
-          <TreeNode
-            node={tree}
-            onMoveNode={handleMoveNode}
-            onOpenTicketModal={handleOpenTicketModal}
-            privateTicketCount={privateTicketCounts.get(tree.id) || 0}
-            isRoot={true}
-          />
+          {renderNode(tree, true)}
         </div>
       </div>
        <TicketModal

@@ -1,13 +1,13 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import type { OrgNode } from '@/lib/data';
 import { getAvatar } from '@/lib/avatar-storage';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Phone, Briefcase, Building, MessageSquarePlus, ChevronDown, ChevronUp, Bell, Mail, Eye, EyeOff } from 'lucide-react';
+import { Phone, Briefcase, Building, MessageSquarePlus, ChevronDown, ChevronUp, Bell, Mail } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import {
   Tooltip,
@@ -18,10 +18,11 @@ import {
 
 type TreeNodeProps = {
   node: OrgNode;
-  onMoveNode: (draggedNodeId: string, targetNodeId: string) => void;
+  isDraggable: boolean;
+  isDragOver: boolean;
+  onDragStart: (e: React.DragEvent) => void;
   onOpenTicketModal: (node: OrgNode) => void;
   privateTicketCount: number;
-  isRoot?: boolean;
 };
 
 const WhatsAppIcon = () => (
@@ -45,69 +46,24 @@ function NodeAvatar({ node }: { node: OrgNode }) {
     );
 }
 
-const validSupervisorRoles = ['Diretor', 'Gerente', 'Coordenador', 'Supervisor', 'Gerente de Contratos', 'Coordenador de Contratos', 'Supervisor de Qualidade', 'Administrador'];
-
-export function TreeNode({ node, onMoveNode, onOpenTicketModal, privateTicketCount, isRoot = false }: TreeNodeProps) {
+export function TreeNode({ node, isDraggable, isDragOver, onDragStart, onOpenTicketModal, privateTicketCount }: TreeNodeProps) {
   const [isExpanded, setIsExpanded] = useState(true);
-  const [isDragOver, setIsDragOver] = useState(false);
   
-  const isCompanyRoot = node.id === 'arpolar';
   const isContractNode = node.role === 'Contrato';
-  const isSupervisor = validSupervisorRoles.includes(node.role) || isCompanyRoot;
-  
   const formattedPhone = node.contact?.replace(/\D/g, '');
-
-  const handleDragStart = (e: React.DragEvent) => {
-    if (isCompanyRoot) {
-      e.preventDefault();
-      return;
-    }
-    e.dataTransfer.setData('application/reactflow', node.id);
-    e.dataTransfer.effectAllowed = 'move';
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    if (isSupervisor) {
-      setIsDragOver(true);
-      e.dataTransfer.dropEffect = 'move';
-    } else {
-      e.dataTransfer.dropEffect = 'none';
-    }
-  };
-
-  const handleDragLeave = () => {
-    setIsDragOver(false);
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    setIsDragOver(false);
-    if(!isSupervisor) return;
-
-    const draggedNodeId = e.dataTransfer.getData('application/reactflow');
-    if (draggedNodeId && draggedNodeId !== node.id) {
-        onMoveNode(draggedNodeId, node.id);
-    }
-  };
 
   return (
     <TooltipProvider>
-    <div 
-        className="flex flex-col items-center text-center relative px-4"
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-    >
-      <Card 
-        draggable={!isCompanyRoot}
-        onDragStart={handleDragStart}
+    <Card 
+        draggable={isDraggable}
+        onDragStart={onDragStart}
         className={cn(
-        "w-60 text-center shadow-md hover:shadow-lg transition-all duration-300 relative group min-h-[200px] flex flex-col",
-        "bg-card",
-        isCompanyRoot ? "cursor-default" : "cursor-grab",
-        isDragOver && isSupervisor && "ring-2 ring-accent ring-offset-2"
-        )}>
+            "w-60 text-center shadow-md hover:shadow-lg transition-all duration-300 relative group min-h-[200px] flex flex-col",
+            "bg-card",
+            !isDraggable ? "cursor-default" : "cursor-grab",
+            isDragOver && "ring-2 ring-accent ring-offset-2"
+        )}
+    >
         <CardContent className="p-4 flex flex-col items-center gap-2 relative h-full flex-1">
           <NodeAvatar node={node} />
           <div className="mt-2 flex-grow">
@@ -198,30 +154,7 @@ export function TreeNode({ node, onMoveNode, onOpenTicketModal, privateTicketCou
                 </Button>
             )}
         </CardContent>
-      </Card>
-      
-      {isExpanded && node.children && node.children.length > 0 && (
-        <>
-          <div className="absolute top-full h-8 w-px bg-slate-600 left-1/2 -translate-x-1/2"></div>
-          
-          <div className="flex pt-16 relative before:content-[''] before:absolute before:top-8 before:w-full before:h-px before:bg-slate-600">
-            {node.children.map((child, index) => (
-              <div key={child.id} className={cn(
-                "relative before:content-[''] before:absolute before:bottom-full before:left-1/2 before:-translate-x-1/2 before:w-px before:h-8 before:bg-slate-600",
-                index > 0 && "ml-4",
-              )}>
-                <TreeNode 
-                  node={child} 
-                  onMoveNode={onMoveNode}
-                  onOpenTicketModal={onOpenTicketModal}
-                  privateTicketCount={0} // Ticket counts are only relevant for the top-level user
-                />
-              </div>
-            ))}
-          </div>
-        </>
-      )}
-    </div>
+    </Card>
     </TooltipProvider>
   );
 }

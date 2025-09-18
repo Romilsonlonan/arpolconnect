@@ -106,7 +106,7 @@ const initialCovers: ReportCover[] = [
 ];
 
 const ArpolarIcon = () => (
-  <Image src="https://i.ibb.co/CBr2Y9n/logo-arpolar-icon.png" alt="Arpolar Icon" width={32} height={32} />
+  <Image src="https://i.ibb.co/ksM7sG9D/Logo.png" alt="Arpolar Icon" width={32} height={32} />
 );
 
 export default function ReportPage() {
@@ -399,5 +399,3 @@ export default function ReportPage() {
     </div>
   );
 }
-
-    

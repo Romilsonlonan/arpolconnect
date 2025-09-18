@@ -84,7 +84,7 @@ const StatusCard = ({ title, value, color }: PreventiveStatusCardData) => {
 };
 
 const ArpolarIcon = ({ className }: { className?: string }) => (
-    <Image src="https://i.ibb.co/CBr2Y9n/logo-arpolar-icon.png" alt="Arpolar Icon" width={32} height={32} className={className} />
+    <Image src="https://i.ibb.co/ksM7sG9D/Logo.png" alt="Arpolar Icon" width={32} height={32} className={className} />
 );
 
 // --- Main Dashboard Component ---
@@ -212,5 +212,3 @@ export function PreventiveDashboard() {
     </div>
   );
 }
-
-    

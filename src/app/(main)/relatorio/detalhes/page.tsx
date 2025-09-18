@@ -227,6 +227,12 @@ export default function ReportDetailsPage() {
                 </div>
                  <div className="p-3 bg-black/10 rounded" />
             </div>
+            
+            <div className="text-center mt-2">
+                <h2 className="text-lg font-bold text-blue-900">Gestão de Contratos</h2>
+                <p className="text-sm text-blue-800">Supervisora Danielle</p>
+            </div>
+
 
             <div className="flex flex-col gap-2 mt-4">
                     <Popover>
@@ -403,3 +409,4 @@ export default function ReportDetailsPage() {
     </div>
   );
 }
+

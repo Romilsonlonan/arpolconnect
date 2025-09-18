@@ -7,7 +7,7 @@ import { TreeNode } from '@/components/organization/tree-node';
 import { Button } from '@/components/ui/button';
 import { Slider } from '@/components/ui/slider';
 import { ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
-import { buildTreeFromUsersAndContracts, updateTree } from '@/lib/tree-utils';
+import { buildTreeFromUsersAndContracts, updateTree, findNode } from '@/lib/tree-utils';
 import { TicketModal } from '@/components/organization/ticket-modal';
 import { useToast } from '@/hooks/use-toast';
 
@@ -94,6 +94,46 @@ export default function OrganogramaPage() {
     setIsTicketModalOpen(false);
     setTicketNode(null);
   };
+  
+  const handleMoveNode = (draggedNodeId: string, targetNodeId: string) => {
+    if (draggedNodeId === targetNodeId) return;
+    
+    const users: AppUser[] = JSON.parse(localStorage.getItem(USERS_STORAGE_KEY) || '[]');
+    const targetNodeInTree = findNode(tree!, targetNodeId);
+
+    const targetUser = users.find(u => u.id === targetNodeId);
+
+    // Define roles that can be supervisors
+    const validSupervisorRoles = ['Diretor', 'Gerente', 'Coordenador', 'Supervisor', 'Gerente de Contratos', 'Coordenador de Contratos', 'Supervisor de Qualidade', 'Administrador'];
+    
+    const isTargetValidSupervisor = targetUser && validSupervisorRoles.includes(targetUser.role);
+    const isTargetCompanyRoot = targetNodeId === 'arpolar';
+
+    if (!isTargetValidSupervisor && !isTargetCompanyRoot) {
+      toast({
+        title: "Movimento Inválido",
+        description: `"${targetNodeInTree?.name}" não pode ser um supervisor.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const updatedUsers = users.map(user => {
+      if (user.id === draggedNodeId) {
+        return { ...user, supervisorId: targetNodeId };
+      }
+      return user;
+    });
+
+    localStorage.setItem(USERS_STORAGE_KEY, JSON.stringify(updatedUsers));
+    window.dispatchEvent(new StorageEvent('storage', { key: USERS_STORAGE_KEY })); // Triggers loadData via listener
+
+    const draggedNode = findNode(tree!, draggedNodeId);
+    toast({
+        title: "Organograma Atualizado",
+        description: `"${draggedNode?.name}" agora é subordinado a "${targetNodeInTree?.name}".`,
+    });
+  };
 
   const privateTicketCounts = useMemo(() => {
     const counts = new Map<string, number>();
@@ -117,7 +157,7 @@ export default function OrganogramaPage() {
             <h1 className="text-lg font-semibold md:text-2xl font-headline">Organograma</h1>
         </div>
         <div className="ml-0 sm:ml-auto flex items-center gap-2 sm:gap-4">
-          <p className="text-sm text-muted-foreground">O organograma é montado dinamicamente. Para editar, vá ao painel de Admin.</p>
+          <p className="text-sm text-muted-foreground">Arraste um funcionário para reatribuí-lo a um novo gestor.</p>
           <div className="flex items-center gap-2 w-36 sm:w-48">
             <Button variant="outline" size="icon" onClick={() => setZoom(z => Math.max(0.2, z - 0.1))}><ZoomOut className="h-4 w-4" /></Button>
             <Slider
@@ -142,12 +182,8 @@ export default function OrganogramaPage() {
         >
           <TreeNode
             node={tree}
-            onUpdate={handlePlaceholder}
-            onAddChild={handlePlaceholder}
-            onRemove={handlePlaceholder}
-            onMoveNode={handlePlaceholder}
+            onMoveNode={handleMoveNode}
             onOpenTicketModal={handleOpenTicketModal}
-            onToggleVisibility={handlePlaceholder} // Visibility is now handled in Admin
             privateTicketCount={privateTicketCounts.get(tree.id) || 0}
             isRoot={true}
           />
@@ -163,3 +199,5 @@ export default function OrganogramaPage() {
     </div>
   );
 }
+
+    

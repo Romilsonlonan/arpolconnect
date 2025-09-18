@@ -18,12 +18,8 @@ import {
 
 type TreeNodeProps = {
   node: OrgNode;
-  onUpdate: (nodeId: string, values: Partial<OrgNode>) => void;
-  onAddChild: (parentId: string, child: Omit<OrgNode, 'children' | 'id'>) => void;
-  onRemove: (nodeId: string) => void;
   onMoveNode: (draggedNodeId: string, targetNodeId: string) => void;
   onOpenTicketModal: (node: OrgNode) => void;
-  onToggleVisibility: (nodeId: string) => void;
   privateTicketCount: number;
   isRoot?: boolean;
 };
@@ -49,20 +45,64 @@ function NodeAvatar({ node }: { node: OrgNode }) {
     );
 }
 
-export function TreeNode({ node, onUpdate, onAddChild, onRemove, onMoveNode, onOpenTicketModal, onToggleVisibility, privateTicketCount, isRoot = false }: TreeNodeProps) {
+export function TreeNode({ node, onMoveNode, onOpenTicketModal, privateTicketCount, isRoot = false }: TreeNodeProps) {
   const [isExpanded, setIsExpanded] = useState(true);
+  const [isDragOver, setIsDragOver] = useState(false);
   const isContractNode = node.role === 'Contrato';
-  const isSupervisorNode = node.role === 'Supervisor' || node.role === 'Supervisor de Qualidade' || node.role === 'Administrador';
+  const isCompanyRoot = node.id === 'arpolar';
+
   const formattedPhone = node.contact?.replace(/\D/g, '');
-  const isVisibleInNeuralNet = node.showInNeuralNet !== false; // Default to true if undefined
+
+  const handleDragStart = (e: React.DragEvent) => {
+    if (isCompanyRoot) {
+      e.preventDefault();
+      return;
+    }
+    e.dataTransfer.setData('application/reactflow', node.id);
+    e.dataTransfer.effectAllowed = 'move';
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    if (!isContractNode) {
+      setIsDragOver(true);
+      e.dataTransfer.dropEffect = 'move';
+    } else {
+      e.dataTransfer.dropEffect = 'none';
+    }
+  };
+
+  const handleDragLeave = () => {
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragOver(false);
+    if(isContractNode) return;
+
+    const draggedNodeId = e.dataTransfer.getData('application/reactflow');
+    if (draggedNodeId && draggedNodeId !== node.id) {
+        onMoveNode(draggedNodeId, node.id);
+    }
+  };
 
   return (
     <TooltipProvider>
-    <div className="flex flex-col items-center text-center relative px-4">
+    <div 
+        className="flex flex-col items-center text-center relative px-4"
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+    >
       <Card 
+        draggable={!isCompanyRoot}
+        onDragStart={handleDragStart}
         className={cn(
         "w-60 text-center shadow-md hover:shadow-lg transition-all duration-300 relative group min-h-[200px] flex flex-col",
-        "bg-card"
+        "bg-card",
+        isCompanyRoot ? "cursor-default" : "cursor-grab",
+        isDragOver && "ring-2 ring-accent ring-offset-2"
         )}>
         <CardContent className="p-4 flex flex-col items-center gap-2 relative h-full flex-1">
           <NodeAvatar node={node} />
@@ -168,13 +208,9 @@ export function TreeNode({ node, onUpdate, onAddChild, onRemove, onMoveNode, onO
               )}>
                 <TreeNode 
                   node={child} 
-                  onUpdate={onUpdate} 
-                  onAddChild={onAddChild} 
-                  onRemove={onRemove}
                   onMoveNode={onMoveNode}
                   onOpenTicketModal={onOpenTicketModal}
-                  onToggleVisibility={onToggleVisibility}
-                  privateTicketCount={privateTicketCount}
+                  privateTicketCount={0} // Ticket counts are only relevant for the top-level user
                 />
               </div>
             ))}
@@ -185,3 +221,5 @@ export function TreeNode({ node, onUpdate, onAddChild, onRemove, onMoveNode, onO
     </TooltipProvider>
   );
 }
+
+    

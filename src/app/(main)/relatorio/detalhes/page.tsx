@@ -221,14 +221,11 @@ export default function ReportDetailsPage() {
             className="col-span-2 p-6 flex flex-col gap-4"
             style={{background: 'linear-gradient(180deg, #FDE047 0%, #EAB308 100%)'}}
         >
-            <div className="flex items-center gap-2">
-                <div className="p-2 bg-black/10 rounded">
-                    <ArpolarIcon />
-                </div>
-                 <div className="p-3 bg-black/10 rounded" />
+            <div className="flex justify-center mb-2">
+                <Image src="https://i.ibb.co/ksM7sG9D/Logo.png" alt="Arpolar Icon" width={64} height={64} unoptimized />
             </div>
             
-            <div className="text-center mt-2">
+            <div className="text-center">
                 <h2 className="text-lg font-bold text-blue-900">Gestão de Contratos</h2>
                 <p className="text-sm text-blue-800">Supervisora Danielle</p>
             </div>
@@ -409,4 +406,3 @@ export default function ReportDetailsPage() {
     </div>
   );
 }
-

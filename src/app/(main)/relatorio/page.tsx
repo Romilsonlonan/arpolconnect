@@ -1,136 +1,99 @@
 
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ArrowRight, Upload, Maximize, Minimize } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import type { User } from '@/lib/data';
+import { getAvatar } from '@/lib/avatar-storage';
 
-const BANNER_STORAGE_KEY = 'reportBannerImage';
+const USERS_STORAGE_KEY = 'arpolarUsers';
 
-export default function ReportBannerPage() {
-  const [bannerImage, setBannerImage] = useState('https://picsum.photos/seed/report-banner/1200/600');
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const { toast } = useToast();
-  const [isClient, setIsClient] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(false);
+const SupervisorCard = ({ supervisor }: { supervisor: User }) => {
+    const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
 
+    useEffect(() => {
+        const url = getAvatar(supervisor.id);
+        setAvatarUrl(url);
+        
+        const handleStorageChange = (e: StorageEvent) => {
+            if (e.key === `avatar_${supervisor.id}`) {
+                setAvatarUrl(e.newValue);
+            }
+        };
 
-  useEffect(() => {
-    setIsClient(true);
-    const savedBanner = localStorage.getItem(BANNER_STORAGE_KEY);
-    if (savedBanner) {
-      setBannerImage(savedBanner);
-    }
-  }, []);
+        window.addEventListener('storage', handleStorageChange);
+        return () => window.removeEventListener('storage', handleStorageChange);
 
-  const handleBannerChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const result = e.target?.result as string;
-        try {
-            localStorage.setItem(BANNER_STORAGE_KEY, result);
-            setBannerImage(result);
-            toast({
-              title: 'Banner Alterado',
-              description: 'A nova imagem de banner foi salva no armazenamento local.',
-            });
-        } catch(err) {
-             toast({
-              title: 'Aviso: Imagem muito grande',
-              description: 'A imagem pode ser grande demais para ser salva permanentemente no navegador.',
-              variant: 'destructive',
-            });
-            // Show the image visually even if not saved permanently
-            setBannerImage(result);
-        }
-      };
-      reader.readAsDataURL(file);
-    }
-  };
+    }, [supervisor.id]);
 
-  const triggerFileInput = () => {
-    fileInputRef.current?.click();
-  };
+    const supervisorSlug = supervisor.name.toLowerCase().replace(/\s+/g, '-');
 
-  if (!isClient) {
-    return null; // or a loading skeleton
-  }
-
-  return (
-    <div className="flex flex-col h-full">
-      <div className={cn("flex items-center gap-4 mb-6", isFullscreen && "hidden")}>
-        <Link href="/dashboard">
-          <Button variant="outline" size="icon">
-            <ArrowLeft />
-          </Button>
-        </Link>
-        <div>
-          <h1 className="text-2xl font-bold font-headline">Relatório de Atividades</h1>
-          <p className="text-muted-foreground">Supervisores 2025</p>
-        </div>
-      </div>
-
-      <Card className="flex-1 flex flex-col">
-        {!isFullscreen && (
-            <CardHeader className="flex flex-row items-center justify-between">
-            <div>
-                <CardTitle>Banner do Relatório</CardTitle>
-                <CardDescription>Clique na imagem para navegar ou altere o banner.</CardDescription>
+    return (
+        <Link href={`/relatorio/${supervisorSlug}`}>
+            <div className="bg-blue-800 rounded-lg shadow-lg text-white hover:scale-105 transition-transform duration-300">
+                <div className="p-3 text-center">
+                    <p className="text-sm">{supervisor.role}</p>
+                    <p className="font-bold text-lg">{supervisor.name}</p>
+                </div>
+                <div className="bg-white p-2 rounded-b-lg">
+                    <div className="relative w-full h-32">
+                        <Image 
+                            src={avatarUrl || 'https://picsum.photos/seed/avatar/200'} 
+                            alt={`Foto de ${supervisor.name}`} 
+                            fill
+                            className="object-cover rounded-full border-4 border-white"
+                        />
+                    </div>
+                </div>
             </div>
-            <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleBannerChange}
-                className="hidden"
-                accept="image/png, image/jpeg, image/webp"
-            />
-            <Button variant="outline" onClick={triggerFileInput}>
-                <Upload className="mr-2"/>
-                Alterar Banner
-            </Button>
-            </CardHeader>
-        )}
-        <CardContent className="flex-1 flex items-center justify-center p-0 relative">
-            <Button 
-                variant="ghost" 
-                size="icon" 
-                className="absolute top-2 right-2 z-10 bg-black/30 hover:bg-black/50 text-white hover:text-white"
-                onClick={() => setIsFullscreen(!isFullscreen)}
-            >
-                {isFullscreen ? <Minimize /> : <Maximize />}
-            </Button>
-           <Link href="/relatorio/detalhes" className="w-full h-full block">
-             <div className="relative w-full h-full">
-                <Image
-                    src={bannerImage}
-                    alt="Banner do Relatório"
-                    fill
-                    className="object-cover"
-                    data-ai-hint="presentation business"
-                    unoptimized
-                />
-             </div>
-           </Link>
-        </CardContent>
-      </Card>
-      
-      {!isFullscreen && (
-        <div className="flex justify-end mt-4">
-            <Link href="/relatorio/detalhes">
-                <Button>
-                    Visualizar Relatório
-                    <ArrowRight className="ml-2"/>
-                </Button>
-            </Link>
+        </Link>
+    )
+}
+
+export default function ReportSupervisorSelectionPage() {
+    const [supervisors, setSupervisors] = useState<User[]>([]);
+    
+    useEffect(() => {
+        const savedUsers = localStorage.getItem(USERS_STORAGE_KEY);
+        if (savedUsers) {
+            const allUsers: User[] = JSON.parse(savedUsers);
+            const supervisorRoles = ['Supervisor', 'Coordenador', 'Administrador', 'Diretor', 'Gerente', 'Supervisor de Qualidade'];
+            const filtered = allUsers.filter(user => supervisorRoles.includes(user.role) && user.status === 'Ativo');
+            setSupervisors(filtered);
+        }
+    }, []);
+
+    return (
+        <div 
+            className="flex flex-col gap-6 p-6 rounded-lg min-h-full"
+            style={{background: 'linear-gradient(to bottom, #fde047, #facc15)'}}
+        >
+            {/* Header */}
+            <header className="flex items-center justify-between text-blue-900">
+                <div className="flex items-center gap-4">
+                    <Link href="/dashboard">
+                        <Button variant="outline" size="icon" className="bg-white/50 border-blue-900/20 hover:bg-white/80 text-blue-900">
+                            <ArrowLeft />
+                        </Button>
+                    </Link>
+                </div>
+                <h1 className="text-xl md:text-2xl font-bold">Relatório de Atividades - Supervisores 2025</h1>
+                <div className="w-10"> {/* Placeholder for spacing */} </div>
+            </header>
+
+            {/* Main Content */}
+            <div className="flex-1 p-4 md:p-6 bg-yellow-300/50 rounded-lg">
+                 <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-4 md:gap-6">
+                    {supervisors.map(supervisor => (
+                        <SupervisorCard key={supervisor.id} supervisor={supervisor} />
+                    ))}
+                </div>
+            </div>
         </div>
-      )}
-    </div>
-  );
+    );
 }

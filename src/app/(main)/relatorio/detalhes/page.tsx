@@ -250,7 +250,7 @@ export default function ReportDetailsPage() {
              </div>
             
             <div className="relative mt-8">
-                 <Image src="https://i.ibb.co/YyY2S54/tecnico-grafico.png" alt="Técnico com gráficos" width={200} height={300} className="object-contain mx-auto" unoptimized/>
+                 <Image src="https://i.ibb.co/3yHnLPbz/anota-es.png" alt="Técnico com gráficos" width={200} height={300} className="object-contain mx-auto" unoptimized/>
             </div>
         </aside>
 

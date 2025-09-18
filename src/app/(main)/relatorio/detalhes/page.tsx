@@ -222,12 +222,12 @@ export default function ReportDetailsPage() {
             style={{background: 'linear-gradient(180deg, #FDE047 0%, #EAB308 100%)'}}
         >
             <div className="flex justify-center mb-2">
-                <Image src="https://i.ibb.co/ksM7sG9D/Logo.png" alt="Arpolar Icon" width={64} height={64} unoptimized />
+                <Image src="https://i.ibb.co/ksM7sG9D/Logo.png" alt="Arpolar Icon" width={80} height={80} unoptimized />
             </div>
             
             <div className="text-center">
-                <h2 className="text-lg font-bold text-blue-900">Gestão de Contratos</h2>
-                <p className="text-sm text-blue-800">Supervisora Danielle</p>
+                <h2 className="text-xl font-bold text-blue-900">Gestão de Contratos</h2>
+                <p className="text-base text-blue-800">Supervisora Danielle</p>
             </div>
 
 

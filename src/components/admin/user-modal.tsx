@@ -1,7 +1,8 @@
 
+
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import {
   Dialog,
   DialogContent,
@@ -36,6 +37,7 @@ type UserModalProps = {
   onClose: () => void;
   onSave: (data: Omit<User, 'id'>, id?: string, avatarDataUrl?: string) => void;
   editingUser: User | null;
+  users: User[];
   contracts: Contract[];
 };
 
@@ -63,12 +65,13 @@ const userRoles: string[] = [
 ];
 const PLACEHOLDER_AVATAR = 'https://placehold.co/100x100';
 
-export function UserModal({ isOpen, onClose, onSave, editingUser, contracts }: UserModalProps) {
+export function UserModal({ isOpen, onClose, onSave, editingUser, users, contracts }: UserModalProps) {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<User['role']>('Visualizador');
   const [status, setStatus] = useState<User['status']>('Ativo');
   const [avatar, setAvatar] = useState(PLACEHOLDER_AVATAR);
+  const [supervisorId, setSupervisorId] = useState<string | undefined>('');
   
   // Permissions state
   const [canViewAllContracts, setCanViewAllContracts] = useState(false);
@@ -76,6 +79,11 @@ export function UserModal({ isOpen, onClose, onSave, editingUser, contracts }: U
   
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  
+  const possibleSupervisors = useMemo(() => {
+    const supervisorRoles = ['Administrador', 'Diretor', 'Gerente', 'Coordenador', 'Supervisor'];
+    return users.filter(u => supervisorRoles.includes(u.role) && u.status === 'Ativo');
+  }, [users]);
 
   useEffect(() => {
     if (isOpen) {
@@ -84,6 +92,7 @@ export function UserModal({ isOpen, onClose, onSave, editingUser, contracts }: U
         setEmail(editingUser.email);
         setRole(editingUser.role);
         setStatus(editingUser.status);
+        setSupervisorId(editingUser.supervisorId);
         
         const storedAvatar = getAvatar(editingUser.id);
         setAvatar(storedAvatar || PLACEHOLDER_AVATAR);
@@ -96,6 +105,7 @@ export function UserModal({ isOpen, onClose, onSave, editingUser, contracts }: U
         setEmail('');
         setRole('Visualizador');
         setStatus('Ativo');
+        setSupervisorId('');
         setAvatar(PLACEHOLDER_AVATAR);
         setCanViewAllContracts(false);
         setAllowedContractIds([]);
@@ -164,6 +174,15 @@ export function UserModal({ isOpen, onClose, onSave, editingUser, contracts }: U
       });
       return;
     }
+    
+     if (!supervisorId) {
+        toast({
+            title: "Campo Obrigatório",
+            description: "Por favor, selecione a dependência (superior direto).",
+            variant: "destructive"
+        });
+        return;
+    }
 
     const permissions = {
         canViewAllContracts,
@@ -176,6 +195,7 @@ export function UserModal({ isOpen, onClose, onSave, editingUser, contracts }: U
         role,
         status,
         permissions,
+        supervisorId,
     }, editingUser?.id, avatar);
   };
 
@@ -242,6 +262,17 @@ export function UserModal({ isOpen, onClose, onSave, editingUser, contracts }: U
                             <SelectContent>
                                 <SelectItem value="Ativo">Ativo</SelectItem>
                                 <SelectItem value="Inativo">Inativo</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                     <div className="grid gap-2 md:col-span-2">
+                        <Label htmlFor="supervisor">Dependência (Superior Direto)</Label>
+                        <Select onValueChange={setSupervisorId} value={supervisorId}>
+                            <SelectTrigger><SelectValue placeholder="Selecione a dependência" /></SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="arpolar">Arpolar (Empresa)</SelectItem>
+                                <Separator />
+                                {possibleSupervisors.map(s => <SelectItem key={s.id} value={s.id}>{s.name} ({s.role})</SelectItem>)}
                             </SelectContent>
                         </Select>
                     </div>

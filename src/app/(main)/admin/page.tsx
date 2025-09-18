@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
@@ -735,6 +736,7 @@ export default function AdminPage() {
         onClose={() => setIsUserModalOpen(false)}
         onSave={handleSaveUser}
         editingUser={editingUser}
+        users={users}
         contracts={contracts}
       />
 

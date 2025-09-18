@@ -1,4 +1,5 @@
 
+
 import type { OrgNode, Employee, User, Contract } from './data';
 
 export function findNode(tree: OrgNode, nodeId: string): OrgNode | null {
@@ -99,6 +100,7 @@ export function buildTreeFromUsersAndContracts(users: User[], contracts: Contrac
   const childrenMap: Map<string, (OrgNode | Contract)[]> = new Map();
 
   // Initialize maps
+  nodeMap.set(root.id, root);
   childrenMap.set(root.id, []);
 
   // Process users
@@ -114,13 +116,12 @@ export function buildTreeFromUsersAndContracts(users: User[], contracts: Contrac
       children: []
     };
     nodeMap.set(user.id, userNode);
-    // This logic is simplified; real app would need a supervisor field in User model
-    // For now, let's assume all non-admins report to the root admin
-    const supervisorId = user.role !== 'Administrador' ? activeUsers.find(u=>u.role === 'Administrador')?.id || root.id : root.id;
-    if (!childrenMap.has(supervisorId)) {
-        childrenMap.set(supervisorId, []);
+
+    const parentId = user.supervisorId || root.id;
+    if (!childrenMap.has(parentId)) {
+        childrenMap.set(parentId, []);
     }
-    childrenMap.get(supervisorId)!.push(userNode);
+    childrenMap.get(parentId)!.push(userNode);
   });
 
   // Process contracts
@@ -134,15 +135,13 @@ export function buildTreeFromUsersAndContracts(users: User[], contracts: Contrac
         showInNeuralNet: false,
         children: [],
     };
-    if (childrenMap.has(contract.supervisorId)) {
-      childrenMap.get(contract.supervisorId)!.push(contractNode);
+    const parentId = contract.supervisorId;
+    if (childrenMap.has(parentId)) {
+      childrenMap.get(parentId)!.push(contractNode);
     } else {
-      // If supervisor is inactive, maybe attach to admin?
-      const admin = activeUsers.find(u => u.role === 'Administrador');
-      if (admin) {
-        if (!childrenMap.has(admin.id)) childrenMap.set(admin.id, []);
-        childrenMap.get(admin.id)!.push(contractNode);
-      }
+      // If supervisor is inactive or doesn't exist, attach to root
+       if (!childrenMap.has(root.id)) childrenMap.set(root.id, []);
+       childrenMap.get(root.id)!.push(contractNode);
     }
   });
   
@@ -151,14 +150,19 @@ export function buildTreeFromUsersAndContracts(users: User[], contracts: Contrac
   while(queue.length > 0) {
       const currentNode = queue.shift();
       if (currentNode) {
-          const children = childrenMap.get(currentNode.id);
-          if (children) {
+          const childrenData = childrenMap.get(currentNode.id);
+          if (childrenData) {
             // @ts-ignore
-            currentNode.children = children.map(child => {
-                const childNode = nodeMap.get(child.id) || child;
-                queue.push(childNode as OrgNode);
-                return childNode;
+            const childNodes = childrenData.map(childData => {
+              if (nodeMap.has(childData.id)) {
+                return nodeMap.get(childData.id)!;
+              }
+              // This handles contract nodes which aren't in the user-based nodeMap
+              return childData as OrgNode;
             });
+            
+            currentNode.children = childNodes;
+            queue.push(...childNodes.filter(n => n.role !== 'Contrato')); // Don't traverse into contract children
           }
       }
   }

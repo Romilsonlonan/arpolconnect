@@ -93,6 +93,7 @@ export type User = {
   role: 'Administrador' | 'Supervisor' | 'Mecânico' | 'Visualizador' | 'Supervisor de Qualidade' | string;
   status: 'Ativo' | 'Inativo';
   showInReports?: boolean;
+  supervisorId?: string;
   permissions: {
     canViewAllContracts: boolean;
     allowedContractIds: string[];
@@ -166,6 +167,7 @@ export const initialUsers: User[] = [
         role: 'Administrador',
         status: 'Ativo',
         showInReports: true,
+        supervisorId: 'arpolar',
         permissions: {
             canViewAllContracts: true,
             allowedContractIds: [],

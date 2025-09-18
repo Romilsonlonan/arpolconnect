@@ -95,7 +95,7 @@ export default function ReportSupervisorSelectionPage() {
                         </Button>
                     </Link>
                 </div>
-                <h1 className="text-xl md:text-2xl font-bold">Relatório de Atividades - Supervisores 2025</h1>
+                <h1 className="text-xl md:text-2xl font-bold text-black">Relatório de Atividades - Supervisores 2025</h1>
                 <div className="w-10"> {/* Placeholder for spacing */} </div>
             </header>
 

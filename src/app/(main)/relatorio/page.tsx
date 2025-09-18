@@ -218,7 +218,7 @@ export default function ReportPage() {
                                             fill
                                             className={cn(
                                                 "object-cover",
-                                                cover.type !== 'supervisors' && cover.type !== 'supervisor-report' && 'opacity-30'
+                                                cover.type === 'cover' && 'opacity-30'
                                             )}
                                             priority
                                         />
@@ -363,6 +363,8 @@ export default function ReportPage() {
         </div>
     );
 }
+
+    
 
     
 

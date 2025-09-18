@@ -357,9 +357,11 @@ export default function ReportPage() {
                                 <ChartLegend wrapperStyle={{ paddingTop: '30px' }} />
                                 
                                 <Bar dataKey="Realizadas" fill="var(--color-Realizadas)" barSize={20} radius={[4,4,0,0]}/>
-                                <Bar dataKey="Atrasadas" fill="var(--color-Atrasadas)" barSize={20} />
-                                <Bar dataKey="Não Realizadas" fill="var(--color-Não Realizadas)" barSize={20} />
-                                <Bar dataKey="Pendentes" fill="var(--color-Pendentes)" barSize={20} />
+                                <Bar dataKey="Atrasadas" fill="var(--color-Atrasadas)" barSize={20} radius={[4,4,0,0]}/>
+                                <Bar dataKey="Não Realizadas" fill="var(--color-Não Realizadas)" barSize={20} radius={[4,4,0,0]}/>
+                                <Bar dataKey="Pendentes" fill="var(--color-Pendentes)" barSize={20} radius={[4,4,0,0]}/>
+                                <Line type="monotone" dataKey="Realizadas" stroke="var(--color-Realizadas)" strokeWidth={2} dot={false} />
+                                <Line type="monotone" dataKey="Atrasadas" stroke="var(--color-Atrasadas)" strokeWidth={2} dot={false} />
                             </ComposedChart>
                         </ChartContainer>
                     </div>
@@ -369,3 +371,4 @@ export default function ReportPage() {
     </div>
   );
 }
+

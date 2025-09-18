@@ -26,6 +26,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { ReportCoverModal } from '@/components/report/report-cover-modal';
 import type { User, ReportCover, SupervisorCardData } from '@/lib/data';
+import { PreventiveDashboard } from '@/components/report/preventive-dashboard';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -93,6 +94,14 @@ const initialCovers: ReportCover[] = [
       imageUrl: 'https://i.ibb.co/zsgJpY0/fundo-dani.png',
       supervisorName: 'Danielle',
       supervisorImageUrl: 'https://i.ibb.co/b3FhL7d/dani-bg.png'
+  },
+  {
+    id: 'cover-d1',
+    type: 'preventive-dashboard',
+    title: 'Supervisora Danielle - Gestão de Contratos',
+    subtitle: '',
+    imageUrl: 'https://i.ibb.co/mS6DBpD/fundo-gestao.png',
+    supervisorName: 'Danielle',
   }
 ];
 
@@ -241,7 +250,7 @@ export default function ReportPage() {
                       src={cover.imageUrl}
                       alt={cover.title}
                       fill
-                      className={cn('object-cover', cover.type === 'cover' && 'opacity-30')}
+                      className={cn('object-cover', cover.type === 'cover' && 'opacity-30', cover.type === 'preventive-dashboard' && 'object-center')}
                       priority
                       unoptimized
                     />
@@ -335,6 +344,8 @@ export default function ReportPage() {
                                 <Button variant="outline" size="icon"><ChevronsRight /></Button>
                            </div>
                         </div>
+                      ) : cover.type === 'preventive-dashboard' ? (
+                        <PreventiveDashboard />
                       ) : null}
 
                       {isAdmin && (
@@ -388,3 +399,5 @@ export default function ReportPage() {
     </div>
   );
 }
+
+    

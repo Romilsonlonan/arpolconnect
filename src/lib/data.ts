@@ -106,7 +106,7 @@ export type SupervisorCardData = {
 
 export type ReportCover = {
     id: string;
-    type: 'cover' | 'motivational' | 'supervisors' | 'supervisor-report';
+    type: 'cover' | 'motivational' | 'supervisors' | 'supervisor-report' | 'preventive-dashboard';
     title: string;
     subtitle: string;
     imageUrl: string;
@@ -119,6 +119,31 @@ export type ReportCover = {
     // Supervisor-report fields
     supervisorName?: string;
     supervisorImageUrl?: string;
+};
+
+// --- Preventive Dashboard Data Types ---
+export type PreventiveStatusCardData = {
+  title: string;
+  value: string;
+  color: 'red' | 'orange' | 'blue' | 'green';
+};
+
+export type PreventiveConsultation = {
+  contract: string;
+  monthYear: string;
+  status: string;
+  overdue: number;
+  notDone: number;
+  pending: number;
+  done: number;
+};
+
+export type PreventiveChartData = {
+  name: string;
+  overdue: number;
+  notDone: number;
+  pending: number;
+  done: number;
 };
 
 export const initialUsers: User[] = [
@@ -172,6 +197,8 @@ export const refrigerationQuestions: RefrigerationQuestion[] = [
 ];
 
 
+
+    
 
     
 

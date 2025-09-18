@@ -134,6 +134,7 @@ export function ReportCoverModal({ isOpen, onClose, onSave, editingCover }: Repo
                       <SelectItem value="motivational">Página Motivacional</SelectItem>
                       <SelectItem value="supervisors">Página de Supervisores</SelectItem>
                       <SelectItem value="supervisor-report">Página de Relatório Individual</SelectItem>
+                      <SelectItem value="preventive-dashboard">Dashboard de Preventivas</SelectItem>
                   </SelectContent>
               </Select>
           </div>
@@ -142,7 +143,7 @@ export function ReportCoverModal({ isOpen, onClose, onSave, editingCover }: Repo
             <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} />
           </div>
 
-          {type === 'cover' && (
+          {(type === 'cover' || type === 'preventive-dashboard') && (
             <div className="grid gap-2">
               <Label htmlFor="subtitle">Subtítulo (Ex: Mês)</Label>
               <Input id="subtitle" value={subtitle} onChange={(e) => setSubtitle(e.target.value)} />
@@ -178,13 +179,17 @@ export function ReportCoverModal({ isOpen, onClose, onSave, editingCover }: Repo
             </>
           )}
 
-          {type === 'supervisor-report' && (
+          {(type === 'supervisor-report' || type === 'preventive-dashboard') && (
             <>
               <div className="grid gap-2">
                 <Label htmlFor="supervisorName">Nome do Supervisor</Label>
                 <Input id="supervisorName" value={supervisorName} onChange={(e) => setSupervisorName(e.target.value)} />
               </div>
-              <div className="grid gap-2">
+             </>
+          )}
+
+           {type === 'supervisor-report' && (
+             <div className="grid gap-2">
                 <Label>Imagem do Supervisor</Label>
                 {supervisorImageUrl && (
                   <div className="relative w-24 h-24 rounded-md overflow-hidden border">
@@ -200,8 +205,7 @@ export function ReportCoverModal({ isOpen, onClose, onSave, editingCover }: Repo
                   {supervisorImageUrl ? 'Alterar Imagem' : 'Carregar Imagem'}
                 </Button>
               </div>
-            </>
-          )}
+           )}
 
           <div className="grid gap-2">
             <Label>Imagem de Fundo</Label>
@@ -229,5 +233,7 @@ export function ReportCoverModal({ isOpen, onClose, onSave, editingCover }: Repo
     </Dialog>
   );
 }
+
+    
 
     

@@ -51,10 +51,10 @@ const consultationTotals = {
 }
 
 const chartData: PreventiveChartData[] = [
-  { name: 'RIVER ONE', overdue: 10483, notDone: 0, pending: 0, done: 71932 },
+  { name: 'RIVER ONE', overdue: 10483, notDone: 3258, pending: 0, done: 71932 },
   { name: 'RIVERSIDE', overdue: 3366, notDone: 67, pending: 0, done: 33256 },
   { name: 'JATOBA', overdue: 1570, notDone: 1828, pending: 0, done: 16274 },
-  { name: 'ICON ALPHAVILLE', overdue: 1318, notDone: 14, pending: 0, done: 14373 },
+  { name: 'ICON ALPHAVILLE', overdue: 1318, notDone: 12037, pending: 0, done: 14373 },
 ];
 
 const chartConfig: ChartConfig = {
@@ -210,7 +210,10 @@ export default function ReportPage() {
                             <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={8} angle={-15} textAnchor="end" height={50} />
                             <YAxis tickFormatter={(value) => `${value / 1000}k`} />
                             <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
+                            <ChartLegend content={<ChartLegendContent />} />
                             <Bar dataKey="done" stackId="a" fill="var(--color-done)" radius={[4, 4, 0, 0]} />
+                            <Bar dataKey="overdue" stackId="a" fill="var(--color-overdue)" />
+                            <Bar dataKey="notDone" stackId="a" fill="var(--color-notDone)" />
                         </BarChart>
                     </ChartContainer>
                 </div>

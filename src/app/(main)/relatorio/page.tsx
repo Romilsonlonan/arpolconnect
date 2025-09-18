@@ -21,7 +21,7 @@ import {
 } from '@/components/ui/chart';
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, ComposedChart, Line, PieChart, Pie, Cell } from 'recharts';
 import { format } from 'date-fns';
-import { ArrowRight, AlertTriangle, XCircle, Clock, CheckCircle, CalendarIcon, Settings, ArrowLeft, FilterX } from 'lucide-react';
+import { AlertTriangle, XCircle, Clock, CheckCircle, CalendarIcon, Settings, ArrowLeft, ArrowRight, FilterX } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import type { PreventiveStatusCardData, PreventiveConsultation, PreventiveChartData, MonthlyChartData } from '@/lib/data';
 import { Calendar } from '@/components/ui/calendar';
@@ -356,10 +356,10 @@ export default function ReportPage() {
                                 <ChartTooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(0,0,0,0.1)' }} />
                                 <ChartLegend wrapperStyle={{ paddingTop: '30px' }} />
                                 
-                                <Bar dataKey="Realizadas" stackId="a" fill="var(--color-Realizadas)" barSize={20} radius={[4,4,0,0]}/>
-                                <Bar dataKey="Atrasadas" stackId="a" fill="var(--color-Atrasadas)" barSize={20} />
-                                <Bar dataKey="Não Realizadas" stackId="a" fill="var(--color-Não Realizadas)" barSize={20} />
-                                <Bar dataKey="Pendentes" stackId="a" fill="var(--color-Pendentes)" barSize={20} />
+                                <Bar dataKey="Realizadas" fill="var(--color-Realizadas)" barSize={20} radius={[4,4,0,0]}/>
+                                <Bar dataKey="Atrasadas" fill="var(--color-Atrasadas)" barSize={20} />
+                                <Bar dataKey="Não Realizadas" fill="var(--color-Não Realizadas)" barSize={20} />
+                                <Bar dataKey="Pendentes" fill="var(--color-Pendentes)" barSize={20} />
                             </ComposedChart>
                         </ChartContainer>
                     </div>
@@ -369,6 +369,3 @@ export default function ReportPage() {
     </div>
   );
 }
-
-
-    

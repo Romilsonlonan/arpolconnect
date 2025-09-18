@@ -30,7 +30,7 @@ const REPORTS_STORAGE_KEY = 'arpolarReports';
 
 const supervisorData: SupervisorCardData[] = [
     { id: 's0', name: 'Anthony', role: 'Coordenador', avatarUrl: 'https://i.ibb.co/yYvyfB9/steve-jobs.png' },
-    { id: 's1', name: 'Danielle', role: 'Supervisora', avatarUrl: 'https://i.ibb.co/yYvyfB9/steve-jobs.png' },
+    { id: 's1', name: 'Danielle', role: 'Supervisora', avatarUrl: 'https://i.ibb.co/b3FhL7d/dani-bg.png' },
     { id: 's2', name: 'Joel', role: 'Supervisor', avatarUrl: 'https://i.ibb.co/yYvyfB9/steve-jobs.png' },
     { id: 's3', name: 'Lucas', role: 'Supervisor', avatarUrl: 'https://i.ibb.co/yYvyfB9/steve-jobs.png' },
     { id: 's4', name: 'Marcelo', role: 'Supervisor', avatarUrl: 'https://i.ibb.co/yYvyfB9/steve-jobs.png' },
@@ -76,9 +76,9 @@ const initialCovers: ReportCover[] = [
         type: 'supervisor-report',
         title: 'Relatório Danielle',
         subtitle: '',
-        imageUrl: 'https://i.ibb.co/b3FhL7d/dani-bg.png',
+        imageUrl: 'https://i.ibb.co/zsgJpY0/fundo-dani.png',
         supervisorName: 'Danielle',
-        supervisorImageUrl: 'https://i.ibb.co/yYvyfB9/steve-jobs.png', // Placeholder
+        supervisorImageUrl: 'https://i.ibb.co/b3FhL7d/dani-bg.png',
     }
 ];
 
@@ -171,6 +171,22 @@ export default function ReportPage() {
         localStorage.setItem(REPORTS_STORAGE_KEY, JSON.stringify(updatedCovers));
         toast({ title: 'Capa Removida', variant: 'destructive' });
     };
+
+    const handleSupervisorCardClick = (supervisorName: string) => {
+        if (!carouselApi) return;
+
+        const targetIndex = covers.findIndex(c => c.type === 'supervisor-report' && c.supervisorName === supervisorName);
+
+        if (targetIndex !== -1) {
+            carouselApi.scrollTo(targetIndex);
+        } else {
+            toast({
+                title: "Relatório não encontrado",
+                description: `A página de relatório para ${supervisorName} ainda não foi criada.`,
+                variant: 'default',
+            });
+        }
+    };
     
     if (!isClient) return null;
 
@@ -251,7 +267,7 @@ export default function ReportPage() {
                                                     </header>
                                                     <div className="flex-1 p-8 grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-7 gap-4 items-center place-content-center">
                                                        {(cover.supervisors || []).map(s => (
-                                                         <Card key={s.id} className='bg-yellow-400 border-4 border-blue-900 rounded-2xl overflow-hidden shadow-lg cursor-pointer hover:scale-105 transition-transform'>
+                                                         <Card key={s.id} onClick={() => handleSupervisorCardClick(s.name)} className='bg-yellow-400 border-4 border-blue-900 rounded-2xl overflow-hidden shadow-lg cursor-pointer hover:scale-105 transition-transform'>
                                                             <CardHeader className='bg-blue-900 text-white text-center p-2'>
                                                                 <h3 className='font-bold text-sm'>{s.role}</h3>
                                                                 <p className='text-xs'>{s.name}</p>
@@ -286,10 +302,10 @@ export default function ReportPage() {
                                                         </Button>
                                                      </div>
                                                       <div className='absolute bottom-8 right-8 flex gap-4'>
-                                                        <Button variant='outline' size='icon' className='rounded-full h-12 w-12 bg-white/50 border-blue-900 text-blue-900'>
+                                                        <Button variant='outline' size='icon' className='rounded-full h-12 w-12 bg-white/50 border-blue-900 text-blue-900' onClick={() => carouselApi?.scrollPrev()}>
                                                             <ChevronsLeft className='h-8 w-8'/>
                                                         </Button>
-                                                        <Button variant='outline' size='icon' className='rounded-full h-12 w-12 bg-white/50 border-blue-900 text-blue-900'>
+                                                        <Button variant='outline' size='icon' className='rounded-full h-12 w-12 bg-white/50 border-blue-900 text-blue-900' onClick={() => carouselApi?.scrollNext()}>
                                                             <ChevronsRight className='h-8 w-8'/>
                                                         </Button>
                                                      </div>

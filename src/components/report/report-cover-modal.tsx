@@ -91,7 +91,7 @@ export function ReportCoverModal({ isOpen, onClose, onSave, editingCover }: Repo
   };
 
   const handleSubmit = () => {
-    if (!title || !imageUrl) {
+    if (!type || !title || !imageUrl) {
       toast({
         title: 'Campos Obrigatórios',
         description: 'Tipo, Título e Imagem de fundo são obrigatórios.',
@@ -229,3 +229,5 @@ export function ReportCoverModal({ isOpen, onClose, onSave, editingCover }: Repo
     </Dialog>
   );
 }
+
+    

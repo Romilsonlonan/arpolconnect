@@ -45,12 +45,16 @@ function NodeAvatar({ node }: { node: OrgNode }) {
     );
 }
 
+const validSupervisorRoles = ['Diretor', 'Gerente', 'Coordenador', 'Supervisor', 'Gerente de Contratos', 'Coordenador de Contratos', 'Supervisor de Qualidade', 'Administrador'];
+
 export function TreeNode({ node, onMoveNode, onOpenTicketModal, privateTicketCount, isRoot = false }: TreeNodeProps) {
   const [isExpanded, setIsExpanded] = useState(true);
   const [isDragOver, setIsDragOver] = useState(false);
-  const isContractNode = node.role === 'Contrato';
+  
   const isCompanyRoot = node.id === 'arpolar';
-
+  const isContractNode = node.role === 'Contrato';
+  const isSupervisor = validSupervisorRoles.includes(node.role) || isCompanyRoot;
+  
   const formattedPhone = node.contact?.replace(/\D/g, '');
 
   const handleDragStart = (e: React.DragEvent) => {
@@ -64,7 +68,7 @@ export function TreeNode({ node, onMoveNode, onOpenTicketModal, privateTicketCou
 
   const handleDragOver = (e: React.DragEvent) => {
     e.preventDefault();
-    if (!isContractNode) {
+    if (isSupervisor) {
       setIsDragOver(true);
       e.dataTransfer.dropEffect = 'move';
     } else {
@@ -79,7 +83,7 @@ export function TreeNode({ node, onMoveNode, onOpenTicketModal, privateTicketCou
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
     setIsDragOver(false);
-    if(isContractNode) return;
+    if(!isSupervisor) return;
 
     const draggedNodeId = e.dataTransfer.getData('application/reactflow');
     if (draggedNodeId && draggedNodeId !== node.id) {
@@ -102,7 +106,7 @@ export function TreeNode({ node, onMoveNode, onOpenTicketModal, privateTicketCou
         "w-60 text-center shadow-md hover:shadow-lg transition-all duration-300 relative group min-h-[200px] flex flex-col",
         "bg-card",
         isCompanyRoot ? "cursor-default" : "cursor-grab",
-        isDragOver && "ring-2 ring-accent ring-offset-2"
+        isDragOver && isSupervisor && "ring-2 ring-accent ring-offset-2"
         )}>
         <CardContent className="p-4 flex flex-col items-center gap-2 relative h-full flex-1">
           <NodeAvatar node={node} />
@@ -222,4 +226,3 @@ export function TreeNode({ node, onMoveNode, onOpenTicketModal, privateTicketCou
   );
 }
 
-    

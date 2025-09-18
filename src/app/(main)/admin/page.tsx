@@ -474,7 +474,7 @@ export default function AdminPage() {
     }
   }, [filteredContracts, selectedContractForInfo]);
 
-  const supervisorRoles = ['Supervisor', 'Supervisor de Qualidade', 'Administrador', 'Coordenador', 'Gerente', 'Diretor'];
+  const supervisorRoles = ['Supervisor', 'Supervisor de Qualidade', 'Administrador', 'Coordenador', 'Gerente', 'Diretor', 'Gerente de Contratos', 'Coordenador de Contratos'];
 
   if (!isClient) return null;
 

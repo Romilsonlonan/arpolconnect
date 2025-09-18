@@ -81,7 +81,7 @@ export function UserModal({ isOpen, onClose, onSave, editingUser, users, contrac
   const { toast } = useToast();
   
   const possibleSupervisors = useMemo(() => {
-    const supervisorRoles = ['Administrador', 'Diretor', 'Gerente', 'Coordenador', 'Supervisor'];
+    const supervisorRoles = ['Administrador', 'Diretor', 'Gerente', 'Coordenador', 'Supervisor', 'Gerente de Contratos', 'Coordenador de Contratos'];
     return users.filter(u => supervisorRoles.includes(u.role) && u.status === 'Ativo');
   }, [users]);
 

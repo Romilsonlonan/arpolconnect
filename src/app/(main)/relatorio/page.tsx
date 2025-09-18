@@ -28,13 +28,6 @@ import { Calendar } from '@/components/ui/calendar';
 
 
 // --- Mock Data ---
-const statusCardsData: PreventiveStatusCardData[] = [
-  { title: 'Atrasadas', value: '17.340', color: 'yellow', icon: <AlertTriangle /> },
-  { title: 'Não Realizadas', value: '35.391', color: 'yellow', icon: <XCircle /> },
-  { title: 'Pendentes', value: '0', color: 'yellow', icon: <Clock /> },
-  { title: 'Realizadas', value: '210.213', color: 'yellow', icon: <CheckCircle /> },
-];
-
 const consultationData: PreventiveConsultation[] = [
   { contract: 'ICON ALPHAVILLE', monthYear: '03/2025', status: 'Ativo', overdue: 0, notDone: 4680, pending: 0, done: 1484, monthly: [{ name: 'jan 2025', Atrasadas: 100, Realizadas: 1800 }, { name: 'fev 2025', Atrasadas: 50, Realizadas: 2000 }, { name: 'mar 2025', Atrasadas: 0, Realizadas: 1484 }] },
   { contract: 'ICON ALPHAVILLE', monthYear: '02/2025', status: 'Ativo', overdue: 0, notDone: 4040, pending: 0, done: 2124, monthly: [] },
@@ -166,7 +159,6 @@ export default function ReportPage() {
     from: new Date(2025, 0, 1),
     to: new Date(2025, 7, 1),
   });
-  const [viewMode, setViewMode] = useState<'contracts' | 'monthly'>('contracts');
   const [selectedContractName, setSelectedContractName] = useState<string | null>(null);
 
   const filteredData = useMemo(() => {
@@ -218,8 +210,8 @@ export default function ReportPage() {
             </div>
 
             <div className="flex flex-col gap-3 mt-8">
-                 <Button onClick={() => setViewMode('contracts')} className={cn("w-full justify-between text-md py-6 shadow-md rounded-lg", viewMode === 'contracts' ? "bg-blue-900 hover:bg-blue-800 text-white" : "bg-white hover:bg-gray-100 text-blue-900")}>Contratos <ArrowRight /></Button>
-                 <Button onClick={() => setViewMode('monthly')} className={cn("w-full justify-between text-md py-6 shadow-md rounded-lg", viewMode === 'monthly' ? "bg-blue-900 hover:bg-blue-800 text-white" : "bg-white hover:bg-gray-100 text-blue-900")}>Mensal <ArrowRight /></Button>
+                 <Button className="w-full justify-between text-md py-6 shadow-md rounded-lg bg-blue-900 hover:bg-blue-800 text-white">Contratos <ArrowRight /></Button>
+                 <Button className="w-full justify-between text-md py-6 shadow-md rounded-lg bg-blue-900 hover:bg-blue-800 text-white">Mensal <ArrowRight /></Button>
             </div>
 
              <div className="flex flex-col gap-2 mt-4">
@@ -324,7 +316,7 @@ export default function ReportPage() {
                 <div className="bg-white/90 text-black rounded-lg flex flex-col">
                     <div className="bg-blue-900 text-white p-2 text-center text-lg font-semibold">Preventivas por Contratos</div>
                     <div className="flex-1 p-4">
-                         <ChartContainer config={contractsChartConfig} className="w-full h-full min-h-[100px]">
+                         <ChartContainer config={contractsChartConfig} className="w-full h-full">
                             <BarChart data={contractsChartDataWithHighlight} margin={{ top: 20, right: 20, left: -10, bottom: 25 }}>
                                 <CartesianGrid vertical={false} strokeDasharray="3 3"/>
                                 <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={8} angle={-25} textAnchor="end" height={60} interval={0} />
@@ -344,7 +336,7 @@ export default function ReportPage() {
                         Total Preventivas Mensais {selectedContractName && `- ${selectedContractName}`}
                     </header>
                     <div className="flex-1 p-4">
-                        <ChartContainer config={monthlyChartConfig} className="w-full h-full min-h-[100px]">
+                        <ChartContainer config={monthlyChartConfig} className="w-full h-full">
                             <ComposedChart data={filteredData.monthlyChartData} margin={{ top: 20, right: 30, left: 20, bottom: 25 }}>
                                 <CartesianGrid vertical={false} />
                                 <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={10} />

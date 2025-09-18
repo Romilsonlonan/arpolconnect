@@ -3,32 +3,25 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Image from 'next/image';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
   ArrowLeft,
   Upload,
   ArrowRight,
+  Users,
+  Home,
+  Settings
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { ReportCoverModal } from '@/components/report/report-cover-modal';
 import type { User, ReportCover, SupervisorCardData } from '@/lib/data';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger
-} from '@/components/ui/alert-dialog';
+import { PreventiveDashboard } from '@/components/report/preventive-dashboard';
+
 
 const USERS_STORAGE_KEY = 'arpolarUsers';
 const REPORTS_STORAGE_KEY = 'arpolarReports';
 
-// Simplified data for the new structure
 const initialCovers: ReportCover[] = [
   {
     id: 'cover-initial-1',
@@ -79,7 +72,7 @@ export default function ReportPage() {
       const allCovers: ReportCover[] = savedCovers ? JSON.parse(savedCovers) : initialCovers;
       
       setCovers(allCovers);
-      setSelectedReport(allCovers.find(c => c.type === 'cover') || allCovers[0]);
+      setSelectedReport(allCovers[0]);
       
       if(!savedCovers) {
           localStorage.setItem(REPORTS_STORAGE_KEY, JSON.stringify(allCovers));
@@ -120,7 +113,6 @@ export default function ReportPage() {
   const handleNavigateToReport = () => {
     if (!selectedReport) return;
     
-    // Find the next logical page (e.g. the preventive dashboard for this supervisor)
     const targetDashboard = covers.find(
       (c) =>
         c.type === 'preventive-dashboard' &&
@@ -138,6 +130,16 @@ export default function ReportPage() {
     }
   }
 
+  const handleGoBackToSupervisors = () => {
+    const supervisorsPage = covers.find(c => c.type === 'supervisors');
+    if (supervisorsPage) {
+        setSelectedReport(supervisorsPage);
+    } else {
+        // Fallback to the very first page if supervisor page doesn't exist for some reason
+        setSelectedReport(covers[0]);
+    }
+  }
+
   if (!isClient) return null;
   
   if (!selectedReport) {
@@ -149,24 +151,23 @@ export default function ReportPage() {
     )
   }
   
-  // This is a simple flag to differentiate the main banner page from the detailed dashboard view
-  const isDashboardView = selectedReport.type === 'preventive-dashboard';
+  const isSupervisorView = selectedReport.type === 'supervisor-report' || selectedReport.type === 'preventive-dashboard';
 
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div className='flex items-center gap-4'>
-           {isDashboardView && (
-              <Button variant="outline" size="icon" onClick={() => setSelectedReport(covers.find(c => c.type === 'supervisor-report' && c.supervisorName === selectedReport.supervisorName) || covers[0])}>
+           {isSupervisorView && (
+              <Button variant="outline" size="icon" onClick={handleGoBackToSupervisors}>
                 <ArrowLeft />
               </Button>
             )}
             <div>
                 <h1 className="text-lg font-semibold md:text-2xl font-headline">
-                    {isDashboardView ? selectedReport.title : 'Indicadores de Planejamento'}
+                    {isSupervisorView ? selectedReport.title : 'Indicadores de Planejamento'}
                 </h1>
                 <p className="text-muted-foreground">
-                    {isDashboardView ? `Visualizando dashboard para ${selectedReport.supervisorName}` : 'Escolha um relatório para visualizar os indicadores de desempenho.'}
+                    {isSupervisorView ? `Visualizando relatório para ${selectedReport.supervisorName}` : 'Escolha um relatório para visualizar os indicadores de desempenho.'}
                 </p>
             </div>
         </div>
@@ -203,12 +204,14 @@ export default function ReportPage() {
         </CardContent>
       </Card>
       
+      {!isSupervisorView && (
        <div className="flex justify-end">
             <Button onClick={handleNavigateToReport}>
                 Visualizar Relatório
                 <ArrowRight className="ml-2" />
             </Button>
        </div>
+      )}
 
       {isAdmin && isModalOpen && (
         <ReportCoverModal
@@ -221,5 +224,3 @@ export default function ReportPage() {
     </div>
   );
 }
-
-    

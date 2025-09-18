@@ -1,4 +1,5 @@
 
+
 export type Employee = {
   id: string;
   name: string;
@@ -125,7 +126,8 @@ export type ReportCover = {
 export type PreventiveStatusCardData = {
   title: string;
   value: string;
-  color: 'red' | 'orange' | 'blue' | 'green';
+  color: 'red' | 'orange' | 'blue' | 'green' | 'yellow';
+  icon: React.ReactNode;
 };
 
 export type PreventiveConsultation = {

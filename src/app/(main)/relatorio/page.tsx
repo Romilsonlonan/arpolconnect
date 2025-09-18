@@ -1,7 +1,7 @@
 
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -9,10 +9,21 @@ import { Button } from '@/components/ui/button';
 import { ArrowLeft, ArrowRight, Upload } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
+const BANNER_STORAGE_KEY = 'reportBannerImage';
+
 export default function ReportBannerPage() {
   const [bannerImage, setBannerImage] = useState('https://picsum.photos/seed/report-banner/1200/600');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+    const savedBanner = localStorage.getItem(BANNER_STORAGE_KEY);
+    if (savedBanner) {
+      setBannerImage(savedBanner);
+    }
+  }, []);
 
   const handleBannerChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -20,11 +31,20 @@ export default function ReportBannerPage() {
       const reader = new FileReader();
       reader.onload = (e) => {
         const result = e.target?.result as string;
-        setBannerImage(result);
-        toast({
-          title: 'Banner Alterado',
-          description: 'A nova imagem de banner foi carregada.',
-        });
+        try {
+            localStorage.setItem(BANNER_STORAGE_KEY, result);
+            setBannerImage(result);
+            toast({
+              title: 'Banner Alterado',
+              description: 'A nova imagem de banner foi salva.',
+            });
+        } catch (error) {
+             toast({
+              title: 'Erro ao Salvar',
+              description: 'A imagem é muito grande. Por favor, escolha um arquivo menor.',
+              variant: 'destructive',
+            });
+        }
       };
       reader.readAsDataURL(file);
     }
@@ -33,6 +53,10 @@ export default function ReportBannerPage() {
   const triggerFileInput = () => {
     fileInputRef.current?.click();
   };
+
+  if (!isClient) {
+    return null; // or a loading skeleton
+  }
 
   return (
     <div className="flex flex-col h-full">

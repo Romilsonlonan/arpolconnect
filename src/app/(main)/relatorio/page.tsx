@@ -154,12 +154,13 @@ export default function ReportPage() {
             </header>
             
             {/* Status Cards */}
-            <div className="grid grid-cols-5 gap-6 items-center">
+            <div className="flex justify-center items-center gap-6">
+                <StatusCard {...statusCardsData[0]} />
+                <StatusCard {...statusCardsData[1]} />
                 <Button variant="ghost" size="icon" className="h-16 w-16 text-white/50"><ArrowRight className="h-12 w-12 rotate-180" /></Button>
-                {statusCardsData.map((card) => (
-                    <StatusCard key={card.title} {...card} />
-                ))}
                 <Button variant="ghost" size="icon" className="h-16 w-16 text-white/50"><ArrowRight className="h-12 w-12" /></Button>
+                <StatusCard {...statusCardsData[2]} />
+                <StatusCard {...statusCardsData[3]} />
             </div>
 
             {/* Table */}

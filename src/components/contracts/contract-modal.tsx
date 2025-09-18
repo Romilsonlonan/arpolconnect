@@ -229,7 +229,7 @@ export function ContractModal({ isOpen, onClose, supervisors, onSave, editingCon
                         </div>
                         
                         <div className="grid gap-2">
-                            <Label htmlFor="documentType">Tipo de Documento</Label>
+                            <Label htmlFor="documentType">Tipo de Documento Principal</Label>
                             <Select onValueChange={setDocumentType} value={documentType}>
                                 <SelectTrigger id="documentType"><SelectValue placeholder="Selecione um tipo de documento" /></SelectTrigger>
                                 <SelectContent>
@@ -291,3 +291,5 @@ export function ContractModal({ isOpen, onClose, supervisors, onSave, editingCon
         </Dialog>
     )
 }
+
+    

@@ -29,13 +29,13 @@ import { Calendar } from '@/components/ui/calendar';
 
 // --- Mock Data ---
 const consultationData: PreventiveConsultation[] = [
-  { contract: 'ICON ALPHAVILLE', monthYear: '03/2025', status: 'Ativo', overdue: 0, notDone: 4680, pending: 0, done: 1484, monthly: [{ name: 'jan 2025', Atrasadas: 100, Realizadas: 1800 }, { name: 'fev 2025', Atrasadas: 50, Realizadas: 2000 }, { name: 'mar 2025', Atrasadas: 0, Realizadas: 1484 }] },
+  { contract: 'ICON ALPHAVILLE', monthYear: '03/2025', status: 'Ativo', overdue: 0, notDone: 4680, pending: 0, done: 1484, monthly: [{ name: 'jan 2025', Atrasadas: 100, Realizadas: 1800, "Não Realizadas": 200, "Pendentes": 50 }, { name: 'fev 2025', Atrasadas: 50, Realizadas: 2000, "Não Realizadas": 100, "Pendentes": 20 }, { name: 'mar 2025', Atrasadas: 0, Realizadas: 1484, "Não Realizadas": 0, "Pendentes": 0 }] },
   { contract: 'ICON ALPHAVILLE', monthYear: '02/2025', status: 'Ativo', overdue: 0, notDone: 4040, pending: 0, done: 2124, monthly: [] },
   { contract: 'ICON ALPHAVILLE', monthYear: '01/2025', status: 'Ativo', overdue: 0, notDone: 3317, pending: 0, done: 5830, monthly: [] },
-  { contract: 'RIVER ONE', monthYear: '03/2025', status: 'Ativo', overdue: 10483, notDone: 3258, pending: 0, done: 9091, monthly: [{ name: 'jan 2025', Atrasadas: 4000, Realizadas: 8000 }, { name: 'fev 2025', Atrasadas: 3000, Realizadas: 8500 }, { name: 'mar 2025', Atrasadas: 3483, Realizadas: 9091 }] },
+  { contract: 'RIVER ONE', monthYear: '03/2025', status: 'Ativo', overdue: 10483, notDone: 3258, pending: 0, done: 9091, monthly: [{ name: 'jan 2025', Atrasadas: 4000, Realizadas: 8000, "Não Realizadas": 1000, "Pendentes": 500 }, { name: 'fev 2025', Atrasadas: 3000, Realizadas: 8500, "Não Realizadas": 800, "Pendentes": 400 }, { name: 'mar 2025', Atrasadas: 3483, Realizadas: 9091, "Não Realizadas": 500, "Pendentes": 200 }] },
   { contract: 'RIVER ONE', monthYear: '02/2025', status: 'Ativo', overdue: 6857, notDone: 2224, pending: 0, done: 7262, monthly: [] },
-  { contract: 'RIVERSIDE', monthYear: '03/2025', status: 'Ativo', overdue: 3366, notDone: 67, pending: 0, done: 8000, monthly: [{ name: 'jan 2025', Atrasadas: 1000, Realizadas: 7000 }, { name: 'fev 2025', Atrasadas: 1200, Realizadas: 7500 }, { name: 'mar 2025', Atrasadas: 1166, Realizadas: 8000 }] },
-  { contract: 'JATOBA', monthYear: '03/2025', status: 'Ativo', overdue: 1570, notDone: 1828, pending: 0, done: 5000, monthly: [{ name: 'jan 2025', Atrasadas: 500, Realizadas: 4000 }, { name: 'fev 2025', Atrasadas: 400, Realizadas: 4500 }, { name: 'mar 2025', Atrasadas: 670, Realizadas: 5000 }] },
+  { contract: 'RIVERSIDE', monthYear: '03/2025', status: 'Ativo', overdue: 3366, notDone: 67, pending: 0, done: 8000, monthly: [{ name: 'jan 2025', Atrasadas: 1000, Realizadas: 7000, "Não Realizadas": 300, "Pendentes": 100 }, { name: 'fev 2025', Atrasadas: 1200, Realizadas: 7500, "Não Realizadas": 250, "Pendentes": 150 }, { name: 'mar 2025', Atrasadas: 1166, Realizadas: 8000, "Não Realizadas": 100, "Pendentes": 50 }] },
+  { contract: 'JATOBA', monthYear: '03/2025', status: 'Ativo', overdue: 1570, notDone: 1828, pending: 0, done: 5000, monthly: [{ name: 'jan 2025', Atrasadas: 500, Realizadas: 4000, "Não Realizadas": 200, "Pendentes": 100 }, { name: 'fev 2025', Atrasadas: 400, Realizadas: 4500, "Não Realizadas": 150, "Pendentes": 50 }, { name: 'mar 2025', Atrasadas: 670, Realizadas: 5000, "Não Realizadas": 100, "Pendentes": 30 }] },
 ];
 
 const consultationTotals = {
@@ -53,14 +53,14 @@ const contractsChartData: PreventiveChartData[] = [
 ];
 
 const totalMonthlyChartData: MonthlyChartData[] = [
-    { name: 'jan 2025', Atrasadas: 8000, 'Não Realizadas': 0, Pendentes: 0, Realizadas: 15500 },
-    { name: 'fev 2025', Atrasadas: 6200, 'Não Realizadas': 0, Pendentes: 0, Realizadas: 15500 },
-    { name: 'mar 2025', Atrasadas: 9500, 'Não Realizadas': 0, Pendentes: 0, Realizadas: 15500 },
-    { name: 'abr 2025', Atrasadas: 4000, 'Não Realizadas': 1000, Pendentes: 0, Realizadas: 19500 },
-    { name: 'mai 2025', Atrasadas: 7500, 'Não Realizadas': 0, Pendentes: 0, Realizadas: 42000 },
-    { name: 'jun 2025', Atrasadas: 3000, 'Não Realizadas': 0, Pendentes: 0, Realizadas: 25000 },
-    { name: 'jul 2025', Atrasadas: 3500, 'Não Realizadas': 0, Pendentes: 0, Realizadas: 26000 },
-    { name: 'ago 2025', Atrasadas: 5000, 'Não Realizadas': 0, Pendentes: 0, Realizadas: 23000 },
+    { name: 'jan 2025', Atrasadas: 8000, 'Não Realizadas': 2000, Pendentes: 500, Realizadas: 15500 },
+    { name: 'fev 2025', Atrasadas: 6200, 'Não Realizadas': 1500, Pendentes: 400, Realizadas: 15500 },
+    { name: 'mar 2025', Atrasadas: 9500, 'Não Realizadas': 1000, Pendentes: 200, Realizadas: 15500 },
+    { name: 'abr 2025', Atrasadas: 4000, 'Não Realizadas': 1000, Pendentes: 300, Realizadas: 19500 },
+    { name: 'mai 2025', Atrasadas: 7500, 'Não Realizadas': 2500, Pendentes: 800, Realizadas: 42000 },
+    { name: 'jun 2025', Atrasadas: 3000, 'Não Realizadas': 500, Pendentes: 100, Realizadas: 25000 },
+    { name: 'jul 2025', Atrasadas: 3500, 'Não Realizadas': 700, Pendentes: 200, Realizadas: 26000 },
+    { name: 'ago 2025', Atrasadas: 5000, 'Não Realizadas': 1200, Pendentes: 300, Realizadas: 23000 },
 ];
 
 
@@ -73,11 +73,9 @@ const contractsChartConfig = {
 
 const monthlyChartConfig = {
     Atrasadas: { label: 'Atrasadas', color: '#990000' },
-    'Atrasadas (linha)': { label: 'Atrasadas (linha)', color: '#990000' },
     'Não Realizadas': { label: 'Não Realizadas', color: '#ffa500' },
     Pendentes: { label: 'Pendentes', color: '#0000ff' },
     Realizadas: { label: 'Realizadas', color: '#006400' },
-    'Realizadas (linha)': { label: 'Realizadas (linha)', color: '#006400' },
 } satisfies ChartConfig;
 
 const ArpolarIcon = ({ className }: { className?: string }) => (
@@ -102,14 +100,18 @@ const StatusCard = ({ title, value, icon }: {title: string, value: string, icon:
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
-    const total = data.Atrasadas + data.Realizadas;
+    const total = data.Atrasadas + data.Realizadas + (data['Não Realizadas'] || 0) + (data['Pendentes'] || 0);
     const atrasadasPercent = total > 0 ? (data.Atrasadas / total) * 100 : 0;
     const realizadasPercent = total > 0 ? (data.Realizadas / total) * 100 : 0;
+    const naoRealizadasPercent = total > 0 ? ((data['Não Realizadas'] || 0) / total) * 100 : 0;
+    const pendentesPercent = total > 0 ? ((data['Pendentes'] || 0) / total) * 100 : 0;
 
     const pieData = [
       { name: 'Atrasadas', value: data.Atrasadas, color: monthlyChartConfig.Atrasadas.color },
       { name: 'Realizadas', value: data.Realizadas, color: monthlyChartConfig.Realizadas.color },
-    ];
+      { name: 'Não Realizadas', value: data['Não Realizadas'] || 0, color: monthlyChartConfig['Não Realizadas'].color },
+      { name: 'Pendentes', value: data['Pendentes'] || 0, color: monthlyChartConfig.Pendentes.color },
+    ].filter(item => item.value > 0);
 
     return (
       <Card className="w-64">
@@ -131,17 +133,31 @@ const CustomTooltip = ({ active, payload, label }: any) => {
           <div className="mt-4 text-sm space-y-1">
              <div className="flex justify-between items-center">
                 <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full" style={{backgroundColor: monthlyChartConfig.Realizadas.color}}></div>
+                    <span>Realizadas</span>
+                </div>
+                <span>{realizadasPercent.toFixed(1)}%</span>
+             </div>
+             <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2">
                     <div className="w-3 h-3 rounded-full" style={{backgroundColor: monthlyChartConfig.Atrasadas.color}}></div>
                     <span>Atrasadas</span>
                 </div>
                 <span>{atrasadasPercent.toFixed(1)}%</span>
              </div>
              <div className="flex justify-between items-center">
-                 <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full" style={{backgroundColor: monthlyChartConfig.Realizadas.color}}></div>
-                    <span>Realizadas</span>
+                <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full" style={{backgroundColor: monthlyChartConfig['Não Realizadas'].color}}></div>
+                    <span>Não Realizadas</span>
                 </div>
-                <span>{realizadasPercent.toFixed(1)}%</span>
+                <span>{naoRealizadasPercent.toFixed(1)}%</span>
+             </div>
+             <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full" style={{backgroundColor: monthlyChartConfig.Pendentes.color}}></div>
+                    <span>Pendentes</span>
+                </div>
+                <span>{pendentesPercent.toFixed(1)}%</span>
              </div>
           </div>
         </CardContent>
@@ -177,7 +193,7 @@ export default function ReportPage() {
                 pending: contractRow.pending.toLocaleString('pt-BR'),
                 done: contractRow.done.toLocaleString('pt-BR'),
             },
-            monthlyChartData: contractRow.monthly?.map(m => ({ ...m, 'Não Realizadas': 0, Pendentes: 0 })) || [],
+            monthlyChartData: contractRow.monthly?.map(m => ({ ...m, 'Não Realizadas': m['Não Realizadas'] || 0, Pendentes: m['Pendentes'] || 0 })) || [],
         };
     }
     return {
@@ -209,12 +225,7 @@ export default function ReportPage() {
                  <div className="p-3 bg-black/10 rounded" />
             </div>
 
-            <div className="flex flex-col gap-3 mt-8">
-                 <Button className="w-full justify-between text-md py-6 shadow-md rounded-lg bg-blue-900 hover:bg-blue-800 text-white">Contratos <ArrowRight /></Button>
-                 <Button className="w-full justify-between text-md py-6 shadow-md rounded-lg bg-blue-900 hover:bg-blue-800 text-white">Mensal <ArrowRight /></Button>
-            </div>
-
-             <div className="flex flex-col gap-2 mt-4">
+            <div className="flex flex-col gap-2 mt-4">
                     <Popover>
                         <PopoverTrigger asChild>
                             <Button variant="outline" className="text-black justify-start text-left font-normal bg-white/50 border-black/20">
@@ -289,7 +300,7 @@ export default function ReportPage() {
                         {consultationData.slice(0, 5).map((row, i) => (
                             <TableRow 
                                 key={i} 
-                                onClick={() => setSelectedContractName(row.contract)}
+                                onClick={() => setSelectedContractName(row.contract === selectedContractName ? null : row.contract)}
                                 className={cn("cursor-pointer", selectedContractName === row.contract && "bg-yellow-200")}
                             >
                                 <TableCell>{row.contract}</TableCell>
@@ -326,6 +337,7 @@ export default function ReportPage() {
                                 <Bar dataKey="done" stackId="a" fill="var(--color-done)" radius={[4, 4, 0, 0]} />
                                 <Bar dataKey="overdue" stackId="a" fill="var(--color-overdue)" />
                                 <Bar dataKey="notDone" stackId="a" fill="var(--color-notDone)" />
+                                <Bar dataKey="pending" stackId="a" fill="var(--color-pending)" />
                             </BarChart>
                         </ChartContainer>
                     </div>
@@ -344,11 +356,10 @@ export default function ReportPage() {
                                 <ChartTooltip content={<CustomTooltip />} cursor={{ fill: 'rgba(0,0,0,0.1)' }} />
                                 <ChartLegend wrapperStyle={{ paddingTop: '30px' }} />
                                 
-                                <Bar dataKey="Atrasadas" fill="var(--color-Atrasadas)" barSize={20} />
-                                <Bar dataKey="Realizadas" fill="var(--color-Realizadas)" barSize={20} />
-                                
-                                <Line type="monotone" dataKey="Realizadas" name="Realizadas (linha)" stroke="var(--color-Realizadas (linha))" strokeWidth={2} dot={false} />
-                                <Line type="monotone" dataKey="Atrasadas" name="Atrasadas (linha)" stroke="var(--color-Atrasadas (linha))" strokeWidth={2} dot={false} />
+                                <Bar dataKey="Realizadas" stackId="a" fill="var(--color-Realizadas)" barSize={20} radius={[4,4,0,0]}/>
+                                <Bar dataKey="Atrasadas" stackId="a" fill="var(--color-Atrasadas)" barSize={20} />
+                                <Bar dataKey="Não Realizadas" stackId="a" fill="var(--color-Não Realizadas)" barSize={20} />
+                                <Bar dataKey="Pendentes" stackId="a" fill="var(--color-Pendentes)" barSize={20} />
                             </ComposedChart>
                         </ChartContainer>
                     </div>
@@ -358,3 +369,6 @@ export default function ReportPage() {
     </div>
   );
 }
+
+
+    

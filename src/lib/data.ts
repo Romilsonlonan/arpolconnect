@@ -138,7 +138,7 @@ export type PreventiveConsultation = {
   notDone: number;
   pending: number;
   done: number;
-  monthly?: { name: string; Atrasadas: number; Realizadas: number }[];
+  monthly?: { name: string; Atrasadas: number; Realizadas: number; "Não Realizadas": number; "Pendentes": number; }[];
 };
 
 export type PreventiveChartData = {
@@ -223,3 +223,6 @@ export const monthlyChartData: MonthlyChartData[] = [
 
     
 
+
+
+    

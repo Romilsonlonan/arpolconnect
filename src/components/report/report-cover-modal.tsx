@@ -16,7 +16,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import type { ReportCover } from '@/lib/data';
 import Image from 'next/image';
-import { Upload } from 'lucide-react';
+import { Upload, ArrowRight } from 'lucide-react';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '../ui/select';
 import { Textarea } from '../ui/textarea';
 import { ScrollArea } from '../ui/scroll-area';
@@ -77,10 +77,6 @@ export function ReportCoverModal({ isOpen, onClose, onSave, editingCover }: Repo
       reader.onloadend = () => {
         const result = reader.result as string;
         try {
-          if (result.length > 2 * 1024 * 1024) { // Roughly 2MB
-             toast({ title: 'Imagem muito grande', description: 'Tente uma imagem menor que 2MB.', variant: 'destructive'});
-             return;
-          }
           setter(result);
         } catch (err) {
             toast({ title: 'Erro ao carregar imagem', variant: 'destructive'});
@@ -233,7 +229,3 @@ export function ReportCoverModal({ isOpen, onClose, onSave, editingCover }: Repo
     </Dialog>
   );
 }
-
-    
-
-    

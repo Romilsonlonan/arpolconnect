@@ -124,7 +124,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
             <div className={cn("px-4 py-2 text-sm font-semibold text-primary-foreground/70", !open && "hidden")}>Menu</div>
              <SidebarNav>
                 {navItems.map(item => (
-                   <SidebarNavItem key={item.href} href={item.href} label={item.label} icon={item.icon} active={pathname === item.href}/>
+                   <SidebarNavItem key={item.href} href={item.href} label={item.label} icon={item.icon} active={pathname.startsWith(item.href) && (item.href !== '/' || pathname === '/')} />
                 ))}
               </SidebarNav>
           </SidebarBody>

@@ -1,15 +1,38 @@
 
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft, ArrowRight, Upload } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 export default function ReportBannerPage() {
   const [bannerImage, setBannerImage] = useState('https://picsum.photos/seed/report-banner/1200/600');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { toast } = useToast();
+
+  const handleBannerChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const result = e.target?.result as string;
+        setBannerImage(result);
+        toast({
+          title: 'Banner Alterado',
+          description: 'A nova imagem de banner foi carregada.',
+        });
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const triggerFileInput = () => {
+    fileInputRef.current?.click();
+  };
 
   return (
     <div className="flex flex-col h-full">
@@ -31,7 +54,14 @@ export default function ReportBannerPage() {
             <CardTitle>Banner do Relatório</CardTitle>
             <CardDescription>Clique na imagem para navegar ou altere o banner.</CardDescription>
           </div>
-          <Button variant="outline">
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleBannerChange}
+            className="hidden"
+            accept="image/png, image/jpeg, image/webp"
+          />
+          <Button variant="outline" onClick={triggerFileInput}>
             <Upload className="mr-2"/>
             Alterar Banner
           </Button>
@@ -45,6 +75,7 @@ export default function ReportBannerPage() {
                     fill
                     className="object-cover"
                     data-ai-hint="presentation business"
+                    unoptimized
                 />
              </div>
            </Link>

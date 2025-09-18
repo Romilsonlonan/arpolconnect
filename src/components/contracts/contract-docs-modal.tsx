@@ -17,23 +17,22 @@ import { PlusCircle, Paperclip, Trash2, FileText, Download, CalendarDays, AlertT
 import type { Contract, ContractDocument, User } from '@/lib/data';
 import { UploadModal } from '@/components/contracts/upload-modal';
 import { cn } from '@/lib/utils';
-import { differenceInDays, addYears, format, isValid } from 'date-fns';
+import { differenceInDays, addYears, format, isValid, parseISO } from 'date-fns';
 
 // --- Componente do Cartão de Status do Documento ---
 function DocStatusCard({ contract }: { contract: Contract }) {
-    const isArt = contract.documentType === 'ART de manutenção do sistema de ar condicionado';
 
     const getStatus = () => {
-        if (!isArt || !contract.docStartDate || !contract.docEndDate) {
+        if (!contract.docStartDate || !contract.docEndDate) {
             return {
                 daysRemaining: null,
                 statusColor: 'bg-gray-500',
-                statusText: isArt ? 'Datas da ART não definidas' : 'Não é uma ART',
+                statusText: 'Datas do documento não definidas',
             };
         }
 
-        const startDate = new Date(contract.docStartDate);
-        const expiryDate = new Date(contract.docEndDate);
+        const startDate = parseISO(contract.docStartDate);
+        const expiryDate = parseISO(contract.docEndDate);
         
         if (!isValid(startDate) || !isValid(expiryDate)) {
              return { daysRemaining: null, statusColor: 'bg-gray-500', statusText: 'Datas inválidas' };
@@ -58,8 +57,8 @@ function DocStatusCard({ contract }: { contract: Contract }) {
     };
 
     const { daysRemaining, statusColor, statusText } = getStatus();
-    const startDate = contract.docStartDate ? new Date(contract.docStartDate) : null;
-    const expiryDate = contract.docEndDate ? new Date(contract.docEndDate) : null;
+    const startDate = contract.docStartDate ? parseISO(contract.docStartDate) : null;
+    const expiryDate = contract.docEndDate ? parseISO(contract.docEndDate) : null;
 
 
     return (
@@ -89,16 +88,15 @@ function DocStatusCard({ contract }: { contract: Contract }) {
                         <p className="font-semibold">{expiryDate && isValid(expiryDate) ? format(expiryDate, 'dd/MM/yyyy') : 'N/A'}</p>
                     </div>
                 </div>
-                {isArt && daysRemaining !== null && (
+                {daysRemaining !== null ? (
                     <div className="text-center bg-black/20 p-3 rounded-lg">
-                        <p className="text-sm opacity-80">Status da ART</p>
+                        <p className="text-sm opacity-80">Status do Documento</p>
                         <p className="text-2xl font-bold">
                             {daysRemaining >= 0 ? `${daysRemaining} dias restantes` : `Vencida há ${Math.abs(daysRemaining)} dias`}
                         </p>
                         <p className="text-sm font-medium">{statusText}</p>
                     </div>
-                )}
-                 {!isArt && (
+                ): (
                      <div className="text-center bg-black/20 p-3 rounded-lg">
                         <p className="font-semibold">Este documento não tem controle de vencimento.</p>
                     </div>
@@ -220,5 +218,4 @@ export function ContractDocsModal({ isOpen, onClose, contract, onSaveDocument, o
     </>
   );
 }
-
     

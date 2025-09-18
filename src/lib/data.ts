@@ -227,8 +227,6 @@ export const monthlyChartData: MonthlyChartData[] = [
 
     
 
-
-
     
 
     

@@ -291,5 +291,4 @@ export function ContractModal({ isOpen, onClose, supervisors, onSave, editingCon
         </Dialog>
     )
 }
-
     

@@ -6,8 +6,9 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ArrowLeft, ArrowRight, Upload } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Upload, Maximize, Minimize } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { cn } from '@/lib/utils';
 
 const BANNER_STORAGE_KEY = 'reportBannerImage';
 
@@ -16,6 +17,8 @@ export default function ReportBannerPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { toast } = useToast();
   const [isClient, setIsClient] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+
 
   useEffect(() => {
     setIsClient(true);
@@ -39,7 +42,6 @@ export default function ReportBannerPage() {
               description: 'A nova imagem de banner foi salva no armazenamento local.',
             });
         } catch(err) {
-            console.error("Error saving to localStorage (image might be too large):", err);
              toast({
               title: 'Aviso: Imagem muito grande',
               description: 'A imagem pode ser grande demais para ser salva permanentemente no navegador.',
@@ -63,7 +65,7 @@ export default function ReportBannerPage() {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center gap-4 mb-6">
+      <div className={cn("flex items-center gap-4 mb-6", isFullscreen && "hidden")}>
         <Link href="/dashboard">
           <Button variant="outline" size="icon">
             <ArrowLeft />
@@ -76,24 +78,34 @@ export default function ReportBannerPage() {
       </div>
 
       <Card className="flex-1 flex flex-col">
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle>Banner do Relatório</CardTitle>
-            <CardDescription>Clique na imagem para navegar ou altere o banner.</CardDescription>
-          </div>
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleBannerChange}
-            className="hidden"
-            accept="image/png, image/jpeg, image/webp"
-          />
-          <Button variant="outline" onClick={triggerFileInput}>
-            <Upload className="mr-2"/>
-            Alterar Banner
-          </Button>
-        </CardHeader>
-        <CardContent className="flex-1 flex items-center justify-center p-0">
+        {!isFullscreen && (
+            <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+                <CardTitle>Banner do Relatório</CardTitle>
+                <CardDescription>Clique na imagem para navegar ou altere o banner.</CardDescription>
+            </div>
+            <input
+                type="file"
+                ref={fileInputRef}
+                onChange={handleBannerChange}
+                className="hidden"
+                accept="image/png, image/jpeg, image/webp"
+            />
+            <Button variant="outline" onClick={triggerFileInput}>
+                <Upload className="mr-2"/>
+                Alterar Banner
+            </Button>
+            </CardHeader>
+        )}
+        <CardContent className="flex-1 flex items-center justify-center p-0 relative">
+            <Button 
+                variant="ghost" 
+                size="icon" 
+                className="absolute top-2 right-2 z-10 bg-black/30 hover:bg-black/50 text-white hover:text-white"
+                onClick={() => setIsFullscreen(!isFullscreen)}
+            >
+                {isFullscreen ? <Minimize /> : <Maximize />}
+            </Button>
            <Link href="/relatorio/detalhes" className="w-full h-full block">
              <div className="relative w-full h-full">
                 <Image
@@ -109,14 +121,16 @@ export default function ReportBannerPage() {
         </CardContent>
       </Card>
       
-      <div className="flex justify-end mt-4">
-        <Link href="/relatorio/detalhes">
-            <Button>
-                Visualizar Relatório
-                <ArrowRight className="ml-2"/>
-            </Button>
-        </Link>
-      </div>
+      {!isFullscreen && (
+        <div className="flex justify-end mt-4">
+            <Link href="/relatorio/detalhes">
+                <Button>
+                    Visualizar Relatório
+                    <ArrowRight className="ml-2"/>
+                </Button>
+            </Link>
+        </div>
+      )}
     </div>
   );
 }

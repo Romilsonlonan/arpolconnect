@@ -27,27 +27,18 @@ function Lobby({ onJoin, videoEnabled, setVideoEnabled, audioEnabled, setAudioEn
   const streamRef = useRef<MediaStream | null>(null);
 
   useEffect(() => {
-    // Function to get media stream
     const getMedia = async () => {
       try {
-        // Stop any existing stream
         if (streamRef.current) {
           streamRef.current.getTracks().forEach(track => track.stop());
         }
-
-        // Get new stream
         const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         streamRef.current = stream;
-
-        // Attach to video element
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
         }
-
-        // Apply initial enabled/disabled state
         stream.getVideoTracks()[0].enabled = videoEnabled;
         stream.getAudioTracks()[0].enabled = audioEnabled;
-
       } catch (err) {
         console.error('Error accessing media for lobby:', err);
         setVideoEnabled(false);
@@ -57,19 +48,15 @@ function Lobby({ onJoin, videoEnabled, setVideoEnabled, audioEnabled, setAudioEn
     
     getMedia();
 
-    // Cleanup function to run when the component unmounts
     return () => {
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => track.stop());
         streamRef.current = null;
       }
     };
-    // We only want this effect to run once on mount and cleanup on unmount.
-    // The state of the tracks is managed by other effects.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Effect to toggle video track based on `videoEnabled` state
   useEffect(() => {
     if (streamRef.current) {
       const videoTrack = streamRef.current.getVideoTracks()[0];
@@ -79,7 +66,6 @@ function Lobby({ onJoin, videoEnabled, setVideoEnabled, audioEnabled, setAudioEn
     }
   }, [videoEnabled]);
 
-  // Effect to toggle audio track based on `audioEnabled` state
   useEffect(() => {
     if (streamRef.current) {
       const audioTrack = streamRef.current.getAudioTracks()[0];
@@ -147,7 +133,7 @@ function CustomVideoConference() {
     return () => {
       room.off('disconnected', handleDisconnected);
     };
-  }, [room, router]);
+  }, [room]);
 
   if (isDisconnected) {
     return (
@@ -167,45 +153,19 @@ function CustomVideoConference() {
   return <VideoConference />;
 }
 
-export default function ArpolMeetPage() {
-  const searchParams = useSearchParams();
-  const roomName = searchParams.get('room') || 'arpol-meet-dds';
 
-  const [userInfo, setUserInfo] = useState({ name: 'Participante' });
-  const [hasJoined, setHasJoined] = useState(false);
-  
-  // States for lobby media controls that will be passed to LiveKitRoom
-  const [videoEnabled, setVideoEnabled] = useState(true);
-  const [audioEnabled, setAudioEnabled] = useState(true);
-
-  useEffect(() => {
-    const savedSettings = localStorage.getItem(USER_SETTINGS_STORAGE_KEY);
-    if (savedSettings) {
-      try {
-        const settings = JSON.parse(savedSettings);
-        setUserInfo({ name: settings.name || 'Participante' });
-      } catch (e) {
-        console.error("Failed to parse user settings", e);
-      }
-    }
-  }, []);
-
-  const token = useToken(hasJoined ? '/api/livekit' : undefined, roomName, {
+function MeetingRoom({ roomName, userInfo, videoEnabled, audioEnabled }: {
+  roomName: string;
+  userInfo: { name: string };
+  videoEnabled: boolean;
+  audioEnabled: boolean;
+}) {
+  const token = useToken('/api/livekit', roomName, {
     userInfo: {
       name: userInfo.name,
     },
   });
 
-  if (!hasJoined) {
-    return <Lobby 
-      onJoin={() => setHasJoined(true)} 
-      videoEnabled={videoEnabled}
-      setVideoEnabled={setVideoEnabled}
-      audioEnabled={audioEnabled}
-      setAudioEnabled={setAudioEnabled}
-    />;
-  }
-  
   if (token === null) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center">
@@ -231,3 +191,48 @@ export default function ArpolMeetPage() {
     </div>
   );
 }
+
+
+export default function ArpolMeetPage() {
+  const searchParams = useSearchParams();
+  const roomName = searchParams.get('room') || 'arpol-meet-dds';
+
+  const [userInfo, setUserInfo] = useState({ name: 'Participante' });
+  const [hasJoined, setHasJoined] = useState(false);
+  
+  const [videoEnabled, setVideoEnabled] = useState(true);
+  const [audioEnabled, setAudioEnabled] = useState(true);
+
+  useEffect(() => {
+    const savedSettings = localStorage.getItem(USER_SETTINGS_STORAGE_KEY);
+    if (savedSettings) {
+      try {
+        const settings = JSON.parse(savedSettings);
+        setUserInfo({ name: settings.name || 'Participante' });
+      } catch (e) {
+        console.error("Failed to parse user settings", e);
+      }
+    }
+  }, []);
+
+  if (!hasJoined) {
+    return <Lobby 
+      onJoin={() => setHasJoined(true)} 
+      videoEnabled={videoEnabled}
+      setVideoEnabled={setVideoEnabled}
+      audioEnabled={audioEnabled}
+      setAudioEnabled={setAudioEnabled}
+    />;
+  }
+  
+  return (
+    <MeetingRoom 
+      roomName={roomName}
+      userInfo={userInfo}
+      videoEnabled={videoEnabled}
+      audioEnabled={audioEnabled}
+    />
+  );
+}
+
+    

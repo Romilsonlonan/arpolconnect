@@ -22,6 +22,7 @@ import {
   ShieldCheck,
   BarChart2,
   ListChecks,
+  Video,
 } from 'lucide-react';
 
 import {
@@ -129,6 +130,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
       { href: '/organograma', icon: <GitMerge />, label: 'Organograma' },
       { href: '/relatorio', icon: <BarChart2 />, label: 'Relatório' },
       { href: '/ocorrencias', icon: <ListChecks />, label: 'Ocorrências' },
+      { href: '/arpol-meet', icon: <Video />, label: 'Arpol-Meet' },
       { href: '/evaluation', icon: <FileText />, label: 'Avaliação' },
       { href: '/dds-info', icon: <Presentation />, label: 'DDS Info' },
       { href: '/support', icon: <BrainCircuit />, label: 'Suporte IA' },
@@ -146,7 +148,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
                 "flex items-center gap-2 font-semibold font-headline text-primary-foreground",
                 !open && "justify-center"
              )}>
-                <Image src="https://i.ibb.co/ksM7sG9D/Logo.png" alt="Arpolar Connect Logo" width={36} height={36} className="h-9 w-9" />
+                <Image src="https://i.ibb.co/ksM7sH9/Logo.png" alt="Arpolar Connect Logo" width={36} height={36} className="h-9 w-9" />
                 {open && <span>Arpolar Connect</span>}
               </Link>
           </SidebarHeader>

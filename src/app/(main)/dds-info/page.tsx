@@ -2,13 +2,14 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
+import Link from 'next/link';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
-import { Upload, FileText, Send, Phone, UserCheck, Users, Calendar, UserPlus, Trash2, Loader2, Link, Download } from 'lucide-react';
+import { Upload, FileText, Send, Phone, UserCheck, Users, Calendar, UserPlus, Trash2, Loader2, Link, Download, Video } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -315,6 +316,24 @@ export default function DDSInfoPage() {
 
       <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
         
+        {/* Arpol Meet Card */}
+        <Card className="flex flex-col items-center justify-center text-center p-6 bg-gradient-to-br from-primary to-primary/80 text-primary-foreground">
+            <CardHeader className="p-2">
+                <Video className="w-16 h-16 mx-auto mb-4" />
+                <CardTitle className="text-2xl font-bold">Arpol-Meet</CardTitle>
+                <CardDescription className="text-primary-foreground/80">
+                    Inicie uma videochamada para o seu DDS agora mesmo.
+                </CardDescription>
+            </CardHeader>
+            <CardContent className="p-2">
+                <Link href="/arpol-meet">
+                    <Button size="lg" className="bg-background text-foreground hover:bg-background/90">
+                        Iniciar Reunião Agora
+                    </Button>
+                </Link>
+            </CardContent>
+        </Card>
+
         {/* Live Presence List */}
         <Card className="lg:col-span-1 xl:col-span-1">
             <CardHeader>

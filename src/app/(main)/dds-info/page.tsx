@@ -182,7 +182,7 @@ export default function DDSInfoPage() {
         // }
         
         // Simulação de sucesso
-        await new Promise(resolve => setTimeout(resolve, 4000));
+        await new Promise(resolve => setTimeout(resolve, 1500));
         
         toast({
             title: 'Post Enviado com Sucesso! (Simulação)',
@@ -307,7 +307,13 @@ export default function DDSInfoPage() {
         <p className="text-muted-foreground">Gerencie os arquivos, comunicados e a participação da equipe no DDS.</p>
       </div>
       
-      <div className="flex justify-end">
+      <div className="flex justify-between items-center">
+         <Link href="/arpol-meet">
+            <Button>
+                <Video className="mr-2" />
+                Ir para a Sala de Reunião
+            </Button>
+        </Link>
         <Button onClick={generatePresenceLink}>
           <LinkIcon className="mr-2" />
           Gerar Link de Presença
@@ -315,24 +321,6 @@ export default function DDSInfoPage() {
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
-        
-        {/* Arpol Meet Card */}
-        <Card className="flex flex-col items-center justify-center text-center p-6 bg-gradient-to-br from-primary to-primary/80 text-primary-foreground">
-            <CardHeader className="p-2">
-                <Video className="w-16 h-16 mx-auto mb-4" />
-                <CardTitle className="text-2xl font-bold">Arpol-Meet</CardTitle>
-                <CardDescription className="text-primary-foreground/80">
-                    Inicie uma videochamada para o seu DDS agora mesmo.
-                </CardDescription>
-            </CardHeader>
-            <CardContent className="p-2">
-                <Link href="/arpol-meet">
-                    <Button size="lg" className="bg-background text-foreground hover:bg-background/90">
-                        Iniciar Reunião Agora
-                    </Button>
-                </Link>
-            </CardContent>
-        </Card>
 
         {/* Live Presence List */}
         <Card className="lg:col-span-1 xl:col-span-1">

@@ -16,68 +16,82 @@ import { Card } from '@/components/ui/card';
 
 const USER_SETTINGS_STORAGE_KEY = 'userSettings';
 
-function Lobby({ onJoin }: { onJoin: () => void }) {
-  const [videoEnabled, setVideoEnabled] = useState(true);
-  const [audioEnabled, setAudioEnabled] = useState(true);
+function Lobby({ onJoin, videoEnabled, setVideoEnabled, audioEnabled, setAudioEnabled }: { 
+    onJoin: () => void;
+    videoEnabled: boolean;
+    setVideoEnabled: (enabled: boolean) => void;
+    audioEnabled: boolean;
+    setAudioEnabled: (enabled: boolean) => void;
+}) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
   useEffect(() => {
-    const getMedia = async () => {
-      // Stop previous stream if it exists
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
-      }
-      
-      if (videoRef.current) {
-          videoRef.current.srcObject = null;
-      }
+    let isMounted = true;
+    let localStream: MediaStream;
 
+    const getMedia = async () => {
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ 
-            video: videoEnabled, 
-            audio: audioEnabled 
-        });
-        streamRef.current = stream;
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
+        localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        if (isMounted) {
+            if (videoRef.current) {
+                videoRef.current.srcObject = localStream;
+            }
+            streamRef.current = localStream;
+            // Initially set tracks enabled/disabled based on state
+            localStream.getVideoTracks()[0].enabled = videoEnabled;
+            localStream.getAudioTracks()[0].enabled = audioEnabled;
+        } else {
+             localStream.getTracks().forEach(track => track.stop());
         }
       } catch (err) {
         console.error('Error accessing media for lobby:', err);
-        // If we fail to get video, disable it to show the VideoOff icon
-        if ((err as Error).name === 'NotAllowedError' || (err as Error).name === 'NotFoundError') {
-            setVideoEnabled(false);
-        }
+        setVideoEnabled(false);
+        setAudioEnabled(false);
       }
     };
 
     getMedia();
-    
-    // Cleanup function to stop media tracks when the component unmounts or states change
+
     return () => {
+      isMounted = false;
+      if (localStream) {
+        localStream.getTracks().forEach(track => track.stop());
+      }
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current = null;
       }
     };
-  }, [videoEnabled, audioEnabled]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run only once on mount
 
-  const handleJoin = () => {
-    // Stop the tracks before joining the room
+  useEffect(() => {
     if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
+      const videoTrack = streamRef.current.getVideoTracks()[0];
+      if (videoTrack) {
+        videoTrack.enabled = videoEnabled;
+      }
     }
-    onJoin();
-  };
+  }, [videoEnabled]);
+
+  useEffect(() => {
+    if (streamRef.current) {
+      const audioTrack = streamRef.current.getAudioTracks()[0];
+      if (audioTrack) {
+        audioTrack.enabled = audioEnabled;
+      }
+    }
+  }, [audioEnabled]);
 
   return (
     <div className="flex flex-col items-center justify-center h-full text-center bg-gray-50 dark:bg-gray-900 p-4 md:p-8">
       <div className="flex flex-col lg:flex-row items-center gap-8 max-w-5xl w-full">
         <div className="relative w-full max-w-lg">
           <Card className="aspect-video w-full overflow-hidden shadow-lg">
-            {videoEnabled ? (
-              <video ref={videoRef} autoPlay muted playsInline className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full bg-slate-800 flex items-center justify-center">
+            <video ref={videoRef} autoPlay muted playsInline className="w-full h-full object-cover" />
+             {!videoEnabled && (
+              <div className="absolute inset-0 w-full h-full bg-slate-800 flex items-center justify-center">
                 <VideoOff className="w-16 h-16 text-slate-500" />
               </div>
             )}
@@ -105,7 +119,7 @@ function Lobby({ onJoin }: { onJoin: () => void }) {
         <div className="flex flex-col items-center lg:items-start text-center lg:text-left gap-6">
           <h1 className="text-3xl md:text-4xl font-bold">Pronto para entrar?</h1>
           <p className="text-muted-foreground">Verifique seu áudio e vídeo antes de participar da reunião.</p>
-          <Button size="lg" onClick={handleJoin} className="w-full sm:w-auto">
+          <Button size="lg" onClick={onJoin} className="w-full sm:w-auto">
             Participar agora
           </Button>
         </div>
@@ -134,7 +148,7 @@ function CustomVideoConference() {
         <div className="flex flex-col items-center gap-4 p-8 bg-gray-800/50 rounded-lg">
           <h1 className="text-2xl font-bold">Você foi desconectado.</h1>
           <p className="text-muted-foreground">A reunião terminou ou sua conexão foi perdida.</p>
-          <Button onClick={() => window.location.reload()} variant="secondary" size="lg">
+          <Button onClick={() => window.location.href = '/'} variant="secondary" size="lg">
             <LogOut className="mr-2" />
             Voltar para o Início
           </Button>
@@ -152,6 +166,10 @@ export default function ArpolMeetPage() {
 
   const [userInfo, setUserInfo] = useState({ name: 'Participante' });
   const [hasJoined, setHasJoined] = useState(false);
+  
+  // States for lobby media controls that will be passed to LiveKitRoom
+  const [videoEnabled, setVideoEnabled] = useState(true);
+  const [audioEnabled, setAudioEnabled] = useState(true);
 
   useEffect(() => {
     const savedSettings = localStorage.getItem(USER_SETTINGS_STORAGE_KEY);
@@ -173,7 +191,13 @@ export default function ArpolMeetPage() {
   });
 
   if (!hasJoined) {
-    return <Lobby onJoin={() => setHasJoined(true)} />;
+    return <Lobby 
+      onJoin={() => setHasJoined(true)} 
+      videoEnabled={videoEnabled}
+      setVideoEnabled={setVideoEnabled}
+      audioEnabled={audioEnabled}
+      setAudioEnabled={setAudioEnabled}
+    />;
   }
   
   if (token === null) {
@@ -193,8 +217,8 @@ export default function ArpolMeetPage() {
         token={token}
         serverUrl={process.env.NEXT_PUBLIC_LIVEKIT_URL}
         connect={true}
-        video={true}
-        audio={true}
+        video={videoEnabled}
+        audio={audioEnabled}
         className="h-full"
       >
         <CustomVideoConference />

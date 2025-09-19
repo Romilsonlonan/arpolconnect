@@ -130,7 +130,6 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
       { href: '/organograma', icon: <GitMerge />, label: 'Organograma' },
       { href: '/relatorio', icon: <BarChart2 />, label: 'Relatório' },
       { href: '/ocorrencias', icon: <ListChecks />, label: 'Ocorrências' },
-      { href: '/arpol-meet', icon: <Video />, label: 'Arpol-Meet' },
       { href: '/evaluation', icon: <FileText />, label: 'Avaliação' },
       { href: '/dds-info', icon: <Presentation />, label: 'DDS Info' },
       { href: '/support', icon: <BrainCircuit />, label: 'Suporte IA' },

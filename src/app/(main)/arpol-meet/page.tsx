@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
@@ -23,22 +24,32 @@ function Lobby({ onJoin, videoEnabled, setVideoEnabled, audioEnabled, setAudioEn
     setAudioEnabled: (enabled: boolean) => void;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
 
   useEffect(() => {
-    let stream: MediaStream | undefined;
-
+    // Function to get media stream
     const getMedia = async () => {
       try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        // Stop any existing stream
+        if (streamRef.current) {
+          streamRef.current.getTracks().forEach(track => track.stop());
+        }
+
+        // Get new stream
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        streamRef.current = stream;
+
+        // Attach to video element
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
         }
-        // Initialize tracks based on passed state. This ensures they match the UI.
+
+        // Apply initial enabled/disabled state
         stream.getVideoTracks()[0].enabled = videoEnabled;
         stream.getAudioTracks()[0].enabled = audioEnabled;
+
       } catch (err) {
         console.error('Error accessing media for lobby:', err);
-        // If permission is denied, reflect that in the state by disabling both.
         setVideoEnabled(false);
         setAudioEnabled(false);
       }
@@ -46,22 +57,22 @@ function Lobby({ onJoin, videoEnabled, setVideoEnabled, audioEnabled, setAudioEn
     
     getMedia();
 
-    // Cleanup function: this is critical to release the devices.
+    // Cleanup function to run when the component unmounts
     return () => {
-      if (stream) {
-        stream.getTracks().forEach(track => track.stop());
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+        streamRef.current = null;
       }
     };
-    // The dependency array is intentionally empty to run this only once on mount.
-    // The state of tracks is managed separately in the other useEffects.
+    // We only want this effect to run once on mount and cleanup on unmount.
+    // The state of the tracks is managed by other effects.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Effect to toggle video track based on `videoEnabled` state
   useEffect(() => {
-    if (videoRef.current && videoRef.current.srcObject) {
-      const stream = videoRef.current.srcObject as MediaStream;
-      const videoTrack = stream.getVideoTracks()[0];
+    if (streamRef.current) {
+      const videoTrack = streamRef.current.getVideoTracks()[0];
       if (videoTrack) {
         videoTrack.enabled = videoEnabled;
       }
@@ -70,14 +81,14 @@ function Lobby({ onJoin, videoEnabled, setVideoEnabled, audioEnabled, setAudioEn
 
   // Effect to toggle audio track based on `audioEnabled` state
   useEffect(() => {
-    if (videoRef.current && videoRef.current.srcObject) {
-      const stream = videoRef.current.srcObject as MediaStream;
-      const audioTrack = stream.getAudioTracks()[0];
+    if (streamRef.current) {
+      const audioTrack = streamRef.current.getAudioTracks()[0];
       if (audioTrack) {
         audioTrack.enabled = audioEnabled;
       }
     }
   }, [audioEnabled]);
+
 
   return (
     <div className="flex flex-col items-center justify-center h-full text-center bg-gray-50 dark:bg-gray-900 p-4 md:p-8">
@@ -136,7 +147,7 @@ function CustomVideoConference() {
     return () => {
       room.off('disconnected', handleDisconnected);
     };
-  }, [room]);
+  }, [room, router]);
 
   if (isDisconnected) {
     return (
@@ -179,11 +190,10 @@ export default function ArpolMeetPage() {
     }
   }, []);
 
-  const token = useToken('/api/livekit', roomName, {
+  const token = useToken(hasJoined ? '/api/livekit' : undefined, roomName, {
     userInfo: {
       name: userInfo.name,
     },
-    skip: !hasJoined,
   });
 
   if (!hasJoined) {

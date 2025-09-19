@@ -6,15 +6,99 @@ import {
   LiveKitRoom,
   VideoConference,
   useToken,
-  useRoomContext
+  useRoomContext,
+  useDataChannel,
+  ControlBar,
 } from '@livekit/components-react';
 import '@livekit/components-styles';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Loader2, Video, Mic, VideoOff, MicOff, LogOut } from 'lucide-react';
+import { Loader2, Video, Mic, VideoOff, MicOff, LogOut, Smile, Hand, MoreHorizontal, PhoneCall, MessageSquare, ScreenShare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { animated, useTransition } from '@react-spring/web';
+import { cn } from '@/lib/utils';
 
 const USER_SETTINGS_STORAGE_KEY = 'userSettings';
+
+// --- Reactions Components ---
+const EMOJIS = ['💖', '👍', '🎉', '👏', '😂', '😮', '😢', '🤔', '👎'];
+
+type Reaction = {
+  id: number;
+  emoji: string;
+  x: number;
+};
+
+function ReactionButton({ onSelect }: { onSelect: (emoji: string) => void }) {
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <Button variant="secondary" size="icon" className="h-12 w-12 rounded-full">
+          <Smile />
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent className="w-auto p-2 bg-gray-800 border-gray-700 rounded-full">
+        <div className="flex gap-2">
+          {EMOJIS.map((emoji) => (
+            <button
+              key={emoji}
+              onClick={() => onSelect(emoji)}
+              className="text-2xl p-1 rounded-full hover:bg-gray-700 transition-colors"
+            >
+              {emoji}
+            </button>
+          ))}
+        </div>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function ReactionAnimations() {
+  const [reactions, setReactions] = useState<Reaction[]>([]);
+  const reactionId = useRef(0);
+
+  useDataChannel('reactions', (payload) => {
+    const message = new TextDecoder().decode(payload.payload);
+    const newReaction: Reaction = {
+      id: reactionId.current++,
+      emoji: message,
+      x: Math.random() * 80 + 10, // Horizontal position from 10% to 90%
+    };
+    setReactions((prev) => [...prev, newReaction]);
+  });
+  
+  const transitions = useTransition(reactions, {
+    from: { transform: 'translateY(0px) scale(1)', opacity: 1 },
+    enter: { transform: 'translateY(-200px) scale(1.5)', opacity: 1 },
+    leave: { transform: 'translateY(-400px) scale(0.5)', opacity: 0 },
+    config: { duration: 3000 },
+    onRest: (result, spring, item) => {
+        setReactions((prev) => prev.filter(r => r.id !== item.id));
+    },
+  });
+
+  return (
+    <div className="absolute bottom-24 inset-x-0 h-96 pointer-events-none z-50">
+        {transitions((style, item) => (
+            <animated.div
+             style={{
+                ...style,
+                position: 'absolute',
+                bottom: 0,
+                left: `${item.x}%`,
+                transform: style.transform,
+              }}
+              className="text-4xl"
+            >
+                {item.emoji}
+            </animated.div>
+        ))}
+    </div>
+  );
+}
+
 
 function Lobby({ onJoin, videoEnabled, setVideoEnabled, audioEnabled, setAudioEnabled }: { 
     onJoin: () => void;
@@ -27,28 +111,37 @@ function Lobby({ onJoin, videoEnabled, setVideoEnabled, audioEnabled, setAudioEn
   const streamRef = useRef<MediaStream | null>(null);
 
   useEffect(() => {
+    let isMounted = true;
     const getMedia = async () => {
-      try {
-        if (streamRef.current) {
-          streamRef.current.getTracks().forEach(track => track.stop());
+        try {
+          if (streamRef.current) {
+              streamRef.current.getTracks().forEach(track => track.stop());
+          }
+          const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+          if (isMounted) {
+            streamRef.current = stream;
+            if (videoRef.current) {
+              videoRef.current.srcObject = stream;
+            }
+             // Apply initial state
+            stream.getVideoTracks()[0].enabled = videoEnabled;
+            stream.getAudioTracks()[0].enabled = audioEnabled;
+          } else {
+             stream.getTracks().forEach(track => track.stop());
+          }
+        } catch (err) {
+            console.error('Error accessing media for lobby:', err);
+             if (isMounted) {
+                setVideoEnabled(false);
+                setAudioEnabled(false);
+            }
         }
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-        streamRef.current = stream;
-        if (videoRef.current) {
-          videoRef.current.srcObject = stream;
-        }
-        stream.getVideoTracks()[0].enabled = videoEnabled;
-        stream.getAudioTracks()[0].enabled = audioEnabled;
-      } catch (err) {
-        console.error('Error accessing media for lobby:', err);
-        setVideoEnabled(false);
-        setAudioEnabled(false);
-      }
     };
     
     getMedia();
 
     return () => {
+      isMounted = false;
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => track.stop());
         streamRef.current = null;
@@ -124,6 +217,15 @@ function CustomVideoConference() {
   const room = useRoomContext();
   const router = useRouter();
   const [isDisconnected, setIsDisconnected] = useState(false);
+  const { send } = useDataChannel('reactions');
+
+  const handleReaction = (emoji: string) => {
+    if (send) {
+        const payload = new TextEncoder().encode(emoji);
+        send(payload);
+    }
+  };
+
 
   useEffect(() => {
     const handleDisconnected = () => {
@@ -133,7 +235,7 @@ function CustomVideoConference() {
     return () => {
       room.off('disconnected', handleDisconnected);
     };
-  }, [room]);
+  }, [room, router]);
 
   if (isDisconnected) {
     return (
@@ -150,7 +252,63 @@ function CustomVideoConference() {
     );
   }
 
-  return <VideoConference />;
+  const CustomControls = () => (
+    <div className="flex items-center gap-2">
+      <ReactionButton onSelect={handleReaction} />
+      <ControlBar.ControlButton label="Legendas (CC)" >
+        <div className="flex items-center justify-center">
+            <p className="font-bold text-sm">CC</p>
+        </div>
+      </ControlBar.ControlButton>
+      <ControlBar.ControlButton label="Levantar a mão">
+        <Hand />
+      </ControlBar.ControlButton>
+       <ControlBar.ControlButton label="Mais opções">
+        <MoreHorizontal />
+      </ControlBar.ControlButton>
+       <ControlBar.ControlButton label="Encerrar chamada" className="bg-red-600 hover:bg-red-700 text-white" onClick={() => room.disconnect()}>
+        <PhoneCall className="transform -scale-x-100" />
+      </ControlBar.ControlButton>
+    </div>
+  );
+
+  return (
+    <div className="relative h-full">
+        <VideoConference />
+        <ReactionAnimations />
+         <div className="absolute bottom-0 left-0 right-0 p-4 flex justify-center">
+            <div className="lk-control-bar" style={{ position: 'relative', width: 'auto'}}>
+                <ControlBar.Root>
+                    <ControlBar.Item>
+                       <ControlBar.MuteButton>
+                            <Mic />
+                            <MicOff />
+                        </ControlBar.MuteButton>
+                    </ControlBar.Item>
+                    <ControlBar.Item>
+                         <ControlBar.CameraButton>
+                            <Video />
+                            <VideoOff />
+                        </ControlBar.CameraButton>
+                    </ControlBar.Item>
+                    <ControlBar.Item>
+                         <ControlBar.ScreenShareButton>
+                            <ScreenShare />
+                         </ControlBar.ScreenShareButton>
+                    </ControlBar.Item>
+                     <ControlBar.Item>
+                         <ControlBar.ChatButton>
+                            <MessageSquare />
+                         </ControlBar.ChatButton>
+                    </ControlBar.Item>
+                    <ControlBar.Item>
+                        <CustomControls />
+                    </ControlBar.Item>
+                </ControlBar.Root>
+            </div>
+        </div>
+    </div>
+  );
 }
 
 
@@ -234,5 +392,3 @@ export default function ArpolMeetPage() {
     />
   );
 }
-
-    

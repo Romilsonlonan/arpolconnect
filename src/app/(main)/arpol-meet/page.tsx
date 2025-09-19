@@ -6,7 +6,6 @@ import {
   LiveKitRoom,
   VideoConference,
   useToken,
-  LocalVideoTrack,
 } from '@livekit/components-react';
 import '@livekit/components-styles';
 import { useSearchParams } from 'next/navigation';
@@ -20,39 +19,48 @@ function Lobby({ onJoin }: { onJoin: () => void }) {
   const [videoEnabled, setVideoEnabled] = useState(true);
   const [audioEnabled, setAudioEnabled] = useState(true);
   const videoRef = useRef<HTMLVideoElement>(null);
+  const streamRef = useRef<MediaStream | null>(null);
 
   useEffect(() => {
-    let stream: MediaStream | undefined;
-
     const getMedia = async () => {
-      // Clean up previous stream
-      if (videoRef.current?.srcObject) {
-          const currentStream = videoRef.current.srcObject as MediaStream;
-          currentStream.getTracks().forEach(track => track.stop());
-          videoRef.current.srcObject = null;
+      // Clean up previous stream if it exists
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
       }
-      
+
       try {
         if (videoEnabled) {
-          stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: audioEnabled });
+          const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: audioEnabled });
+          streamRef.current = stream;
           if (videoRef.current) {
             videoRef.current.srcObject = stream;
           }
+        } else if (videoRef.current) {
+          videoRef.current.srcObject = null;
         }
       } catch (err) {
         console.error('Error accessing media for lobby:', err);
-        setVideoEnabled(false); // Disable video if permission is denied
+        setVideoEnabled(false);
       }
     };
 
     getMedia();
 
+    // Cleanup function to stop media tracks when component unmounts
     return () => {
-       if (stream) {
-            stream.getTracks().forEach(track => track.stop());
-        }
+      if (streamRef.current) {
+        streamRef.current.getTracks().forEach(track => track.stop());
+      }
     };
   }, [videoEnabled, audioEnabled]);
+
+  const handleJoin = () => {
+    // Stop tracks before joining the room
+    if (streamRef.current) {
+      streamRef.current.getTracks().forEach(track => track.stop());
+    }
+    onJoin();
+  };
 
   return (
     <div className="flex flex-col items-center justify-center h-full text-center bg-gray-50 dark:bg-gray-900 p-4 md:p-8">
@@ -92,7 +100,7 @@ function Lobby({ onJoin }: { onJoin: () => void }) {
         <div className="flex flex-col items-center lg:items-start text-center lg:text-left gap-6">
           <h1 className="text-3xl md:text-4xl font-bold">Pronto para entrar?</h1>
           <p className="text-muted-foreground">Verifique seu áudio e vídeo antes de participar da reunião.</p>
-          <Button size="lg" onClick={() => onJoin()} className="w-full sm:w-auto">
+          <Button size="lg" onClick={handleJoin} className="w-full sm:w-auto">
             Participar agora
           </Button>
         </div>

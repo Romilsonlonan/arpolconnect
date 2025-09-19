@@ -24,51 +24,39 @@ function Lobby({ onJoin, videoEnabled, setVideoEnabled, audioEnabled, setAudioEn
     setAudioEnabled: (enabled: boolean) => void;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
 
   useEffect(() => {
-    let isMounted = true;
-    let localStream: MediaStream;
-
+    let stream: MediaStream;
     const getMedia = async () => {
       try {
-        localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-        if (isMounted) {
-            if (videoRef.current) {
-                videoRef.current.srcObject = localStream;
-            }
-            streamRef.current = localStream;
-            // Initially set tracks enabled/disabled based on state
-            localStream.getVideoTracks()[0].enabled = videoEnabled;
-            localStream.getAudioTracks()[0].enabled = audioEnabled;
-        } else {
-             localStream.getTracks().forEach(track => track.stop());
+        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
         }
+        // Initialize tracks based on passed state
+        stream.getVideoTracks()[0].enabled = videoEnabled;
+        stream.getAudioTracks()[0].enabled = audioEnabled;
       } catch (err) {
         console.error('Error accessing media for lobby:', err);
+        // If permission is denied, reflect that in the state
         setVideoEnabled(false);
         setAudioEnabled(false);
       }
     };
-
     getMedia();
 
     return () => {
-      isMounted = false;
-      if (localStream) {
-        localStream.getTracks().forEach(track => track.stop());
-      }
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
-        streamRef.current = null;
+      if (stream) {
+        stream.getTracks().forEach(track => track.stop());
       }
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []); // Run only once on mount
+  }, []);
 
   useEffect(() => {
-    if (streamRef.current) {
-      const videoTrack = streamRef.current.getVideoTracks()[0];
+    if (videoRef.current && videoRef.current.srcObject) {
+      const stream = videoRef.current.srcObject as MediaStream;
+      const videoTrack = stream.getVideoTracks()[0];
       if (videoTrack) {
         videoTrack.enabled = videoEnabled;
       }
@@ -76,8 +64,9 @@ function Lobby({ onJoin, videoEnabled, setVideoEnabled, audioEnabled, setAudioEn
   }, [videoEnabled]);
 
   useEffect(() => {
-    if (streamRef.current) {
-      const audioTrack = streamRef.current.getAudioTracks()[0];
+    if (videoRef.current && videoRef.current.srcObject) {
+      const stream = videoRef.current.srcObject as MediaStream;
+      const audioTrack = stream.getAudioTracks()[0];
       if (audioTrack) {
         audioTrack.enabled = audioEnabled;
       }
@@ -141,7 +130,7 @@ function CustomVideoConference() {
     return () => {
       room.off('disconnected', handleDisconnected);
     };
-  }, [room]);
+  }, [room, router]);
 
   if (isDisconnected) {
     return (

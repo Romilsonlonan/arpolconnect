@@ -218,4 +218,3 @@ export function ContractDocsModal({ isOpen, onClose, contract, onSaveDocument, o
     </>
   );
 }
-    

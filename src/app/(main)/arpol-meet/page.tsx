@@ -110,59 +110,43 @@ function Lobby({ onJoin, videoEnabled, setVideoEnabled, audioEnabled, setAudioEn
     setAudioEnabled: (enabled: boolean) => void;
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
   const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
-    let isMounted = true;
+    let stream: MediaStream | null = null;
     const getMedia = async () => {
       try {
-        if (streamRef.current) {
-          streamRef.current.getTracks().forEach(track => track.stop());
-        }
-        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-        if (isMounted) {
-          setHasCameraPermission(true);
-          streamRef.current = stream;
-          if (videoRef.current) {
-            videoRef.current.srcObject = stream;
-          }
-          stream.getVideoTracks()[0].enabled = videoEnabled;
-          stream.getAudioTracks()[0].enabled = audioEnabled;
-        } else {
-          stream.getTracks().forEach(track => track.stop());
+        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        setHasCameraPermission(true);
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
         }
       } catch (err) {
         console.error('Error accessing media for lobby:', err);
-        if (isMounted) {
-          setHasCameraPermission(false);
-          setVideoEnabled(false);
-          setAudioEnabled(false);
-          toast({
-            variant: 'destructive',
-            title: 'Permissão Negada',
-            description: 'O acesso à câmera e ao microfone é necessário. Habilite nas configurações do seu navegador.',
-          });
-        }
+        setHasCameraPermission(false);
+        setVideoEnabled(false);
+        setAudioEnabled(false);
+        toast({
+          variant: 'destructive',
+          title: 'Permissão Negada',
+          description: 'O acesso à câmera e ao microfone é necessário. Habilite nas configurações do seu navegador.',
+        });
       }
     };
     
     getMedia();
 
     return () => {
-      isMounted = false;
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
-        streamRef.current = null;
-      }
+      stream?.getTracks().forEach(track => track.stop());
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    if (streamRef.current) {
-      const videoTrack = streamRef.current.getVideoTracks()[0];
+    if (videoRef.current?.srcObject) {
+      const stream = videoRef.current.srcObject as MediaStream;
+      const videoTrack = stream.getVideoTracks()[0];
       if (videoTrack) {
         videoTrack.enabled = videoEnabled;
       }
@@ -170,8 +154,9 @@ function Lobby({ onJoin, videoEnabled, setVideoEnabled, audioEnabled, setAudioEn
   }, [videoEnabled]);
 
   useEffect(() => {
-    if (streamRef.current) {
-      const audioTrack = streamRef.current.getAudioTracks()[0];
+    if (videoRef.current?.srcObject) {
+      const stream = videoRef.current.srcObject as MediaStream;
+      const audioTrack = stream.getAudioTracks()[0];
       if (audioTrack) {
         audioTrack.enabled = audioEnabled;
       }

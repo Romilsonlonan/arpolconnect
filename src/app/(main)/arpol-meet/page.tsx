@@ -24,24 +24,36 @@ function Lobby({ onJoin }: { onJoin: () => void }) {
 
   useEffect(() => {
     const getMedia = async () => {
+      // Stop previous stream if it exists
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => track.stop());
       }
+      
+      if (videoRef.current) {
+          videoRef.current.srcObject = null;
+      }
 
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({ video: videoEnabled, audio: audioEnabled });
+        const stream = await navigator.mediaDevices.getUserMedia({ 
+            video: videoEnabled, 
+            audio: audioEnabled 
+        });
         streamRef.current = stream;
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
         }
       } catch (err) {
         console.error('Error accessing media for lobby:', err);
-        setVideoEnabled(false); // Disable if there's an error
+        // If we fail to get video, disable it to show the VideoOff icon
+        if ((err as Error).name === 'NotAllowedError' || (err as Error).name === 'NotFoundError') {
+            setVideoEnabled(false);
+        }
       }
     };
 
     getMedia();
     
+    // Cleanup function to stop media tracks when the component unmounts or states change
     return () => {
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => track.stop());
@@ -50,6 +62,7 @@ function Lobby({ onJoin }: { onJoin: () => void }) {
   }, [videoEnabled, audioEnabled]);
 
   const handleJoin = () => {
+    // Stop the tracks before joining the room
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
     }
@@ -118,12 +131,12 @@ function CustomVideoConference() {
   if (isDisconnected) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center bg-gray-900 text-white">
-        <div className="flex flex-col items-center gap-4">
+        <div className="flex flex-col items-center gap-4 p-8 bg-gray-800/50 rounded-lg">
           <h1 className="text-2xl font-bold">Você foi desconectado.</h1>
           <p className="text-muted-foreground">A reunião terminou ou sua conexão foi perdida.</p>
           <Button onClick={() => window.location.reload()} variant="secondary" size="lg">
             <LogOut className="mr-2" />
-            Voltar para o Lobby
+            Voltar para o Início
           </Button>
         </div>
       </div>

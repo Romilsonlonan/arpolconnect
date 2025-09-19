@@ -12,7 +12,7 @@ import {
 } from '@livekit/components-react';
 import '@livekit/components-styles';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Loader2, Video, Mic, VideoOff, MicOff, LogOut, Smile, Hand, MoreHorizontal, PhoneCall, MessageSquare, ScreenShare } from 'lucide-react';
+import { Loader2, Video, Mic, VideoOff, MicOff, LogOut, Smile, Hand, MoreHorizontal, PhoneCall, MessageSquare, ScreenShare, Share } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -252,60 +252,24 @@ function CustomVideoConference() {
     );
   }
 
-  const CustomControls = () => (
-    <div className="flex items-center gap-2">
-      <ReactionButton onSelect={handleReaction} />
-      <ControlBar.ControlButton label="Legendas (CC)" >
-        <div className="flex items-center justify-center">
-            <p className="font-bold text-sm">CC</p>
-        </div>
-      </ControlBar.ControlButton>
-      <ControlBar.ControlButton label="Levantar a mão">
-        <Hand />
-      </ControlBar.ControlButton>
-       <ControlBar.ControlButton label="Mais opções">
-        <MoreHorizontal />
-      </ControlBar.ControlButton>
-       <ControlBar.ControlButton label="Encerrar chamada" className="bg-red-600 hover:bg-red-700 text-white" onClick={() => room.disconnect()}>
-        <PhoneCall className="transform -scale-x-100" />
-      </ControlBar.ControlButton>
-    </div>
-  );
 
   return (
     <div className="relative h-full">
         <VideoConference />
         <ReactionAnimations />
          <div className="absolute bottom-0 left-0 right-0 p-4 flex justify-center">
-            <div className="lk-control-bar" style={{ position: 'relative', width: 'auto'}}>
-                <ControlBar.Root>
-                    <ControlBar.Item>
-                       <ControlBar.MuteButton>
-                            <Mic />
-                            <MicOff />
-                        </ControlBar.MuteButton>
-                    </ControlBar.Item>
-                    <ControlBar.Item>
-                         <ControlBar.CameraButton>
-                            <Video />
-                            <VideoOff />
-                        </ControlBar.CameraButton>
-                    </ControlBar.Item>
-                    <ControlBar.Item>
-                         <ControlBar.ScreenShareButton>
-                            <ScreenShare />
-                         </ControlBar.ScreenShareButton>
-                    </ControlBar.Item>
-                     <ControlBar.Item>
-                         <ControlBar.ChatButton>
-                            <MessageSquare />
-                         </ControlBar.ChatButton>
-                    </ControlBar.Item>
-                    <ControlBar.Item>
-                        <CustomControls />
-                    </ControlBar.Item>
-                </ControlBar.Root>
-            </div>
+            <ControlBar controls={{
+                camera: true,
+                chat: true,
+                microphone: true,
+                screenShare: true,
+                leave: true,
+            }}>
+                <ReactionButton onSelect={handleReaction} />
+                 <ControlBar.ControlButton label="Levantar a mão">
+                    <Hand />
+                </ControlBar.ControlButton>
+            </ControlBar>
         </div>
     </div>
   );

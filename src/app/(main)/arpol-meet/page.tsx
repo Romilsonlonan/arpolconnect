@@ -7,14 +7,9 @@ import {
   VideoConference,
   useToken,
   LocalVideoTrack,
-  ControlBar,
-  useTracks,
-  GridLayout,
-  ParticipantTile,
 } from '@livekit/components-react';
-import type { Track } from 'livekit-client';
 import { useSearchParams } from 'next/navigation';
-import { Loader2, Video, Mic, VideoOff, MicOff, Tv, MonitorUp, PhoneOff } from 'lucide-react';
+import { Loader2, Video, Mic, VideoOff, MicOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 
@@ -27,34 +22,34 @@ function Lobby({ onJoin }: { onJoin: () => void }) {
 
   useEffect(() => {
     let videoTrack: LocalVideoTrack | undefined;
+    let stream: MediaStream | undefined;
 
     const getMedia = async () => {
-      if (videoEnabled) {
-        try {
-          const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      try {
+        if (videoEnabled) {
+          stream = await navigator.mediaDevices.getUserMedia({ video: true });
           if (videoRef.current) {
             videoRef.current.srcObject = stream;
-            videoTrack = new LocalVideoTrack(stream.getVideoTracks()[0]);
+            // No need to create a LocalVideoTrack here, just preview
           }
-        } catch (err) {
-          console.error('Error accessing camera for lobby:', err);
-          setVideoEnabled(false);
-        }
-      } else {
-        if (videoTrack) {
-          videoTrack.stop();
-          if (videoRef.current) {
+        } else {
+          // Stop existing stream if video is disabled
+          if (videoRef.current?.srcObject) {
+            const currentStream = videoRef.current.srcObject as MediaStream;
+            currentStream.getTracks().forEach(track => track.stop());
             videoRef.current.srcObject = null;
           }
         }
+      } catch (err) {
+        console.error('Error accessing camera for lobby:', err);
+        setVideoEnabled(false);
       }
     };
 
     getMedia();
 
     return () => {
-      videoTrack?.stop();
-       if (videoRef.current && videoRef.current.srcObject) {
+       if (videoRef.current?.srcObject) {
             const stream = videoRef.current.srcObject as MediaStream;
             stream.getTracks().forEach(track => track.stop());
         }
@@ -99,7 +94,7 @@ function Lobby({ onJoin }: { onJoin: () => void }) {
         <div className="flex flex-col items-center lg:items-start text-center lg:text-left gap-6">
           <h1 className="text-3xl md:text-4xl font-bold">Pronto para entrar?</h1>
           <p className="text-muted-foreground">Verifique seu áudio e vídeo antes de participar da reunião.</p>
-          <Button size="lg" onClick={onJoin} className="w-full sm:w-auto">
+          <Button size="lg" onClick={() => onJoin()} className="w-full sm:w-auto">
             Participar agora
           </Button>
         </div>
@@ -114,7 +109,7 @@ export default function ArpolMeetPage() {
   const roomName = searchParams.get('room') || 'arpol-meet-dds';
 
   const [userInfo, setUserInfo] = useState({ name: 'Participante' });
-  const [isInLobby, setIsInLobby] = useState(true);
+  const [hasJoined, setHasJoined] = useState(false);
 
   useEffect(() => {
     const savedSettings = localStorage.getItem(USER_SETTINGS_STORAGE_KEY);
@@ -132,14 +127,14 @@ export default function ArpolMeetPage() {
     userInfo: {
       name: userInfo.name,
     },
-    // skip fetching token if in lobby
-    skip: isInLobby,
+    // skip fetching token if the user hasn't joined yet
+    skip: !hasJoined,
   });
 
-  if (isInLobby) {
-    return <Lobby onJoin={() => setIsInLobby(false)} />;
+  if (!hasJoined) {
+    return <Lobby onJoin={() => setHasJoined(true)} />;
   }
-
+  
   if (token === null) {
     return (
       <div className="flex flex-col items-center justify-center h-full text-center">
@@ -150,6 +145,7 @@ export default function ArpolMeetPage() {
     );
   }
 
+
   return (
     <div className="h-full w-full">
       <div data-lk-theme="default" className="h-full w-full">
@@ -159,6 +155,7 @@ export default function ArpolMeetPage() {
           connect={true}
           video={true}
           audio={true}
+          className="h-full"
         >
           <VideoConference />
         </LiveKitRoom>

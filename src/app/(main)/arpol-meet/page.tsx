@@ -44,16 +44,18 @@ export default function ArpolMeetPage() {
   }
 
   return (
-    <div data-lk-theme="default" className='h-full -m-6'>
-        <LiveKitRoom
-            token={token}
-            serverUrl={process.env.NEXT_PUBLIC_LIVEKIT_URL}
-            connect={true}
-            video={true}
-            audio={true}
-        >
-            <VideoConference />
-        </LiveKitRoom>
+    <div className="h-full w-full">
+        <div data-lk-theme="default" className='h-full w-full'>
+            <LiveKitRoom
+                token={token}
+                serverUrl={process.env.NEXT_PUBLIC_LIVEKIT_URL}
+                connect={true}
+                video={true}
+                audio={true}
+            >
+                <VideoConference />
+            </LiveKitRoom>
+        </div>
     </div>
   );
 }

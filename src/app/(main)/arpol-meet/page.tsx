@@ -114,16 +114,15 @@ function Lobby({ onJoin, videoEnabled, setVideoEnabled, audioEnabled, setAudioEn
   const { toast } = useToast();
 
   useEffect(() => {
-    let stream: MediaStream | null = null;
-    const getMedia = async () => {
+    const getCameraPermission = async () => {
       try {
-        stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         setHasCameraPermission(true);
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
         }
-      } catch (err) {
-        console.error('Error accessing media for lobby:', err);
+      } catch (error) {
+        console.error('Error accessing media for lobby:', error);
         setHasCameraPermission(false);
         setVideoEnabled(false);
         setAudioEnabled(false);
@@ -135,10 +134,13 @@ function Lobby({ onJoin, videoEnabled, setVideoEnabled, audioEnabled, setAudioEn
       }
     };
     
-    getMedia();
+    getCameraPermission();
 
     return () => {
-      stream?.getTracks().forEach(track => track.stop());
+      if (videoRef.current && videoRef.current.srcObject) {
+        const stream = videoRef.current.srcObject as MediaStream;
+        stream.getTracks().forEach(track => track.stop());
+      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -146,20 +148,14 @@ function Lobby({ onJoin, videoEnabled, setVideoEnabled, audioEnabled, setAudioEn
   useEffect(() => {
     if (videoRef.current?.srcObject) {
       const stream = videoRef.current.srcObject as MediaStream;
-      const videoTrack = stream.getVideoTracks()[0];
-      if (videoTrack) {
-        videoTrack.enabled = videoEnabled;
-      }
+      stream.getVideoTracks().forEach(track => track.enabled = videoEnabled);
     }
   }, [videoEnabled]);
 
   useEffect(() => {
     if (videoRef.current?.srcObject) {
-      const stream = videoRef.current.srcObject as MediaStream;
-      const audioTrack = stream.getAudioTracks()[0];
-      if (audioTrack) {
-        audioTrack.enabled = audioEnabled;
-      }
+       const stream = videoRef.current.srcObject as MediaStream;
+       stream.getAudioTracks().forEach(track => track.enabled = audioEnabled);
     }
   }, [audioEnabled]);
 
@@ -190,7 +186,7 @@ function Lobby({ onJoin, videoEnabled, setVideoEnabled, audioEnabled, setAudioEn
               size="icon"
               className="rounded-full h-12 w-12"
               onClick={() => setAudioEnabled(!audioEnabled)}
-              disabled={!hasCameraPermission}
+              disabled={hasCameraPermission === false}
             >
               {audioEnabled ? <Mic /> : <MicOff />}
             </Button>
@@ -199,7 +195,7 @@ function Lobby({ onJoin, videoEnabled, setVideoEnabled, audioEnabled, setAudioEn
               size="icon"
               className="rounded-full h-12 w-12"
               onClick={() => setVideoEnabled(!videoEnabled)}
-              disabled={!hasCameraPermission}
+              disabled={hasCameraPermission === false}
             >
               {videoEnabled ? <Video /> : <VideoOff />}
             </Button>
@@ -209,7 +205,7 @@ function Lobby({ onJoin, videoEnabled, setVideoEnabled, audioEnabled, setAudioEn
         <div className="flex flex-col items-center lg:items-start text-center lg:text-left gap-6">
           <h1 className="text-3xl md:text-4xl font-bold">Pronto para entrar?</h1>
           <p className="text-muted-foreground">Verifique seu áudio e vídeo antes de participar da reunião.</p>
-          <Button size="lg" onClick={onJoin} className="w-full sm:w-auto" disabled={!hasCameraPermission}>
+          <Button size="lg" onClick={onJoin} className="w-full sm:w-auto" disabled={hasCameraPermission !== true}>
             Participar agora
           </Button>
         </div>

@@ -86,7 +86,7 @@ export default function LivePresencePage() {
         <CardHeader className="space-y-4">
           <div className="flex justify-center text-primary">
             <div className="w-20 h-20">
-              <Image src="https://i.ibb.co/ksM7sG9/Logo.png" alt="Arpolar Connect Logo" width={80} height={80} />
+              <Image src="https://i.ibb.co/ksM7sG9/Logo.png" alt="Arpolar Connect Logo" width={80} height={80} unoptimized/>
             </div>
           </div>
           <div className="text-center">

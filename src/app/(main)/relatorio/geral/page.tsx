@@ -107,7 +107,7 @@ export default function PerformanceGeralPage() {
         {/* Main Content */}
         <div 
           className="grid grid-cols-12 gap-6 items-stretch p-6 bg-cover bg-center rounded-lg flex-1"
-          style={{backgroundImage: "url('https://i.ibb.co/zVzbGGgD/fundoaqc.jpg')"}}
+          style={{backgroundImage: "url('https://i.ibb.co/zVzbGGg/fundoaqc.jpg')"}}
         >
            
             {/* Left Section with Chart and Image */}

@@ -1,4 +1,3 @@
-
 'use client';
 
 import { useEffect, useState, useRef } from 'react';
@@ -26,33 +25,39 @@ function Lobby({ onJoin, videoEnabled, setVideoEnabled, audioEnabled, setAudioEn
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    let stream: MediaStream;
+    let stream: MediaStream | undefined;
+
     const getMedia = async () => {
       try {
         stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         if (videoRef.current) {
           videoRef.current.srcObject = stream;
         }
-        // Initialize tracks based on passed state
+        // Initialize tracks based on passed state. This ensures they match the UI.
         stream.getVideoTracks()[0].enabled = videoEnabled;
         stream.getAudioTracks()[0].enabled = audioEnabled;
       } catch (err) {
         console.error('Error accessing media for lobby:', err);
-        // If permission is denied, reflect that in the state
+        // If permission is denied, reflect that in the state by disabling both.
         setVideoEnabled(false);
         setAudioEnabled(false);
       }
     };
+    
     getMedia();
 
+    // Cleanup function: this is critical to release the devices.
     return () => {
       if (stream) {
         stream.getTracks().forEach(track => track.stop());
       }
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // The dependency array is intentionally empty to run this only once on mount.
+    // The state of tracks is managed separately in the other useEffects.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Effect to toggle video track based on `videoEnabled` state
   useEffect(() => {
     if (videoRef.current && videoRef.current.srcObject) {
       const stream = videoRef.current.srcObject as MediaStream;
@@ -63,6 +68,7 @@ function Lobby({ onJoin, videoEnabled, setVideoEnabled, audioEnabled, setAudioEn
     }
   }, [videoEnabled]);
 
+  // Effect to toggle audio track based on `audioEnabled` state
   useEffect(() => {
     if (videoRef.current && videoRef.current.srcObject) {
       const stream = videoRef.current.srcObject as MediaStream;
@@ -77,10 +83,10 @@ function Lobby({ onJoin, videoEnabled, setVideoEnabled, audioEnabled, setAudioEn
     <div className="flex flex-col items-center justify-center h-full text-center bg-gray-50 dark:bg-gray-900 p-4 md:p-8">
       <div className="flex flex-col lg:flex-row items-center gap-8 max-w-5xl w-full">
         <div className="relative w-full max-w-lg">
-          <Card className="aspect-video w-full overflow-hidden shadow-lg">
+          <Card className="aspect-video w-full overflow-hidden shadow-lg bg-slate-800">
             <video ref={videoRef} autoPlay muted playsInline className="w-full h-full object-cover" />
              {!videoEnabled && (
-              <div className="absolute inset-0 w-full h-full bg-slate-800 flex items-center justify-center">
+              <div className="absolute inset-0 w-full h-full flex items-center justify-center">
                 <VideoOff className="w-16 h-16 text-slate-500" />
               </div>
             )}
@@ -130,7 +136,7 @@ function CustomVideoConference() {
     return () => {
       room.off('disconnected', handleDisconnected);
     };
-  }, [room, router]);
+  }, [room]);
 
   if (isDisconnected) {
     return (
@@ -199,7 +205,6 @@ export default function ArpolMeetPage() {
       </div>
     );
   }
-
 
   return (
     <div className="h-full w-full" data-lk-theme="default">

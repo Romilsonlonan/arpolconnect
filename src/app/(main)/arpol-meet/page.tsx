@@ -8,6 +8,7 @@ import {
   useToken,
   LocalVideoTrack,
 } from '@livekit/components-react';
+import '@livekit/components-styles';
 import { useSearchParams } from 'next/navigation';
 import { Loader2, Video, Mic, VideoOff, MicOff } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -21,40 +22,37 @@ function Lobby({ onJoin }: { onJoin: () => void }) {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    let videoTrack: LocalVideoTrack | undefined;
     let stream: MediaStream | undefined;
 
     const getMedia = async () => {
+      // Clean up previous stream
+      if (videoRef.current?.srcObject) {
+          const currentStream = videoRef.current.srcObject as MediaStream;
+          currentStream.getTracks().forEach(track => track.stop());
+          videoRef.current.srcObject = null;
+      }
+      
       try {
         if (videoEnabled) {
-          stream = await navigator.mediaDevices.getUserMedia({ video: true });
+          stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: audioEnabled });
           if (videoRef.current) {
             videoRef.current.srcObject = stream;
-            // No need to create a LocalVideoTrack here, just preview
-          }
-        } else {
-          // Stop existing stream if video is disabled
-          if (videoRef.current?.srcObject) {
-            const currentStream = videoRef.current.srcObject as MediaStream;
-            currentStream.getTracks().forEach(track => track.stop());
-            videoRef.current.srcObject = null;
           }
         }
       } catch (err) {
-        console.error('Error accessing camera for lobby:', err);
-        setVideoEnabled(false);
+        console.error('Error accessing media for lobby:', err);
+        setVideoEnabled(false); // Disable video if permission is denied
       }
     };
 
     getMedia();
 
     return () => {
-       if (videoRef.current?.srcObject) {
-            const stream = videoRef.current.srcObject as MediaStream;
+       if (stream) {
             stream.getTracks().forEach(track => track.stop());
         }
     };
-  }, [videoEnabled]);
+  }, [videoEnabled, audioEnabled]);
 
   return (
     <div className="flex flex-col items-center justify-center h-full text-center bg-gray-50 dark:bg-gray-900 p-4 md:p-8">
@@ -147,19 +145,17 @@ export default function ArpolMeetPage() {
 
 
   return (
-    <div className="h-full w-full">
-      <div data-lk-theme="default" className="h-full w-full">
-        <LiveKitRoom
-          token={token}
-          serverUrl={process.env.NEXT_PUBLIC_LIVEKIT_URL}
-          connect={true}
-          video={true}
-          audio={true}
-          className="h-full"
-        >
-          <VideoConference />
-        </LiveKitRoom>
-      </div>
+    <div className="h-full w-full" data-lk-theme="default">
+      <LiveKitRoom
+        token={token}
+        serverUrl={process.env.NEXT_PUBLIC_LIVEKIT_URL}
+        connect={true}
+        video={true}
+        audio={true}
+        className="h-full"
+      >
+        <VideoConference />
+      </LiveKitRoom>
     </div>
   );
 }

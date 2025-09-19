@@ -179,7 +179,7 @@ export const initialOrgTree: OrgNode = {
   id: 'arpolar',
   name: 'Arpolar',
   role: 'Empresa',
-  avatar: 'https://i.ibb.co/zVzbGGgD/fundoaqc.jpg',
+  avatar: 'https://i.ibb.co/ksM7sG9/Logo.png',
   showInNeuralNet: false,
   children: []
 };

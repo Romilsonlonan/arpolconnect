@@ -83,7 +83,7 @@ export default function SupportPage() {
                   )}>
                     {message.role === 'assistant' && (
                       <Avatar className="w-8 h-8 border-2 border-primary">
-                        <AvatarImage src="https://i.ibb.co/jL2G9w9/Logo.png" />
+                        <AvatarImage src="https://i.ibb.co/ksM7sG9/Logo.png" />
                         <AvatarFallback>IA</AvatarFallback>
                       </Avatar>
                     )}
@@ -104,7 +104,7 @@ export default function SupportPage() {
                {isLoading && (
                   <div className="flex items-start gap-4">
                     <Avatar className="w-8 h-8 border-2 border-primary">
-                        <AvatarImage src="https://i.ibb.co/jL2G9w9/Logo.png" />
+                        <AvatarImage src="https://i.ibb.co/ksM7sG9/Logo.png" />
                         <AvatarFallback>IA</AvatarFallback>
                     </Avatar>
                     <div className="max-w-prose p-3 rounded-lg bg-muted flex items-center gap-2">

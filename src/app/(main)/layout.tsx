@@ -222,7 +222,7 @@ function MainLayoutContent({ children }: { children: React.ReactNode }) {
                         "flex items-center gap-2 font-semibold font-headline text-primary-foreground",
                         !open && "justify-center"
                     )}>
-                        <Image src="https://i.ibb.co/jL2G9w9/Logo.png" alt="Arpolar Connect Logo" width={36} height={36} className="h-9 w-9" unoptimized />
+                        <Image src="https://i.ibb.co/ksM7sG9/Logo.png" alt="Arpolar Connect Logo" width={36} height={36} className="h-9 w-9" unoptimized />
                         {open && <span>Arpolar Connect</span>}
                     </Link>
                 </SidebarHeader>

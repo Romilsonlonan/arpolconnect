@@ -8,7 +8,7 @@ export default function Loading() {
       <div className="flex flex-col items-center gap-4">
         <div className="animate-pulse-slow">
             <Image 
-                src="https://i.ibb.co/jL2G9w9/Logo.png" 
+                src="https://i.ibb.co/ksM7sG9/Logo.png" 
                 alt="Arpolar Connect Logo" 
                 width={80} 
                 height={80} 

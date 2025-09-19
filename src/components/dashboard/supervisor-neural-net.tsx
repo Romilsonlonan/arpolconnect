@@ -148,7 +148,7 @@ export function SupervisorNeuralNet({ onNodeClick, selectedNodeId }: { onNodeCli
                    <Tooltip>
                         <TooltipTrigger>
                            <div className="w-24 h-24 bg-primary/10 rounded-full flex items-center justify-center p-2">
-                                <Image src="https://i.ibb.co/jL2G9w9/Logo.png" alt="Arpolar Connect Logo" width={96} height={96} />
+                                <Image src="https://i.ibb.co/ksM7sG9/Logo.png" alt="Arpolar Connect Logo" width={96} height={96} />
                            </div>
                         </TooltipTrigger>
                         <TooltipContent>

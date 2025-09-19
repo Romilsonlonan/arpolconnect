@@ -106,7 +106,7 @@ export default function LoginPage() {
         <CardHeader className="space-y-4">
           <div className="flex justify-center text-primary">
             <div className="w-24 h-24">
-              <Image src="https://i.ibb.co/ksM7sG9D/Logo.png" alt="Arpolar Connect Logo" width={96} height={96} />
+              <Image src="https://i.ibb.co/jL2G9w9/Logo.png" alt="Arpolar Connect Logo" width={96} height={96} />
             </div>
           </div>
           <div className="text-center">

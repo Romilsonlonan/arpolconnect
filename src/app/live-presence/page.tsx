@@ -80,7 +80,7 @@ export default function LivePresencePage() {
   return (
     <div 
       className="flex items-center justify-center min-h-screen bg-cover bg-center p-4"
-      style={{ backgroundImage: "url('https://i.ibb.co/Z1pWCjK/fundo-login-arpolconnect.jpg')" }}
+      style={{ backgroundImage: "url('https://i.ibb.co/Z1pWCjK4/fundo-login-arpolconnect.jpg')" }}
     >
       <Card className="mx-auto max-w-md w-full bg-white/50 backdrop-blur-lg border border-white/50 shadow-lg">
         <CardHeader className="space-y-4">

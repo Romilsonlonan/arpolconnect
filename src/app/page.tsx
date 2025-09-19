@@ -67,7 +67,7 @@ export default function LoginPage() {
   return (
     <div 
       className="flex items-center justify-center min-h-screen bg-cover bg-center p-4"
-      style={{ backgroundImage: "url('https://i.ibb.co/Z1pWCjK/fundo-login-arpolconnect.jpg')" }}
+      style={{ backgroundImage: "url('https://i.ibb.co/Z1pWCjK4/fundo-login-arpolconnect.jpg')" }}
     >
       <AlertDialog>
         <AlertDialogTrigger asChild>

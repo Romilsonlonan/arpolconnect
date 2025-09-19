@@ -12,12 +12,11 @@ import {
 } from '@livekit/components-react';
 import '@livekit/components-styles';
 import { useSearchParams, useRouter } from 'next/navigation';
-import { Loader2, Video, Mic, VideoOff, MicOff, LogOut, Smile, Hand, MoreHorizontal, PhoneCall, MessageSquare, ScreenShare, Share } from 'lucide-react';
+import { Loader2, Video, Mic, VideoOff, MicOff, LogOut, Smile, Hand } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { animated, useTransition } from '@react-spring/web';
-import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 

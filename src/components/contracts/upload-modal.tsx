@@ -69,9 +69,6 @@ export function UploadModal({ isOpen, onClose, onSave }: UploadModalProps) {
             setDescription('');
             setFile(null);
             onClose();
-        } else {
-            // This part is tricky because the parent controls isOpen.
-            // A better pattern is to let the parent handle the close logic completely.
         }
     };
 

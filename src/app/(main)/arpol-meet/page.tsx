@@ -18,6 +18,9 @@ import { Card } from '@/components/ui/card';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { animated, useTransition } from '@react-spring/web';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+
 
 const USER_SETTINGS_STORAGE_KEY = 'userSettings';
 
@@ -109,33 +112,41 @@ function Lobby({ onJoin, videoEnabled, setVideoEnabled, audioEnabled, setAudioEn
 }) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
+  const [hasCameraPermission, setHasCameraPermission] = useState<boolean | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
     let isMounted = true;
     const getMedia = async () => {
-        try {
-          if (streamRef.current) {
-              streamRef.current.getTracks().forEach(track => track.stop());
-          }
-          const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
-          if (isMounted) {
-            streamRef.current = stream;
-            if (videoRef.current) {
-              videoRef.current.srcObject = stream;
-            }
-             // Apply initial state
-            stream.getVideoTracks()[0].enabled = videoEnabled;
-            stream.getAudioTracks()[0].enabled = audioEnabled;
-          } else {
-             stream.getTracks().forEach(track => track.stop());
-          }
-        } catch (err) {
-            console.error('Error accessing media for lobby:', err);
-             if (isMounted) {
-                setVideoEnabled(false);
-                setAudioEnabled(false);
-            }
+      try {
+        if (streamRef.current) {
+          streamRef.current.getTracks().forEach(track => track.stop());
         }
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        if (isMounted) {
+          setHasCameraPermission(true);
+          streamRef.current = stream;
+          if (videoRef.current) {
+            videoRef.current.srcObject = stream;
+          }
+          stream.getVideoTracks()[0].enabled = videoEnabled;
+          stream.getAudioTracks()[0].enabled = audioEnabled;
+        } else {
+          stream.getTracks().forEach(track => track.stop());
+        }
+      } catch (err) {
+        console.error('Error accessing media for lobby:', err);
+        if (isMounted) {
+          setHasCameraPermission(false);
+          setVideoEnabled(false);
+          setAudioEnabled(false);
+          toast({
+            variant: 'destructive',
+            title: 'Permissão Negada',
+            description: 'O acesso à câmera e ao microfone é necessário. Habilite nas configurações do seu navegador.',
+          });
+        }
+      }
     };
     
     getMedia();
@@ -174,19 +185,28 @@ function Lobby({ onJoin, videoEnabled, setVideoEnabled, audioEnabled, setAudioEn
       <div className="flex flex-col lg:flex-row items-center gap-8 max-w-5xl w-full">
         <div className="relative w-full max-w-lg">
           <Card className="aspect-video w-full overflow-hidden shadow-lg bg-slate-800">
-            <video ref={videoRef} autoPlay muted playsInline className="w-full h-full object-cover" />
-             {!videoEnabled && (
-              <div className="absolute inset-0 w-full h-full flex items-center justify-center">
+             <video ref={videoRef} autoPlay muted playsInline className="w-full h-full object-cover" />
+            {(!videoEnabled || !hasCameraPermission) && (
+              <div className="absolute inset-0 w-full h-full flex items-center justify-center bg-slate-800">
                 <VideoOff className="w-16 h-16 text-slate-500" />
               </div>
             )}
           </Card>
+           {hasCameraPermission === false && (
+            <Alert variant="destructive" className="mt-4">
+              <AlertTitle>Acesso à Câmera Negado</AlertTitle>
+              <AlertDescription>
+                Por favor, permita o acesso à câmera e ao microfone nas configurações do seu navegador para continuar.
+              </AlertDescription>
+            </Alert>
+          )}
           <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-4">
             <Button
               variant={audioEnabled ? 'secondary' : 'destructive'}
               size="icon"
               className="rounded-full h-12 w-12"
               onClick={() => setAudioEnabled(!audioEnabled)}
+              disabled={!hasCameraPermission}
             >
               {audioEnabled ? <Mic /> : <MicOff />}
             </Button>
@@ -195,6 +215,7 @@ function Lobby({ onJoin, videoEnabled, setVideoEnabled, audioEnabled, setAudioEn
               size="icon"
               className="rounded-full h-12 w-12"
               onClick={() => setVideoEnabled(!videoEnabled)}
+              disabled={!hasCameraPermission}
             >
               {videoEnabled ? <Video /> : <VideoOff />}
             </Button>
@@ -204,7 +225,7 @@ function Lobby({ onJoin, videoEnabled, setVideoEnabled, audioEnabled, setAudioEn
         <div className="flex flex-col items-center lg:items-start text-center lg:text-left gap-6">
           <h1 className="text-3xl md:text-4xl font-bold">Pronto para entrar?</h1>
           <p className="text-muted-foreground">Verifique seu áudio e vídeo antes de participar da reunião.</p>
-          <Button size="lg" onClick={onJoin} className="w-full sm:w-auto">
+          <Button size="lg" onClick={onJoin} className="w-full sm:w-auto" disabled={!hasCameraPermission}>
             Participar agora
           </Button>
         </div>

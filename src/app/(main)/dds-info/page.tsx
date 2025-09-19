@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
-import { Upload, FileText, Send, Phone, UserCheck, Users, Calendar, UserPlus, Trash2, Loader2, Link, Download, Video } from 'lucide-react';
+import { Upload, FileText, Send, Phone, UserCheck, Users, Calendar, UserPlus, Trash2, Loader2, Link as LinkIcon, Download, Video } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -309,7 +309,7 @@ export default function DDSInfoPage() {
       
       <div className="flex justify-end">
         <Button onClick={generatePresenceLink}>
-          <Link className="mr-2" />
+          <LinkIcon className="mr-2" />
           Gerar Link de Presença
         </Button>
       </div>

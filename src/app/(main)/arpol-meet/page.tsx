@@ -9,7 +9,7 @@ import {
   useRoomContext
 } from '@livekit/components-react';
 import '@livekit/components-styles';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { Loader2, Video, Mic, VideoOff, MicOff, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -130,6 +130,7 @@ function Lobby({ onJoin, videoEnabled, setVideoEnabled, audioEnabled, setAudioEn
 
 function CustomVideoConference() {
   const room = useRoomContext();
+  const router = useRouter();
   const [isDisconnected, setIsDisconnected] = useState(false);
 
   useEffect(() => {
@@ -148,7 +149,7 @@ function CustomVideoConference() {
         <div className="flex flex-col items-center gap-4 p-8 bg-gray-800/50 rounded-lg">
           <h1 className="text-2xl font-bold">Você foi desconectado.</h1>
           <p className="text-muted-foreground">A reunião terminou ou sua conexão foi perdida.</p>
-          <Button onClick={() => window.location.href = '/'} variant="secondary" size="lg">
+          <Button onClick={() => router.push('/')} variant="secondary" size="lg">
             <LogOut className="mr-2" />
             Voltar para o Início
           </Button>

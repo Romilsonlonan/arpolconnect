@@ -6,10 +6,11 @@ import {
   LiveKitRoom,
   VideoConference,
   useToken,
+  useRoomContext
 } from '@livekit/components-react';
 import '@livekit/components-styles';
 import { useSearchParams } from 'next/navigation';
-import { Loader2, Video, Mic, VideoOff, MicOff } from 'lucide-react';
+import { Loader2, Video, Mic, VideoOff, MicOff, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 
@@ -23,30 +24,24 @@ function Lobby({ onJoin }: { onJoin: () => void }) {
 
   useEffect(() => {
     const getMedia = async () => {
-      // Clean up previous stream if it exists
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => track.stop());
       }
 
       try {
-        if (videoEnabled) {
-          const stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: audioEnabled });
-          streamRef.current = stream;
-          if (videoRef.current) {
-            videoRef.current.srcObject = stream;
-          }
-        } else if (videoRef.current) {
-          videoRef.current.srcObject = null;
+        const stream = await navigator.mediaDevices.getUserMedia({ video: videoEnabled, audio: audioEnabled });
+        streamRef.current = stream;
+        if (videoRef.current) {
+          videoRef.current.srcObject = stream;
         }
       } catch (err) {
         console.error('Error accessing media for lobby:', err);
-        setVideoEnabled(false);
+        setVideoEnabled(false); // Disable if there's an error
       }
     };
 
     getMedia();
-
-    // Cleanup function to stop media tracks when component unmounts
+    
     return () => {
       if (streamRef.current) {
         streamRef.current.getTracks().forEach(track => track.stop());
@@ -55,7 +50,6 @@ function Lobby({ onJoin }: { onJoin: () => void }) {
   }, [videoEnabled, audioEnabled]);
 
   const handleJoin = () => {
-    // Stop tracks before joining the room
     if (streamRef.current) {
       streamRef.current.getTracks().forEach(track => track.stop());
     }
@@ -65,7 +59,6 @@ function Lobby({ onJoin }: { onJoin: () => void }) {
   return (
     <div className="flex flex-col items-center justify-center h-full text-center bg-gray-50 dark:bg-gray-900 p-4 md:p-8">
       <div className="flex flex-col lg:flex-row items-center gap-8 max-w-5xl w-full">
-        {/* Left Side - Video Preview */}
         <div className="relative w-full max-w-lg">
           <Card className="aspect-video w-full overflow-hidden shadow-lg">
             {videoEnabled ? (
@@ -96,7 +89,6 @@ function Lobby({ onJoin }: { onJoin: () => void }) {
           </div>
         </div>
 
-        {/* Right Side - Join Options */}
         <div className="flex flex-col items-center lg:items-start text-center lg:text-left gap-6">
           <h1 className="text-3xl md:text-4xl font-bold">Pronto para entrar?</h1>
           <p className="text-muted-foreground">Verifique seu áudio e vídeo antes de participar da reunião.</p>
@@ -109,6 +101,37 @@ function Lobby({ onJoin }: { onJoin: () => void }) {
   );
 }
 
+function CustomVideoConference() {
+  const room = useRoomContext();
+  const [isDisconnected, setIsDisconnected] = useState(false);
+
+  useEffect(() => {
+    const handleDisconnected = () => {
+      setIsDisconnected(true);
+    };
+    room.on('disconnected', handleDisconnected);
+    return () => {
+      room.off('disconnected', handleDisconnected);
+    };
+  }, [room]);
+
+  if (isDisconnected) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full text-center bg-gray-900 text-white">
+        <div className="flex flex-col items-center gap-4">
+          <h1 className="text-2xl font-bold">Você foi desconectado.</h1>
+          <p className="text-muted-foreground">A reunião terminou ou sua conexão foi perdida.</p>
+          <Button onClick={() => window.location.reload()} variant="secondary" size="lg">
+            <LogOut className="mr-2" />
+            Voltar para o Lobby
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  return <VideoConference />;
+}
 
 export default function ArpolMeetPage() {
   const searchParams = useSearchParams();
@@ -133,7 +156,6 @@ export default function ArpolMeetPage() {
     userInfo: {
       name: userInfo.name,
     },
-    // skip fetching token if the user hasn't joined yet
     skip: !hasJoined,
   });
 
@@ -162,7 +184,7 @@ export default function ArpolMeetPage() {
         audio={true}
         className="h-full"
       >
-        <VideoConference />
+        <CustomVideoConference />
       </LiveKitRoom>
     </div>
   );

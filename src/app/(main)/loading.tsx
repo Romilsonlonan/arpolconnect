@@ -14,6 +14,7 @@ export default function Loading() {
                 height={80} 
                 className="h-20 w-20"
                 priority
+                unoptimized
             />
         </div>
         <p className="text-muted-foreground font-semibold">Carregando...</p>

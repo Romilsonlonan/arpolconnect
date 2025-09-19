@@ -80,7 +80,7 @@ const monthlyChartConfig = {
 } satisfies ChartConfig;
 
 const ArpolarIcon = ({ className }: { className?: string }) => (
-    <Image src="https://i.ibb.co/ksM7sG9/Logo.png" alt="Arpolar Icon" width={32} height={32} className={className} unoptimized/>
+    <Image src="https://i.ibb.co/JR7Drmjj/aqc.png" alt="Arpolar Icon" width={32} height={32} className={className} unoptimized/>
 );
 
 const StatusCard = ({ title, value, icon }: {title: string, value: string, icon: React.ReactNode}) => (
@@ -222,7 +222,7 @@ export default function ReportDetailsPage() {
             style={{background: 'linear-gradient(180deg, #FDE047 0%, #EAB308 100%)'}}
         >
             <div className="flex justify-center mb-2">
-                <Image src="https://i.ibb.co/ksM7sG9/Logo.png" alt="Arpolar Icon" width={80} height={80} unoptimized />
+                <Image src="https://i.ibb.co/JR7Drmjj/aqc.png" alt="Arpolar Icon" width={80} height={80} unoptimized />
             </div>
             
             <div className="text-center">
